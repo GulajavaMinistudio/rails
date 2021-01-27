@@ -654,6 +654,10 @@ Defaults to `'signed cookie'`.
 
     Any exceptions that are not configured will be mapped to 500 Internal Server Error.
 
+* `config.action_dispatch.return_only_request_media_type_on_content_type` change the
+  return value of `ActionDispatch::Request#content_type` to the Content-Type
+  header without modification.
+
 * `config.action_dispatch.cookies_same_site_protection` configures the default
   value of the `SameSite` attribute when setting cookies. When set to `nil`, the
   `SameSite` attribute is not added. To allow the value of the `SameSite` attribute
@@ -735,6 +739,8 @@ Defaults to `'signed cookie'`.
 * `config.action_view.preload_links_header` determines whether `javascript_include_tag` and `stylesheet_link_tag` will generate a `Link` header that preload assets.
 
 * `config.action_view.button_to_generates_button_tag` determines whether `button_to` will render `<button>` element, regardless of whether or not the content is passed as the first argument or as a block.
+
+* `config.action_view.apply_stylesheet_media_default` determines whether `stylesheet_link_tag` will render `screen` as the default value for the attribute `media` when it's not provided.
 
 ### Configuring Action Mailbox
 
@@ -1043,8 +1049,10 @@ text/javascript image/svg+xml application/postscript application/x-shockwave-fla
 
 #### For '6.2', defaults from previous versions below and:
 - `config.action_view.button_to_generates_button_tag`: `true`
+- `config.action_view.apply_stylesheet_media_default` : `false`
 - `config.active_support.key_generator_hash_digest_class`: `OpenSSL::Digest::SHA256`
 - `config.active_support.hash_digest_class`: `OpenSSL::Digest::SHA256`
+- `config.action_dispatch.return_only_request_media_type_on_content_type`: `false`
 
 #### For '6.1', defaults from previous versions below and:
 
@@ -1107,6 +1115,7 @@ text/javascript image/svg+xml application/postscript application/x-shockwave-fla
 - `config.action_view.form_with_generates_ids`: `false`
 - `config.action_view.preload_links_header`: `nil`
 - `config.action_view.button_to_generates_button_tag`: `false`
+- `config.action_view.apply_stylesheet_media_default` : `true`
 - `config.active_job.retry_jitter`: `0.0`
 - `config.active_job.skip_after_callbacks_if_terminated`: `false`
 - `config.action_mailbox.queues.incineration`: `:action_mailbox_incineration`
@@ -1119,6 +1128,7 @@ text/javascript image/svg+xml application/postscript application/x-shockwave-fla
 - `config.active_support.use_authenticated_message_encryption`: `false`
 - `config.active_support.hash_digest_class`: `OpenSSL::Digest::MD5`
 - `config.active_support.key_generator_hash_digest_class`: `OpenSSL::Digest::SHA1`
+- `config.action_dispatch.return_only_request_media_type_on_content_type`: `true`
 - `ActiveSupport.utc_to_local_returns_utc_offset_times`: `false`
 
 ### Configuring a Database
