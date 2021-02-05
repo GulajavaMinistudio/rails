@@ -118,8 +118,8 @@ class AppGeneratorTest < Rails::Generators::TestCase
   def test_assets
     run_generator
 
-    assert_file("app/views/layouts/application.html.erb", /stylesheet_link_tag\s+'application', 'data-turbolinks-track': 'reload'/)
-    assert_file("app/views/layouts/application.html.erb", /javascript_pack_tag\s+'application', 'data-turbolinks-track': 'reload'/)
+    assert_file("app/views/layouts/application.html.erb", /stylesheet_link_tag\s+"application", "data-turbolinks-track": "reload"/)
+    assert_file("app/views/layouts/application.html.erb", /javascript_pack_tag\s+"application", "data-turbolinks-track": "reload"/)
     assert_file("app/assets/stylesheets/application.css")
     assert_file("app/javascript/packs/application.js")
   end
@@ -202,7 +202,7 @@ class AppGeneratorTest < Rails::Generators::TestCase
 
   def test_new_application_doesnt_need_defaults
     run_generator
-    assert_no_file "config/initializers/new_framework_defaults_6_2.rb"
+    assert_no_file "config/initializers/new_framework_defaults_7_0.rb"
   end
 
   def test_new_application_load_defaults
@@ -250,14 +250,14 @@ class AppGeneratorTest < Rails::Generators::TestCase
     app_root = File.join(destination_root, "myapp")
     run_generator [app_root]
 
-    assert_no_file "#{app_root}/config/initializers/new_framework_defaults_6_2.rb"
+    assert_no_file "#{app_root}/config/initializers/new_framework_defaults_7_0.rb"
 
     stub_rails_application(app_root) do
       generator = Rails::Generators::AppGenerator.new ["rails"], { update: true }, { destination_root: app_root, shell: @shell }
       generator.send(:app_const)
       quietly { generator.update_config_files }
 
-      assert_file "#{app_root}/config/initializers/new_framework_defaults_6_2.rb"
+      assert_file "#{app_root}/config/initializers/new_framework_defaults_7_0.rb"
     end
   end
 
@@ -667,7 +667,7 @@ class AppGeneratorTest < Rails::Generators::TestCase
     assert_no_file "app/javascript"
 
     assert_file "app/views/layouts/application.html.erb" do |contents|
-      assert_match(/stylesheet_link_tag\s+'application' %>/, contents)
+      assert_match(/stylesheet_link_tag\s+"application" %>/, contents)
       assert_no_match(/javascript_pack_tag\s+'application'/, contents)
     end
   end
