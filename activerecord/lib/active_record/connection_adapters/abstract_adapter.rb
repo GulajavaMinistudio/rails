@@ -424,6 +424,10 @@ module ActiveRecord
         false
       end
 
+      def supports_concurrent_connections?
+        true
+      end
+
       # This is meant to be implemented by the adapters that support extensions
       def disable_extension(name)
       end
@@ -436,11 +440,28 @@ module ActiveRecord
         supports_advisory_locks? && @advisory_locks_enabled
       end
 
+      # Obtains an exclusive session level advisory lock, if available, for the duration of the block.
+      #
+      # Returns +false+ without executing the block if the lock could not be obtained.
+      def with_advisory_lock(lock_id, timeout = 0)
+        lock_acquired = get_advisory_lock(lock_id, timeout)
+
+        if lock_acquired
+          yield
+        end
+
+        lock_acquired
+      ensure
+        if lock_acquired && !release_advisory_lock(lock_id)
+          raise ReleaseAdvisoryLockError
+        end
+      end
+
       # This is meant to be implemented by the adapters that support advisory
       # locks
       #
       # Return true if we got the lock, otherwise false
-      def get_advisory_lock(lock_id) # :nodoc:
+      def get_advisory_lock(lock_id, timeout = 0) # :nodoc:
       end
 
       # This is meant to be implemented by the adapters that support advisory
@@ -689,7 +710,7 @@ module ActiveRecord
           exception
         end
 
-        def log(sql, name = "SQL", binds = [], type_casted_binds = [], statement_name = nil) # :doc:
+        def log(sql, name = "SQL", binds = [], type_casted_binds = [], statement_name = nil, async: false) # :doc:
           @instrumenter.instrument(
             "sql.active_record",
             sql:               sql,
@@ -697,6 +718,7 @@ module ActiveRecord
             binds:             binds,
             type_casted_binds: type_casted_binds,
             statement_name:    statement_name,
+            async:             async,
             connection:        self) do
             @lock.synchronize do
               yield

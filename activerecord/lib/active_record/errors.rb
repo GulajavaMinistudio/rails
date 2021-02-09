@@ -373,6 +373,11 @@ module ActiveRecord
   class TransactionRollbackError < StatementInvalid
   end
 
+  # AsynchronousQueryInsideTransactionError will be raised when attempting
+  # to perform an aynchronous query from inside a transaction
+  class AsynchronousQueryInsideTransactionError < ActiveRecordError
+  end
+
   # SerializationFailure will be raised when a transaction is rolled
   # back by the database due to a serialization failure.
   class SerializationFailure < TransactionRollbackError
@@ -394,6 +399,13 @@ module ActiveRecord
 
   # LockWaitTimeout will be raised when lock wait timeout exceeded.
   class LockWaitTimeout < StatementInvalid
+  end
+
+  # ReleaseAdvisoryLockError will be raised when a advisory lock fail to be released.
+  class ReleaseAdvisoryLockError < StatementInvalid
+    def initialize(message = "Failed to release advisory lock")
+      super
+    end
   end
 
   # StatementTimeout will be raised when statement timeout exceeded.
