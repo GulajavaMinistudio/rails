@@ -67,8 +67,12 @@ module ActiveRecord
     #   user = users.new { |user| user.name = 'Oscar' }
     #   user.name # => Oscar
     def new(attributes = nil, &block)
-      block = current_scope_restoring_block(&block)
-      scoping { _new(attributes, &block) }
+      if attributes.is_a?(Array)
+        attributes.collect { |attr| new(attr, &block) }
+      else
+        block = current_scope_restoring_block(&block)
+        scoping { _new(attributes, &block) }
+      end
     end
     alias build new
 
@@ -683,8 +687,7 @@ module ActiveRecord
     end
 
     def scope_for_create
-      hash = where_values_hash
-      hash.delete(klass.inheritance_column) if klass.finder_needs_type_condition?
+      hash = where_clause.to_h(klass.table_name, equality_only: true)
       create_with_value.each { |k, v| hash[k.to_s] = v } unless create_with_value.empty?
       hash
     end
