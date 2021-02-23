@@ -55,17 +55,28 @@ class EnumTest < ActiveRecord::TestCase
 
     assert_equal @book, Book.where(status: published).first
     assert_not_equal @book, Book.where(status: written).first
-    assert_equal @book, Book.where(status: [published]).first
-    assert_not_equal @book, Book.where(status: [written]).first
-    assert_not_equal @book, Book.where("status <> ?", published).first
-    assert_equal @book, Book.where("status <> ?", written).first
+    assert_equal @book, Book.where(status: [published, published]).first
+    assert_not_equal @book, Book.where(status: [written, written]).first
+    assert_not_equal @book, Book.where.not(status: published).first
+    assert_equal @book, Book.where.not(status: written).first
+  end
+
+  test "find via where with values.to_s" do
+    published, written = Book.statuses[:published].to_s, Book.statuses[:written].to_s
+
+    assert_equal @book, Book.where(status: published).first
+    assert_not_equal @book, Book.where(status: written).first
+    assert_equal @book, Book.where(status: [published, published]).first
+    assert_not_equal @book, Book.where(status: [written, written]).first
+    assert_not_equal @book, Book.where.not(status: published).first
+    assert_equal @book, Book.where.not(status: written).first
   end
 
   test "find via where with symbols" do
     assert_equal @book, Book.where(status: :published).first
     assert_not_equal @book, Book.where(status: :written).first
-    assert_equal @book, Book.where(status: [:published]).first
-    assert_not_equal @book, Book.where(status: [:written]).first
+    assert_equal @book, Book.where(status: [:published, :published]).first
+    assert_not_equal @book, Book.where(status: [:written, :written]).first
     assert_not_equal @book, Book.where.not(status: :published).first
     assert_equal @book, Book.where.not(status: :written).first
     assert_equal books(:ddd), Book.where(last_read: :forgotten).first
@@ -74,16 +85,26 @@ class EnumTest < ActiveRecord::TestCase
   test "find via where with strings" do
     assert_equal @book, Book.where(status: "published").first
     assert_not_equal @book, Book.where(status: "written").first
-    assert_equal @book, Book.where(status: ["published"]).first
-    assert_not_equal @book, Book.where(status: ["written"]).first
+    assert_equal @book, Book.where(status: ["published", "published"]).first
+    assert_not_equal @book, Book.where(status: ["written", "written"]).first
     assert_not_equal @book, Book.where.not(status: "published").first
     assert_equal @book, Book.where.not(status: "written").first
     assert_equal books(:ddd), Book.where(last_read: "forgotten").first
   end
 
+  test "find via where should be type casted" do
+    book = Book.enabled.create!
+    assert_predicate book, :enabled?
+
+    enabled = Book.boolean_statuses[:enabled].to_s
+    assert_equal book, Book.where(boolean_status: enabled).last
+  end
+
   test "build from scope" do
     assert_predicate Book.written.build, :written?
     assert_not_predicate Book.written.build, :proposed?
+    assert_predicate PublishedBook.hard.build, :hard?
+    assert_not_predicate PublishedBook.hard.build, :soft?
   end
 
   test "build from where" do
