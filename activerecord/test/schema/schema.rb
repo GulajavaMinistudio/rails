@@ -267,11 +267,13 @@ ActiveRecord::Schema.define do
     t.integer :developer, null: false
     t.integer :extendedWarranty, null: false
     t.integer :timezone
+    t.timestamps
   end
 
   create_table :computers_developers, id: false, force: true do |t|
     t.references :computer
     t.references :developer
+    t.timestamps
   end
 
   create_table :contracts, force: true do |t|
@@ -741,7 +743,14 @@ ActiveRecord::Schema.define do
       t.references :pirate, foreign_key: true
     end
 
+    # used by tests that do `Parrot.has_and_belongs_to_many :treasures` (the default)
     create_table :parrots_treasures, id: false, force: true do |t|
+      t.references :parrot, foreign_key: true
+      t.references :treasure, foreign_key: true
+    end
+
+    # used by tests that do `Parrot.has_many :treasures, through: :parrot_treasures`, and don't want to override the through relation's `table_name`
+    create_table :parrot_treasures, id: false, force: true do |t|
       t.references :parrot, foreign_key: true
       t.references :treasure, foreign_key: true
     end
