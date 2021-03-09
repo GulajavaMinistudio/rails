@@ -26,7 +26,7 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
     deps.singleton_class < deps::ZeitwerkIntegration::Decorations
   end
 
-  test "ActiveSupport::Dependencies is decorated by default" do
+  test "ActiveSupport::Dependencies is decorated" do
     boot
 
     assert decorated?
@@ -34,17 +34,6 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
     assert_instance_of Zeitwerk::Loader, Rails.autoloaders.main
     assert_instance_of Zeitwerk::Loader, Rails.autoloaders.once
     assert_equal [Rails.autoloaders.main, Rails.autoloaders.once], Rails.autoloaders.to_a
-  end
-
-  test "ActiveSupport::Dependencies is not decorated in classic mode" do
-    add_to_config "config.autoloader = :classic"
-    boot
-
-    assert_not decorated?
-    assert_not Rails.autoloaders.zeitwerk_enabled?
-    assert_nil Rails.autoloaders.main
-    assert_nil Rails.autoloaders.once
-    assert_equal 0, Rails.autoloaders.count
   end
 
   test "autoloaders inflect with Active Support" do
@@ -343,42 +332,6 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
     ActiveSupport::Dependencies.clear
 
     assert_equal %i(main_autoloader), $zeitwerk_integration_reload_test
-  end
-
-  test "verbose = true sets the dependencies logger if present" do
-    boot
-
-    logger = Logger.new(File::NULL)
-    ActiveSupport::Dependencies.logger = logger
-    ActiveSupport::Dependencies.verbose = true
-
-    Rails.autoloaders.each do |autoloader|
-      assert_same logger, autoloader.logger
-    end
-  end
-
-  test "verbose = true sets the Rails logger as fallback" do
-    boot
-
-    ActiveSupport::Dependencies.verbose = true
-
-    Rails.autoloaders.each do |autoloader|
-      assert_same Rails.logger, autoloader.logger
-    end
-  end
-
-  test "verbose = false sets loggers to nil" do
-    boot
-
-    ActiveSupport::Dependencies.verbose = true
-    Rails.autoloaders.each do |autoloader|
-      assert autoloader.logger
-    end
-
-    ActiveSupport::Dependencies.verbose = false
-    Rails.autoloaders.each do |autoloader|
-      assert_nil autoloader.logger
-    end
   end
 
   test "unhooks" do
