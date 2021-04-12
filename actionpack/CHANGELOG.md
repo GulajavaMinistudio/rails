@@ -1,4 +1,4 @@
-*   Remove inline styles and address basic accessibilty issues on rescue templates.
+*   Remove inline styles and address basic accessibility issues on rescue templates.
 
     *Jacob Herrington*
 
@@ -18,13 +18,13 @@
     ```ruby
     send_stream(filename: "subscribers.csv") do |stream|
       stream.writeln "email_address,updated_at"
-    
+
       @subscribers.find_each do |subscriber|
         stream.writeln [ subscriber.email_address, subscriber.updated_at ].join(",")
       end
     end
     ```
-    
+
     *DHH*
 
 *   Add `ActionController::Live::Buffer#writeln` to write a line to the stream with a newline included.
