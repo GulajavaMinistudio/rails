@@ -5,6 +5,16 @@ require "active_support/dependencies"
 
 module ActionDispatch
   class MiddlewareStack
+    class FakeRuntime
+      def initialize(app)
+        @app = app
+      end
+
+      def call(env)
+        @app.call(env)
+      end
+    end
+
     class Middleware
       attr_reader :args, :block, :klass
 
@@ -69,6 +79,7 @@ module ActionDispatch
 
     def initialize(*args)
       @middlewares = []
+      @rack_runtime_deprecated = true
       yield(self) if block_given?
     end
 
@@ -88,31 +99,35 @@ module ActionDispatch
       middlewares[i]
     end
 
-    ruby2_keywords def unshift(klass, *args, &block)
+    def unshift(klass, *args, &block)
       middlewares.unshift(build_middleware(klass, args, block))
     end
+    ruby2_keywords(:unshift)
 
     def initialize_copy(other)
       self.middlewares = other.middlewares.dup
     end
 
-    ruby2_keywords def insert(index, klass, *args, &block)
+    def insert(index, klass, *args, &block)
       index = assert_index(index, :before)
       middlewares.insert(index, build_middleware(klass, args, block))
     end
+    ruby2_keywords(:insert)
 
     alias_method :insert_before, :insert
 
-    ruby2_keywords def insert_after(index, *args, &block)
+    def insert_after(index, *args, &block)
       index = assert_index(index, :after)
       insert(index + 1, *args, &block)
     end
+    ruby2_keywords(:insert_after)
 
-    ruby2_keywords def swap(target, *args, &block)
+    def swap(target, *args, &block)
       index = assert_index(target, :before)
       insert(index, *args, &block)
       middlewares.delete_at(index + 1)
     end
+    ruby2_keywords(:swap)
 
     def delete(target)
       middlewares.delete_if { |m| m.klass == target }
@@ -136,9 +151,10 @@ module ActionDispatch
       middlewares.insert(target_index + 1, source_middleware)
     end
 
-    ruby2_keywords def use(klass, *args, &block)
+    def use(klass, *args, &block)
       middlewares.push(build_middleware(klass, args, block))
     end
+    ruby2_keywords(:use)
 
     def build(app = nil, &block)
       instrumenting = ActiveSupport::Notifications.notifier.listening?(InstrumentationProxy::EVENT_NAME)
@@ -153,13 +169,31 @@ module ActionDispatch
 
     private
       def assert_index(index, where)
-        i = index.is_a?(Integer) ? index : middlewares.index { |m| m.klass == index }
+        i = index.is_a?(Integer) ? index : index_of(index)
         raise "No such middleware to insert #{where}: #{index.inspect}" unless i
         i
       end
 
       def build_middleware(klass, args, block)
+        @rack_runtime_deprecated = false if klass == Rack::Runtime
+
         Middleware.new(klass, args, block)
+      end
+
+      def index_of(index)
+        raise "ActionDispatch::MiddlewareStack::FakeRuntime can not be referenced in middleware operations" if index == FakeRuntime
+
+        if index == Rack::Runtime && @rack_runtime_deprecated
+          ActiveSupport::Deprecation.warn(<<-MSG.squish)
+            Rack::Runtime is removed from the default middleware stack in Rails
+            and referencing it in middleware operations without adding it back
+            is deprecated and will throw an error in Rails 7.1
+          MSG
+        end
+
+        middlewares.index do |m|
+          m.klass == index || (@rack_runtime_deprecated && m.klass == FakeRuntime && index == Rack::Runtime)
+        end
       end
   end
 end
