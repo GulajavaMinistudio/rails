@@ -65,7 +65,7 @@ one per tab/device open to your connection).
 
 ### Pub/Sub
 
-[Pub/Sub](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), or
+[Pub/Sub](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) or
 Publish-Subscribe, refers to a message queue paradigm whereby senders of
 information (publishers), send data to an abstract class of recipients
 (subscribers), without specifying individual recipients. Action Cable uses this
@@ -499,7 +499,7 @@ The following setup steps are common to both examples:
 
 Here's a simple example of a channel that tracks whether a user is online or not
 and what page they're on. (This is useful for creating presence features like showing
-a green dot next to a user name if they're online).
+a green dot next to a username if they're online).
 
 Create the server-side appearance channel:
 
@@ -524,7 +524,7 @@ class AppearanceChannel < ApplicationCable::Channel
 end
 ```
 
-When a subscription is initiated the `subscribed` callback gets fired and we
+When a subscription is initiated the `subscribed` callback gets fired, and we
 take that opportunity to say "the current user has indeed appeared". That
 appear/disappear API could be backed by Redis, a database, or whatever else.
 
@@ -708,6 +708,7 @@ production:
   url: redis://10.10.3.153:6381
   channel_prefix: appname_production
 ```
+
 #### Adapter Configuration
 
 Below is a list of the subscription adapters available for end users.

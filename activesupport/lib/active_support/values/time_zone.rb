@@ -229,12 +229,16 @@ module ActiveSupport
       # Returns +nil+ if no such time zone is known to the system.
       def [](arg)
         case arg
+        when self
+          arg
         when String
           begin
             @lazy_zones_map[arg] ||= create(arg)
           rescue TZInfo::InvalidTimezoneIdentifier
             nil
           end
+        when TZInfo::Timezone
+          @lazy_zones_map[arg.name] ||= create(arg.name, nil, arg)
         when Numeric, ActiveSupport::Duration
           arg *= 3600 if arg.abs <= 13
           all.find { |z| z.utc_offset == arg.to_i }
@@ -513,7 +517,7 @@ module ActiveSupport
     def utc_to_local(time)
       tzinfo.utc_to_local(time).yield_self do |t|
         ActiveSupport.utc_to_local_returns_utc_offset_times ?
-          t : Time.utc(t.year, t.month, t.day, t.hour, t.min, t.sec, t.sec_fraction)
+          t : Time.utc(t.year, t.month, t.day, t.hour, t.min, t.sec, t.sec_fraction * 1_000_000)
       end
     end
 

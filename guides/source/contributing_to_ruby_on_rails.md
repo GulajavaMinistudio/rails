@@ -284,7 +284,7 @@ message, to allow future contributors to easily verify your findings and
 determine if they are still relevant. (For example, future optimizations in the
 Ruby VM might render certain optimizations unnecessary.)
 
-When optimizing for a specific scenario that you care about, it is easy to 
+When optimizing for a specific scenario that you care about, it is easy to
 regress performance for other common cases.
 Therefore, you should test your change against a list of representative
 scenarios, ideally extracted from real-world production applications.
@@ -550,7 +550,7 @@ Navigate to the Rails [GitHub repository](https://github.com/rails/rails) and pr
 Add the new remote to your local repository on your local machine:
 
 ```bash
-$ git remote add fork https://github.com/<your user name>/rails.git
+$ git remote add fork https://github.com/<your username>/rails.git
 ```
 
 You may have cloned your local repository from rails/rails, or you may have cloned from your forked repository. The following git commands assume that you have made a "rails" remote that points to rails/rails.

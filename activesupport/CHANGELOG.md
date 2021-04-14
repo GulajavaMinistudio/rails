@@ -1,6 +1,17 @@
-*   Fix issue in `Hash#deep_merge` where it did not properly duplicate a nested `Hash`
+*   Freeze `ActiveSupport::Duration#parts` and remove writer methods.
 
-    *Marcel Eeken*
+    Durations are meant to be value objects and should not be mutated.
+
+    *Andrew White*
+
+*   Fix `ActiveSupport::TimeZone#utc_to_local` with fractional seconds.
+
+    When `utc_to_local_returns_utc_offset_times` is false and the time
+    instance had fractional seconds the new UTC time instance was out by
+    a factor of 1,000,000 as the `Time.utc` constructor takes a usec
+    value and not a fractional second value.
+
+    *Andrew White*
 
 *   Add `expires_at` argument to `ActiveSupport::Cache` `write` and `fetch` to set a cache entry TTL as an absolute time.
 
