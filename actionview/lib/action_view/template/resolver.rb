@@ -35,6 +35,8 @@ module ActionView
       alias :to_s :to_str
     end
 
+    TemplateDetails = Struct.new(:path, :locale, :handler, :format, :variant)
+
     class PathParser # :nodoc:
       def build_path_regex
         handlers = Template::Handlers.extensions.map { |x| Regexp.escape(x) }.join("|")
@@ -58,15 +60,14 @@ module ActionView
       def parse(path)
         @regex ||= build_path_regex
         match = @regex.match(path)
-        {
-          prefix: match[:prefix] || "",
-          action: match[:action],
-          partial: !!match[:partial],
-          locale: match[:locale]&.to_sym,
-          handler: match[:handler]&.to_sym,
-          format: match[:format]&.to_sym,
-          variant: match[:variant]
-        }
+        path = Path.build(match[:action], match[:prefix] || "", !!match[:partial])
+        TemplateDetails.new(
+          path,
+          match[:locale]&.to_sym,
+          match[:handler]&.to_sym,
+          match[:format]&.to_sym,
+          match[:variant]
+        )
       end
     end
 
@@ -188,8 +189,6 @@ module ActionView
 
   # A resolver that loads files from the filesystem.
   class FileSystemResolver < Resolver
-    EXTENSIONS = { locale: ".", formats: ".", variants: "+", handlers: "." }
-
     attr_reader :path
 
     def initialize(path)
@@ -217,11 +216,9 @@ module ActionView
     alias :== :eql?
 
     def all_template_paths # :nodoc:
-      paths = Dir.glob("**/*", base: @path)
-      paths.reject do |filename|
-        File.directory?(File.join(@path, filename))
-      end.map do |filename|
-        filename.gsub(/\.[^\/]*\z/, "")
+      paths = template_glob("**/*")
+      paths.map do |filename|
+        filename.from(@path.size + 1).remove(/\.[^\/]*\z/)
       end.uniq
     end
 
@@ -232,19 +229,14 @@ module ActionView
       end
 
       def query(path, details, formats, locals, cache:)
-        template_paths = find_template_paths_from_details(path, details)
-        template_paths = reject_files_external_to_app(template_paths)
+        cache = cache ? @unbound_templates : Concurrent::Map.new
 
-        template_paths.map do |template|
-          unbound_template =
-            if cache
-              @unbound_templates.compute_if_absent([template, path.virtual]) do
-                build_unbound_template(template, path.virtual)
-              end
-            else
-              build_unbound_template(template, path.virtual)
-            end
+        unbound_templates =
+          cache.compute_if_absent(path.virtual) do
+            unbound_templates_from_path(path)
+          end
 
+        filter_and_sort_by_details(unbound_templates, details).map do |unbound_template|
           unbound_template.bind_locals(locals)
         end
       end
@@ -253,110 +245,89 @@ module ActionView
         Template::Sources::File.new(template)
       end
 
-      def build_unbound_template(template, virtual_path)
-        handler, format, variant = extract_handler_and_format_and_variant(template)
+      def build_unbound_template(template)
+        details = @path_parser.parse(template.from(@path.size + 1))
         source = source_for_template(template)
 
         UnboundTemplate.new(
           source,
           template,
-          handler,
-          virtual_path: virtual_path,
-          format: format,
-          variant: variant,
+          details.handler,
+          virtual_path: details.path.virtual,
+          locale: details.locale,
+          format: details.format,
+          variant: details.variant,
         )
       end
 
-      def reject_files_external_to_app(files)
-        files.reject { |filename| !inside_path?(@path, filename) }
-      end
-
-      def inside_path?(path, filename)
-        filename = File.expand_path(filename)
-        path = File.join(path, "")
-        filename.start_with?(path)
-      end
-
-      def escape_entry(entry)
-        entry.gsub(/[*?{}\[\]]/, '\\\\\\&')
-      end
-
-      # Extract handler, formats and variant from path. If a format cannot be found neither
-      # from the path, or the handler, we should return the array of formats given
-      # to the resolver.
-      def extract_handler_and_format_and_variant(path)
-        details = @path_parser.parse(path)
-
-        handler = Template.handler_for_extension(details[:handler])
-        format = details[:format] || handler.try(:default_format)
-        variant = details[:variant]
-
-        # Template::Types[format] and handler.default_format can return nil
-        [handler, format, variant]
-      end
-
-      def find_candidate_template_paths(path)
-        # Instead of checking for every possible path, as our other globs would
-        # do, scan the directory for files with the right prefix.
-        query = "#{escape_entry(File.join(@path, path))}*"
-
-        Dir[query].reject do |filename|
-          File.directory?(filename)
-        end
-      end
-
-      def find_template_paths_from_details(path, details)
+      def unbound_templates_from_path(path)
         if path.name.include?(".")
           return []
         end
 
-        candidates = find_candidate_template_paths(path)
+        # Instead of checking for every possible path, as our other globs would
+        # do, scan the directory for files with the right prefix.
+        paths = template_glob("#{escape_entry(path.to_s)}*")
 
-        regex = build_regex(path, details)
-
-        candidates.uniq.reject do |filename|
-          # This regex match does double duty of finding only files which match
-          # details (instead of just matching the prefix) and also filtering for
-          # case-insensitive file systems.
-          !regex.match?(filename) ||
-            File.directory?(filename)
-        end.sort_by do |filename|
-          # Because we scanned the directory, instead of checking for files
-          # one-by-one, they will be returned in an arbitrary order.
-          # We can use the matches found by the regex and sort by their index in
-          # details.
-          match = filename.match(regex)
-          EXTENSIONS.keys.map do |ext|
-            if ext == :variants && details[ext] == :any
-              match[ext].nil? ? 0 : 1
-            elsif match[ext].nil?
-              # No match should be last
-              details[ext].length
-            else
-              found = match[ext].to_sym
-              details[ext].index(found)
-            end
-          end
+        paths.map do |path|
+          build_unbound_template(path)
+        end.select do |template|
+          # Select for exact virtual path match, including case sensitivity
+          template.virtual_path == path.virtual
         end
       end
 
-      def build_regex(path, details)
-        query = Regexp.escape(File.join(@path, path))
-        exts = EXTENSIONS.map do |ext, prefix|
-          match =
-            if ext == :variants && details[ext] == :any
-              ".*?"
-            else
-              arr = details[ext].compact
-              arr.uniq!
-              arr.map! { |e| Regexp.escape(e) }
-              arr.join("|")
-            end
-          prefix = Regexp.escape(prefix)
-          "(#{prefix}(?<#{ext}>#{match}))?"
-        end.join
+      def filter_and_sort_by_details(templates, details)
+        locale = details[:locale]
+        formats = details[:formats]
+        variants = details[:variants]
+        handlers = details[:handlers]
 
-        %r{\A#{query}#{exts}\z}
+        results = templates.map do |template|
+          locale_match = details_match_sort_key(template.locale, locale) || next
+          format_match = details_match_sort_key(template.format, formats) || next
+          variant_match =
+            if variants == :any
+              template.variant ? 1 : 0
+            else
+              details_match_sort_key(template.variant&.to_sym, variants) || next
+            end
+          handler_match = details_match_sort_key(template.handler, handlers) || next
+
+          [template, [locale_match, format_match, variant_match, handler_match]]
+        end
+
+        results.compact!
+        results.sort_by!(&:last) if results.size > 1
+        results.map!(&:first)
+
+        results
+      end
+
+      def details_match_sort_key(have, want)
+        if have
+          want.index(have)
+        else
+          want.size
+        end
+      end
+
+      # Safe glob within @path
+      def template_glob(glob)
+        query = File.join(escape_entry(@path), glob)
+        path_with_slash = File.join(@path, "")
+
+        Dir.glob(query).reject do |filename|
+          File.directory?(filename)
+        end.map do |filename|
+          File.expand_path(filename)
+        end.select do |filename|
+          filename.start_with?(path_with_slash)
+        end
+      end
+
+      def escape_entry(entry)
+        entry.gsub(/[*?{}\[\]]/, '\\\\\\&')
       end
   end
 end
