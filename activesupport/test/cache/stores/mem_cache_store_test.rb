@@ -36,16 +36,27 @@ class MemCacheStoreTest < ActiveSupport::TestCase
   end
 
   def lookup_store(options = {})
-    ActiveSupport::Cache.lookup_store(*store, { namespace: @namespace }.merge(options))
+    cache = ActiveSupport::Cache.lookup_store(*store, { namespace: @namespace }.merge(options))
+    (@_stores ||= []) << cache
+    cache
   end
 
   def setup
     skip "memcache server is not up" unless MEMCACHE_UP
 
-    @namespace = "test-#{SecureRandom.hex}"
+    @namespace = "test-#{Random.rand(16**32).to_s(16)}"
     @cache = lookup_store(expires_in: 60)
     @peek = lookup_store
     @cache.logger = ActiveSupport::Logger.new(File::NULL)
+  end
+
+  def after_teardown
+    stores, @_stores = @_stores, []
+    stores.each do |store|
+      # Eagerly closing Dalli connection avoid file descriptor exhaustion.
+      # Otherwise the test suite is flaky when ran repeatedly
+      store.instance_variable_get(:@data).close
+    end
   end
 
   include CacheStoreBehavior
@@ -77,7 +88,7 @@ class MemCacheStoreTest < ActiveSupport::TestCase
     cache = lookup_store(raw: true)
     cache.write("foo", 2)
 
-    assert_not_called_on_instance_of ActiveSupport::Cache::Entry, :compress! do
+    assert_not_called_on_instance_of ActiveSupport::Cache::Entry, :compressed do
       cache.read("foo")
     end
   end

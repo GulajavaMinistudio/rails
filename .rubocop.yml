@@ -253,6 +253,9 @@ Performance/BindCall:
 Performance/FlatMap:
   Enabled: true
 
+Performance/MapCompact:
+  Enabled: true
+
 Performance/RedundantMerge:
   Enabled: true
 
@@ -266,6 +269,9 @@ Performance/RegexpMatch:
   Enabled: true
 
 Performance/ReverseEach:
+  Enabled: true
+
+Performance/StringReplacement:
   Enabled: true
 
 Performance/UnfreezeString:
