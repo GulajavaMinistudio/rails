@@ -10,7 +10,7 @@ module ActiveModel
       def check_validity!
         unless (options.keys & COMPARE_CHECKS.keys).any?
           raise ArgumentError, "Expected one of :greater_than, :greater_than_or_equal_to, "\
-          ":equal_to, :less_than, :less_than_or_equal_to, nor :other_than supplied."
+          ":equal_to, :less_than, :less_than_or_equal_to, or :other_than option to be supplied."
         end
       end
 
@@ -22,7 +22,7 @@ module ActiveModel
             return record.errors.add(attr_name, :blank, **error_options(value, option_value))
           end
 
-          unless value.send(COMPARE_CHECKS[option], option_value)
+          unless value.public_send(COMPARE_CHECKS[option], option_value)
             record.errors.add(attr_name, option, **error_options(value, option_value))
           end
         rescue ArgumentError => e
