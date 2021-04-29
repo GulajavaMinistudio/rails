@@ -781,6 +781,11 @@ There are a number of settings available on `config.action_mailer`:
     * `:enable_starttls_auto` - Detects if STARTTLS is enabled in your SMTP server and starts to use it. It defaults to `true`.
     * `:openssl_verify_mode` - When using TLS, you can set how OpenSSL checks the certificate. This is useful if you need to validate a self-signed and/or a wildcard certificate. This can be one of the OpenSSL verify constants, `:none` or `:peer` -- or the constant directly `OpenSSL::SSL::VERIFY_NONE` or `OpenSSL::SSL::VERIFY_PEER`, respectively.
     * `:ssl/:tls` - Enables the SMTP connection to use SMTP/TLS (SMTPS: SMTP over direct TLS connection).
+    * `:open_timeout` - Number of seconds to wait while attempting to open a connection.
+    * `:read_timeout` - Number of seconds to wait until timing-out a read(2) call.
+
+* `config.action_mailer.smtp_timeout` allows to configure both the `:open_timeout` and `:read_timeout`
+values for `:smtp` delivery method.
 
 * `config.action_mailer.sendmail_settings` allows detailed configuration for the `sendmail` delivery method. It accepts a hash of options, which can include any of these options:
     * `:location` - The location of the sendmail executable. Defaults to `/usr/sbin/sendmail`.
@@ -865,7 +870,7 @@ There are a few configuration options available in Active Support:
 
 * `config.active_support.use_authenticated_message_encryption` specifies whether to use AES-256-GCM authenticated encryption as the default cipher for encrypting messages instead of AES-256-CBC.
 
-* `config.active_support.cache_format_version` specifies which version of the cache serializer to use. Possible values are `6.1` and `7.0`. Defaults to `6.1`.
+* `config.active_support.cache_format_version` specifies which version of the cache serializer to use. Possible values are `6.1` and `7.0`.
 
 * `ActiveSupport::Logger.silencer` is set to `false` to disable the ability to silence logging in a block. The default is `true`.
 
@@ -1059,7 +1064,9 @@ text/javascript image/svg+xml application/postscript application/x-shockwave-fla
 - `config.action_view.apply_stylesheet_media_default` : `false`
 - `config.active_support.key_generator_hash_digest_class`: `OpenSSL::Digest::SHA256`
 - `config.active_support.hash_digest_class`: `OpenSSL::Digest::SHA256`
+- `config.active_support.cache_format_version`: `7.0`
 - `config.action_dispatch.return_only_request_media_type_on_content_type`: `false`
+- `config.action_mailer.smtp_timeout`: `5`
 
 #### For '6.1', defaults from previous versions below and:
 
@@ -1135,8 +1142,10 @@ text/javascript image/svg+xml application/postscript application/x-shockwave-fla
 - `config.active_support.use_authenticated_message_encryption`: `false`
 - `config.active_support.hash_digest_class`: `OpenSSL::Digest::MD5`
 - `config.active_support.key_generator_hash_digest_class`: `OpenSSL::Digest::SHA1`
+- `config.active_support.cache_format_version`: `6.1`
 - `config.action_dispatch.return_only_request_media_type_on_content_type`: `true`
 - `ActiveSupport.utc_to_local_returns_utc_offset_times`: `false`
+- `config.action_mailer.smtp_timeout`: `nil`
 
 ### Configuring a Database
 

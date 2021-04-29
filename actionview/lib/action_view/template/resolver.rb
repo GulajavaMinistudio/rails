@@ -15,11 +15,18 @@ module ActionView
       attr_reader :name, :prefix, :partial, :virtual
       alias_method :partial?, :partial
 
+      def self.virtual(name, prefix, partial)
+        if prefix.empty?
+          "#{partial ? "_" : ""}#{name}"
+        elsif partial
+          "#{prefix}/_#{name}"
+        else
+          "#{prefix}/#{name}"
+        end
+      end
+
       def self.build(name, prefix, partial)
-        virtual = +""
-        virtual << "#{prefix}/" unless prefix.empty?
-        virtual << (partial ? "_#{name}" : name)
-        new name, prefix, partial, virtual
+        new name, prefix, partial, virtual(name, prefix, partial)
       end
 
       def initialize(name, prefix, partial, virtual)
@@ -317,12 +324,12 @@ module ActionView
         query = File.join(escape_entry(@path), glob)
         path_with_slash = File.join(@path, "")
 
-        Dir.glob(query).reject do |filename|
-          File.directory?(filename)
-        end.map do |filename|
-          File.expand_path(filename)
-        end.select do |filename|
-          filename.start_with?(path_with_slash)
+        Dir.glob(query).filter_map do |filename|
+          filename = File.expand_path(filename)
+          next if File.directory?(filename)
+          next unless filename.start_with?(path_with_slash)
+
+          filename
         end
       end
 
