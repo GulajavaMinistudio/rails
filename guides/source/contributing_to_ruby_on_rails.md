@@ -29,7 +29,7 @@ NOTE: Bugs in the most recent released version of Ruby on Rails will likely get 
 
 ### Creating a Bug Report
 
-If you've found a problem in Ruby on Rails that is not a security risk, search the [Issues](https://github.com/rails/rails/issues) on Github, in case it has already been reported. If you cannot find any open GitHub issues addressing the problem you found, your next step will be to [open a new issue](https://github.com/rails/rails/issues/new). (See the next section for reporting security issues.)
+If you've found a problem in Ruby on Rails that is not a security risk, search the [Issues](https://github.com/rails/rails/issues) on GitHub, in case it has already been reported. If you cannot find any open GitHub issues addressing the problem you found, your next step will be to [open a new issue](https://github.com/rails/rails/issues/new). (See the next section for reporting security issues.)
 
 Your issue report should contain a title and a clear description of the issue at the bare minimum. You should include as much relevant information as possible and a code sample that demonstrates the issue. It would be even better to include a failing unit test that tests the expected behavior. Your goal should be to make it easy for yourself - and others - to reproduce the bug and figure out a fix.
 
@@ -274,6 +274,19 @@ Inspecting 1 file
 ```
 
 For `rails-ujs` CoffeeScript and JavaScript files, you can run `npm run lint` in `actionview` folder.
+
+We are also running [misspell](https://github.com/client9/misspell) which is mainly written in Golang to check
+spelling with [GitHub Actions](../../.github/workflows/lint.yml). Correct commonly misspelled English words quickly
+with `misspell`. You can run `misspell` locally against all files with:
+
+```bash
+find . -type f | xargs ./misspell -i 'aircrafts,devels,invertions' -error
+```
+
+Notable `misspell` help options or flags are:
+
+- `-i` string: ignore the following corrections, comma separated
+- `-w`: Overwrite file with corrections (default is just to display)
 
 ### Benchmark Your Code
 
