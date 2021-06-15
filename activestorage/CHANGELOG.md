@@ -1,3 +1,20 @@
+
+*   Add support for ActiveStorage expiring URLs.
+
+    ```ruby
+    rails_blob_path(user.avatar, disposition: "attachment", expires_in: 30.minutes)
+
+    <%= image_tag rails_blob_path(user.avatar.variant(resize: "100x100"), expires_in: 30.minutes) %>
+    ```
+
+    If you want to set default expiration time for ActiveStorage URLs throughout your application, set `config.active_storage.urls_expire_in`.
+
+    *aki77*
+
+*   Allow to purge an attachment when record is not persisted for `has_many_attached`
+
+    *Jacopo Beschi*
+
 *   Add `with_all_variant_records` method to eager load all variant records on an attachment at once.
     `with_attached_image` scope now eager loads variant records if using variant tracking.
 
