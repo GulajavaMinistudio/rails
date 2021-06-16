@@ -334,31 +334,32 @@ module ActiveRecord
       end
 
       def find_by!(*args) # :nodoc:
-        find_by(*args) || raise(RecordNotFound.new("Couldn't find #{name}", name))
+        find_by(*args) || where(*args).raise_record_not_found_exception!
       end
 
-      def default_timezone # :nodoc:
-        ActiveRecord.default_timezone
-      end
+      %w(
+        reading_role writing_role legacy_connection_handling default_timezone index_nested_attribute_errors
+        verbose_query_logs queues warn_on_records_fetched_greater_than maintain_test_schema
+        application_record_class action_on_strict_loading_violation schema_format error_on_ignored_order
+        timestamped_migrations dump_schema_after_migration dump_schemas suppress_multiple_database_warning
+      ).each do |attr|
+        module_eval(<<~RUBY, __FILE__, __LINE__ + 1)
+          def #{attr}
+            ActiveSupport::Deprecation.warn(<<~MSG)
+              ActiveRecord::Base.#{attr} is deprecated and will be removed in Rails 7.1.
+              Use `ActiveRecord.#{attr}` instead.
+            MSG
+            ActiveRecord.#{attr}
+          end
 
-      def maintain_test_schema # :nodoc:
-        ActiveRecord.maintain_test_schema
-      end
-
-      def reading_role # :nodoc:
-        ActiveSupport::Deprecation.warn(<<~MSG)
-          ActiveRecord::Base.reading_role is deprecated and will be removed in Rails 7.1.
-          Use `ActiveRecord.reading_role` instead.
-        MSG
-        ActiveRecord.reading_role
-      end
-
-      def writing_role # :nodoc:
-        ActiveSupport::Deprecation.warn(<<~MSG)
-          ActiveRecord::Base.writing_role is deprecated and will be removed in Rails 7.1.
-          Use `ActiveRecord.writing_role` instead.
-        MSG
-        ActiveRecord.writing_role
+          def #{attr}=(value)
+            ActiveSupport::Deprecation.warn(<<~MSG)
+              ActiveRecord::Base.#{attr}= is deprecated and will be removed in Rails 7.1.
+              Use `ActiveRecord.#{attr}=` instead.
+            MSG
+            ActiveRecord.#{attr} = value
+          end
+        RUBY
       end
 
       def initialize_generated_modules # :nodoc:
