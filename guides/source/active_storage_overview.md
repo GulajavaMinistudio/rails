@@ -235,6 +235,15 @@ google:
   bucket: ""
 ```
 
+Optionally provide a Cache-Control metadata to set on uploaded assets:
+
+```yaml
+google:
+  service: GCS
+  ...
+  cache_control: "public, max-age=3600"
+```
+
 Add the [`google-cloud-storage`](https://github.com/GoogleCloudPlatform/google-cloud-ruby/tree/master/google-cloud-storage) gem to your `Gemfile`:
 
 ```ruby
@@ -477,7 +486,7 @@ model test. To do that, provide a Hash containing at least an open IO object
 and a filename:
 
 ```ruby
-@message.image.attach(io: File.open('/path/to/file'), filename: 'file.pdf')
+@message.images.attach(io: File.open('/path/to/file'), filename: 'file.pdf')
 ```
 
 When possible, provide a content type as well. Active Storage attempts to
@@ -485,14 +494,14 @@ determine a file’s content type from its data. It falls back to the content
 type you provide if it can’t do that.
 
 ```ruby
-@message.image.attach(io: File.open('/path/to/file'), filename: 'file.pdf', content_type: 'application/pdf')
+@message.images.attach(io: File.open('/path/to/file'), filename: 'file.pdf', content_type: 'application/pdf')
 ```
 
 You can bypass the content type inference from the data by passing in
 `identify: false` along with the `content_type`.
 
 ```ruby
-@message.image.attach(
+@message.images.attach(
   io: File.open('/path/to/file'),
   filename: 'file.pdf',
   content_type: 'application/pdf',
@@ -523,15 +532,18 @@ user.avatar.purge_later
 [Attached::One#purge]: https://api.rubyonrails.org/classes/ActiveStorage/Attached/One.html#method-i-purge
 [Attached::One#purge_later]: https://api.rubyonrails.org/classes/ActiveStorage/Attached/One.html#method-i-purge_later
 
-Linking to Files
-----------------
+Serving Files
+-------------
+
+Active Storage supports two ways to serve files: redirecting and proxying.
+
+### Redirect mode
 
 To generate a permanent URL for a blob, you can pass the blob to the
 [`url_for`][ActionView::RoutingUrlFor#url_for] view helper. This generates a
 URL with the blob's [`signed_id`][ActiveStorage::Blob#signed_id]
 that is routed to the blob's
 [`RedirectController`](ActiveStorage::Blobs::RedirectController).
-
 
 ```ruby
 url_for(user.avatar)
@@ -549,7 +561,7 @@ even if a `before_action` in your `ApplicationController` would otherwise
 require a login. If your files require a higher level of protection consider
 implementing your own authenticated
 [`ActiveStorage::Blobs::RedirectController`](ActiveStorage::Blobs::RedirectController) and
-[`ActiveStorage::Representations::RedirectController`](ActiveStorage::Blobs::RedirectController)
+[`ActiveStorage::Representations::RedirectController`](ActiveStorage::Representations::RedirectController)
 
 To create a download link, use the `rails_blob_{path|url}` helper. Using this
 helper allows you to set the disposition.
@@ -700,6 +712,48 @@ previewable files. You can also call these methods directly.
 [`representable?`]: https://api.rubyonrails.org/classes/ActiveStorage/Blob/Representable.html#method-i-representable-3F
 [`representation`]: https://api.rubyonrails.org/classes/ActiveStorage/Blob/Representable.html#method-i-representation
 
+### Lazy vs Immediate Loading
+
+By default, Active Storage will process representations lazily. This code:
+
+```ruby
+image_tag file.representation(resize_to_limit: [100, 100])
+```
+
+Will generate an `<img>` tag with the `src` pointing to the
+[`ActiveStorage::Representations::RedirectController`][]. The browser will
+make a request to that controller, which will return a `302` redirect to the
+file on the remote service (or in [proxy mode](#proxy-mode), return the file
+contents). Loading the file lazily allows features like
+[single use URLs](#public-access) to work without slowing down your initial page loads.
+
+This works fine for most cases.
+
+If you want to generate URLs for images immediately, you can call `.processed.url`:
+
+```ruby
+image_tag file.representation(resize_to_limit: [100, 100]).processed.url
+```
+
+The Active Storage variant tracker improves performance of this, by storing a
+record in the database if the requested representation has been processed before.
+Thus, the above code will only make an API call to the remote service (eg. S3)
+once, and once a variant is stored, will use that. The variant tracker runs
+automatically, but can be disabled through `config.active_storage.track_variants`.
+
+If you're rendering lots of images on a page, the above example could result
+in N+1 queries loading all the variant records. To avoid these N+1 queries,
+use the named scopes on [`ActiveStorage::Attachment`][].
+
+```ruby
+user.avatars.with_all_variant_records.each do |file|
+  image_tag file.representation(resize_to_limit: [100, 100]).processed.url
+end
+```
+
+[`ActiveStorage::Representations::RedirectController`]: https://api.rubyonrails.org/classes/ActiveStorage/Representations/RedirectController.html
+[`ActiveStorage::Attachment`]: https://api.rubyonrails.org/classes/ActiveStorage/Attachment.html
+
 ### Transforming Images
 
 Transforming images allows you to display the image at your choice of dimensions.
@@ -822,6 +876,7 @@ Take care to allow:
   * `Content-Disposition` (except for Azure Storage)
   * `x-ms-blob-content-disposition` (for Azure Storage only)
   * `x-ms-blob-type` (for Azure Storage only)
+  * `Cache-Control` (for GCS, only if `cache_control` is set)
 
 No CORS configuration is required for the Disk service since it shares your app’s origin.
 
