@@ -674,8 +674,9 @@ Analyzing Files
 Active Storage analyzes files once they've been uploaded by queuing a job in Active Job. Analyzed files will store additional information in the metadata hash, including `analyzed: true`. You can check whether a blob has been analyzed by calling [`analyzed?`][] on it.
 
 Image analysis provides `width` and `height` attributes. Video analysis provides these, as well as `duration`, `angle`, and `display_aspect_ratio`.
+Audio analysis provides `duration` and `bit_rate` attributes.
 
-Analysis requires the `mini_magick` gem. Video analysis also requires the [FFmpeg](https://www.ffmpeg.org/) library, which you must include separately.
+Analysis requires the `mini_magick` gem. Audio/Video analysis also requires the [FFmpeg](https://www.ffmpeg.org/) library, which you must include separately.
 
 [`analyzed?`]: https://api.rubyonrails.org/classes/ActiveStorage/Blob/Analyzable.html#method-i-analyzed-3F
 
@@ -746,7 +747,7 @@ in N+1 queries loading all the variant records. To avoid these N+1 queries,
 use the named scopes on [`ActiveStorage::Attachment`][].
 
 ```ruby
-user.avatars.with_all_variant_records.each do |file|
+message.images.with_all_variant_records.each do |file|
   image_tag file.representation(resize_to_limit: [100, 100]).processed.url
 end
 ```

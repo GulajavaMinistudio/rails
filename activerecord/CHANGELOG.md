@@ -1,3 +1,7 @@
+*   Do not try to rollback transactions that failed due to a `ActiveRecord::TransactionRollbackError`.
+
+    *Jamie McCarthy*
+
 *   Active Record Encryption will now encode values as UTF-8 when using deterministic
     encryption. The encoding is part of the encrypted payload, so different encodings for
     different values result in different ciphertexts. This can break unique constraints and
@@ -10,7 +14,14 @@
 
 *   Disable automatic write protection on replicas.
 
-    Write protection is no longer automatically enabled for replicas. Write protection should be enabled by the database user settings.
+    Write protection is no longer automatically enabled for replicas.
+    You can manually prevent writes in your app with
+    `while_preventing_writes`. To automatically disable all writes on
+    your replica, configure the database user you are using to connect
+    to your replica to prevent writes. How you configure this is
+    specific to which database adapter you are using, but it usually
+    involves only granting the database user permission to do `SELECT`
+    queries.
 
     *Adam Hess*
 
