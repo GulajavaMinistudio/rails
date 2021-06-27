@@ -68,7 +68,6 @@ module ActiveRecord
       class_attribute :belongs_to_required_by_default, instance_accessor: false
 
       class_attribute :strict_loading_by_default, instance_accessor: false, default: false
-      class_attribute :strict_loading_mode, instance_accessor: true, default: :all
 
       class_attribute :has_many_inversing, instance_accessor: false, default: false
 
@@ -119,7 +118,7 @@ module ActiveRecord
             Read more about how to migrate at: https://guides.rubyonrails.org/active_record_multiple_databases.html#migrate-to-the-new-connection-handling
           MSG
         else
-          raise NotImplementedError, "The new connection handling does not setting support multiple connection handlers."
+          raise NotImplementedError, "The new connection handling does not support multiple connection handlers."
         end
 
         @@connection_handlers = handlers
@@ -677,6 +676,8 @@ module ActiveRecord
       @strict_loading = value
     end
 
+    attr_reader :strict_loading_mode
+
     # Returns +true+ if the record uses strict_loading with +:n_plus_one_only+ mode enabled.
     def strict_loading_n_plus_one_only?
       @strict_loading_mode == :n_plus_one_only
@@ -768,7 +769,7 @@ module ActiveRecord
 
         @primary_key         = klass.primary_key
         @strict_loading      = klass.strict_loading_by_default
-        @strict_loading_mode = klass.strict_loading_mode
+        @strict_loading_mode = :all
 
         klass.define_attribute_methods
       end

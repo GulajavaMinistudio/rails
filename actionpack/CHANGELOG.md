@@ -1,3 +1,31 @@
+*   Remove IE6-7-8 file download related hack/fix from ActionController::DataStreaming module
+
+    Due to the age of those versions of IE this fix is no longer relevant, more importantly it creates an edge-case for unexpected Cache-Control headers.
+
+    *Tadas Sasnauskas*
+
+*   Configuration setting to skip logging an uncaught exception backtrace when the exception is
+    present in `rescued_responses`.
+
+    It may be too noisy to get all backtraces logged for applications that manage uncaught
+    exceptions via `rescued_responses` and `exceptions_app`.
+    `config.action_dispatch.log_rescued_responses` (defaults to `true`) can be set to `false` in
+    this case, so that only exceptions not found in `rescued_responses` will be logged.
+
+    *Alexander Azarov*, *Mike Dalessio*
+
+*   Ignore file fixtures on `db:fixtures:load`
+
+    *Kevin Sjöberg*
+
+*   Fix ActionController::Live controller test deadlocks by removing the body buffer size limit for tests.
+
+    *Dylan Thacker-Smith*
+
+*   New `ActionController::ConditionalGet#no_store` method to set HTTP cache control `no-store` directive.
+
+    *Tadas Sasnauskas*
+
 *   Drop support for the `SERVER_ADDR` header
 
     Following up https://github.com/rack/rack/pull/1573 and https://github.com/rails/rails/pull/42349

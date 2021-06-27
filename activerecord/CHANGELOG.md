@@ -1,3 +1,23 @@
+*   Prevent polluting ENV during postgresql structure dump/load
+
+    Some configuration parameters were provided to pg_dump / psql via
+    environment variables which persisted beyond the command being run, and may
+    have caused subsequent commands and connections to fail. Tasks running
+    across multiple postgresql databases like `rails db:test:prepare` may have
+    been affected.
+
+    *Samuel Cochran*
+
+*   Set precision 6 by default for `datetime` columns
+
+    By default, datetime columns will have microseconds precision instead of seconds precision.
+
+    *Roberto Miranda*
+
+*   Allow preloading of associations with instance dependent scopes
+
+    *John Hawthorn*, *John Crepezzi*, *Adam Hess*, *Eileen M. Uchitelle*, *Dinah Shi*
+
 *   Do not try to rollback transactions that failed due to a `ActiveRecord::TransactionRollbackError`.
 
     *Jamie McCarthy*
@@ -11,19 +31,6 @@
     that is `Encoding::UTF_8` by default. It can be disabled by setting it to `nil`.
 
     *Jorge Manrubia*
-
-*   Disable automatic write protection on replicas.
-
-    Write protection is no longer automatically enabled for replicas.
-    You can manually prevent writes in your app with
-    `while_preventing_writes`. To automatically disable all writes on
-    your replica, configure the database user you are using to connect
-    to your replica to prevent writes. How you configure this is
-    specific to which database adapter you are using, but it usually
-    involves only granting the database user permission to do `SELECT`
-    queries.
-
-    *Adam Hess*
 
 *   The MySQL adapter now cast numbers and booleans bind parameters to to string for safety reasons.
 

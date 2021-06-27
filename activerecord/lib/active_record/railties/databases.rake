@@ -86,14 +86,23 @@ db_namespace = namespace :db do
 
   desc "Migrate the database (options: VERSION=x, VERBOSE=false, SCOPE=blog)."
   task migrate: :load_config do
-    original_db_config = ActiveRecord::Base.connection_db_config
-    ActiveRecord::Base.configurations.configs_for(env_name: ActiveRecord::Tasks::DatabaseTasks.env).each do |db_config|
-      ActiveRecord::Base.establish_connection(db_config)
+    db_configs = ActiveRecord::Base.configurations.configs_for(env_name: ActiveRecord::Tasks::DatabaseTasks.env)
+
+    if db_configs.size == 1
       ActiveRecord::Tasks::DatabaseTasks.migrate
+    else
+      original_db_config = ActiveRecord::Base.connection_db_config
+      mapped_versions = ActiveRecord::Tasks::DatabaseTasks.db_configs_with_versions(db_configs)
+
+      mapped_versions.sort.each do |version, db_config|
+        ActiveRecord::Base.establish_connection(db_config)
+        ActiveRecord::Tasks::DatabaseTasks.migrate(version)
+      end
     end
+
     db_namespace["_dump"].invoke
   ensure
-    ActiveRecord::Base.establish_connection(original_db_config)
+    ActiveRecord::Base.establish_connection(original_db_config) if original_db_config
   end
 
   # IMPORTANT: This task won't dump the schema if ActiveRecord.dump_schema_after_migration is set to false
@@ -385,8 +394,9 @@ db_namespace = namespace :db do
       fixture_files = if ENV["FIXTURES"]
         ENV["FIXTURES"].split(",")
       else
-        # The use of String#[] here is to support namespaced fixtures.
-        Dir["#{fixtures_dir}/**/*.yml"].map { |f| f[(fixtures_dir.size + 1)..-5] }
+        files = Dir[File.join(fixtures_dir, "**/*.{yml}")]
+        files.reject! { |f| f.start_with?(File.join(fixtures_dir, "files")) }
+        files.map! { |f| f[fixtures_dir.to_s.size..-5].delete_prefix("/") }
       end
 
       ActiveRecord::FixtureSet.create_fixtures(fixtures_dir, fixture_files)
