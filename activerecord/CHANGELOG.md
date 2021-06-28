@@ -1,3 +1,28 @@
+*   Adds support for `if_not_exists` to `add_foreign_key` and `if_exists` to `remove_foreign_key`.
+
+    Applications can set their migrations to ignore exceptions raised when adding a foreign key
+    that already exists or when removing a foreign key that does not exist.
+
+    Example Usage:
+
+    ```ruby
+    class AddAuthorsForeignKeyToArticles < ActiveRecord::Migration[7.0]
+      def change
+        add_foreign_key :articles, :authors, if_not_exists: true
+      end
+    end
+    ```
+
+    ```ruby
+    class RemoveAuthorsForeignKeyFromArticles < ActiveRecord::Migration[7.0]
+      def change
+        remove_foreign_key :articles, :authors, if_exists: true
+      end
+    end
+    ```
+
+    *Roberto Miranda*
+
 *   Prevent polluting ENV during postgresql structure dump/load
 
     Some configuration parameters were provided to pg_dump / psql via
@@ -468,6 +493,19 @@
       @posts = Post.some_complex_scope.load_async
     end
     ```
+
+    Active Record logs will also include timing info for the duration of how long
+    the main thread had to wait to access the result. This timing is useful to know
+    whether or not it's worth to load the query asynchronously.
+
+    ```
+    DEBUG -- :   Category Load (62.1ms)  SELECT * FROM `categories` LIMIT 50
+    DEBUG -- :   ASYNC Post Load (64ms) (db time 126.1ms)  SELECT * FROM `posts` LIMIT 100
+    ```
+
+    The duration in the first set of parens is how long the main thread was blocked
+    waiting for the results, and the second set of parens with "db time" is how long
+    the entire query took to execute.
 
     *Jean Boussier*
 

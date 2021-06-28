@@ -32,26 +32,6 @@ class ActiveStorage::BlobTest < ActiveSupport::TestCase
     assert_equal data, blob.download
   end
 
-  test "create_after_upload! has the same effect as create_and_upload!" do
-    data = "Some other, even more funky file"
-    blob = assert_deprecated do
-      ActiveStorage::Blob.create_after_upload!(io: StringIO.new(data), filename: "funky.bin")
-    end
-
-    assert blob.persisted?
-    assert_equal data, blob.download
-  end
-
-  test "build_after_upload uploads to service but does not save the Blob" do
-    data = "A potentially overwriting file"
-    blob = assert_deprecated do
-      ActiveStorage::Blob.build_after_upload(io: StringIO.new(data), filename: "funky.bin")
-    end
-
-    assert_not blob.persisted?
-    assert_equal data, blob.download
-  end
-
   test "create_and_upload sets byte size and checksum" do
     data = "Hello world!"
     blob = create_blob data: data
@@ -283,6 +263,33 @@ class ActiveStorage::BlobTest < ActiveSupport::TestCase
 
     assert_called_with(blob.service, :update_metadata, expected_arguments) do
       blob.update!(content_type: "image/jpeg")
+    end
+  end
+
+  test "scope_for_strict_loading adds includes only when track_variants and strict_loading_by_default" do
+    assert_empty(
+      ActiveStorage::Blob.scope_for_strict_loading.includes_values,
+      "Expected ActiveStorage::Blob.scope_for_strict_loading have no includes"
+    )
+
+    with_strict_loading_by_default do
+      includes_values = ActiveStorage::Blob.scope_for_strict_loading.includes_values
+
+      assert(
+        includes_values.any? { |values| values[:variant_records] == { image_attachment: :blob } },
+        "Expected ActiveStorage::Blob.scope_for_strict_loading to have variant_records included"
+      )
+      assert(
+        includes_values.any? { |values| values[:preview_image_attachment] == :blob },
+        "Expected ActiveStorage::Blob.scope_for_strict_loading to have preview_image_attachment included"
+      )
+
+      without_variant_tracking do
+        assert_empty(
+          ActiveStorage::Blob.scope_for_strict_loading.includes_values,
+          "Expected ActiveStorage::Blob.scope_for_strict_loading have no includes"
+        )
+      end
     end
   end
 

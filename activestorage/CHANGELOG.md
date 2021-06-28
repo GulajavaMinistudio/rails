@@ -1,8 +1,22 @@
+*   Deprecate `config.active_storage.replace_on_assign_to_many`. Future versions of Rails
+    will behave the same way as when the config is set to `true`.
+
+    *Santiago Bartesaghi*
+
+*   Remove deprecated methods: `build_after_upload`, `create_after_upload!` in favor of `create_and_upload!`,
+    and `service_url` in favor of `url`.
+
+    *Santiago Bartesaghi*
+
+*   Add support of `strict_loading_by_default` to `ActiveStorage::Representations` controllers
+
+    *Anton Topchii*, *Andrew White*
+
 *   Allow to detach an attachment when record is not persisted
 
     *Jacopo Beschi*
 
-*   Use libvips instead of ImageMagick to analyze images when `active_storage.variant_processor = vips`  
+*   Use libvips instead of ImageMagick to analyze images when `active_storage.variant_processor = vips`
 
     *Breno Gazzola*
 
