@@ -32,6 +32,25 @@ Using Active Storage, an application can transform image uploads or generate ima
 representations of non-image uploads like PDFs and videos, and extract metadata from 
 arbitrary files.
 
+### Requirements
+
+Various features of Active Storage depend on third-party software which Rails 
+will not install, and must be installed separately:
+
+* [ImageMagick](https://imagemagick.org/index.php) or [libvips](https://github.com/libvips/libvips) v8.6+ for image analysis and transformations
+* [ffmpeg](http://ffmpeg.org/) v3.4+ for video/audio analysis and video previews
+* [poppler](https://poppler.freedesktop.org/) or [muPDF](https://mupdf.com/) for PDF previews
+
+Image analysis and transformations also require the `image_processing` gem. Uncomment it in your `Gemfile`, or add it if necessary:
+
+```ruby
+gem "image_processing", ">= 1.2"
+```
+
+TIP: Compared to libvips, ImageMagick is better known and more widely available. However, libvips can be [up to 10x faster and consume 1/10 the memory](https://github.com/libvips/libvips/wiki/Speed-and-memory-use). For JPEG files, this can be further improved by replacing `libjpeg-dev` with `libjpeg-turbo-dev`, which is [2-7x faster](https://libjpeg-turbo.org/About/Performance). 
+
+WARNING: Before you install and use third-party software, make sure you understand the licensing implications of doing so. MuPDF, in particular, is licensed under AGPL and requires a commercial license for some use.
+
 ## Setup
 
 Active Storage uses three tables in your application’s database named
@@ -243,6 +262,25 @@ google:
   service: GCS
   ...
   cache_control: "public, max-age=3600"
+```
+
+Optionally use [IAM](https://cloud.google.com/storage/docs/access-control/signed-urls#signing-iam) instead of the `credentials` when signing URLs. This is useful if you are authenticating your GKE applications with Workload Identity, see [this Google Cloud blog post](https://cloud.google.com/blog/products/containers-kubernetes/introducing-workload-identity-better-authentication-for-your-gke-applications) for more information.
+
+```yaml
+google:
+  service: GCS
+  ...
+  iam: true
+```
+
+Optionally use a specific GSA when signing URLs. When using IAM, the [metadata server](https://cloud.google.com/compute/docs/storing-retrieving-metadata) will be contacted to get the GSA email, but this metadata server is not always present (e.g. local tests) and you may wish to use a non-default GSA.
+
+```yaml
+google:
+  service: GCS
+  ...
+  iam: true
+  gsa_email: "foobar@baz.iam.gserviceaccount.com"
 ```
 
 Add the [`google-cloud-storage`](https://github.com/GoogleCloudPlatform/google-cloud-ruby/tree/master/google-cloud-storage) gem to your `Gemfile`:
@@ -722,10 +760,6 @@ Active Storage analyzes files once they've been uploaded by queuing a job in Act
 
 Image analysis provides `width` and `height` attributes. Video analysis provides these, as well as `duration`, `angle`, `display_aspect_ratio`, and `video` and `audio` booleans to indicate the presence of those channels. Audio analysis provides `duration` and `bit_rate` attributes.
 
-Image analysis requires either the `mini_magick` gem and the ImageMagick library, or the `ruby-vips` gem and the libvips library. Note that the libraries are not included in the gems, and must be installed separately.
-
-Audio/Video analysis requires [FFmpeg](https://www.ffmpeg.org/), which must also be installed separately.
-
 [`analyzed?`]: https://api.rubyonrails.org/classes/ActiveStorage/Blob/Analyzable.html#method-i-analyzed-3F
 
 Displaying Images, Videos, and PDFs
@@ -805,13 +839,7 @@ end
 
 ### Transforming Images
 
-Transforming images allows you to display the image at your choice of dimensions.
-To enable variants, add the `image_processing` gem to your `Gemfile`:
-
-```ruby
-gem 'image_processing'
-```
-
+Transforming images allows you to display the image at your choice of dimensions. 
 To create a variation of an image, call [`variant`][] on the attachment. You
 can pass any transformation supported by the variant processor to the method.
 When the browser hits the variant URL, Active Storage will lazily transform
@@ -857,12 +885,6 @@ a link to a lazily-generated preview, use the attachment's [`preview`][] method:
 
 To add support for another format, add your own previewer. See the
 [`ActiveStorage::Preview`][] documentation for more information.
-
-WARNING: Extracting previews requires third-party applications: FFmpeg v3.4+ for
-video and muPDF for PDFs, and on macOS also XQuartz and Poppler.
-These libraries are not provided by Rails. You must install them yourself to
-use the built-in previewers. Before you install and use third-party software,
-make sure you understand the licensing implications of doing so.
 
 [`preview`]: https://api.rubyonrails.org/classes/ActiveStorage/Blob/Representable.html#method-i-preview
 [`ActiveStorage::Preview`]: https://api.rubyonrails.org/classes/ActiveStorage/Preview.html

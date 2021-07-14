@@ -1,3 +1,33 @@
+*   `partial_inserts` is now disabled by default in new apps.
+
+    This will be the default for new apps in Rails 7. To opt in:
+
+    ```ruby
+    config.active_record.partial_inserts = false
+    ```
+
+    If a migration remove the default value of a column, this option
+    would cause old processes to no longer be able to create new records.
+
+    If you need to remove a column, you should first use `ignored_columns`
+    to stop using it.
+
+    *Jean Boussier*
+
+*   Rails can now verify foreign keys after loading fixtures in tests.
+
+    This will be the default for new apps in Rails 7. To opt in:
+
+    ```ruby
+    config.active_record.verify_foreign_keys_for_fixtures = true
+    ```
+
+    Tests will not run if there is a foreign key constraint violation in your fixture data.
+
+    The feature is supported by SQLite and PostgreSQL, other adapters can also add support for it.
+
+    *Alex Ghiculescu*
+
 *   Clear cached `has_one` association after setting `belongs_to` association to `nil`.
 
     After setting a `belongs_to` relation to `nil` and updating an unrelated attribute on the owner,
@@ -70,9 +100,9 @@
 
     *Jorge Manrubia*
 
-*   The MySQL adapter now cast numbers and booleans bind parameters to to string for safety reasons.
+*   The MySQL adapter now cast numbers and booleans bind parameters to string for safety reasons.
 
-    When comparing a string and a number in a query, MySQL convert the string to a number. So for
+    When comparing a string and a number in a query, MySQL converts the string to a number. So for
     instance `"foo" = 0`, will implicitly cast `"foo"` to `0` and will evaluate to `TRUE` which can
     lead to security vulnerabilities.
 
