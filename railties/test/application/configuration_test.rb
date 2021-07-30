@@ -3147,6 +3147,20 @@ module ApplicationTests
         " -frames:v 1 -f image2"
     end
 
+    test "ActiveStorage.variant_processor uses mini_magick without Rails 7 defaults" do
+      remove_from_config '.*config\.load_defaults.*\n'
+
+      app "development"
+
+      assert_equal :mini_magick, ActiveStorage.variant_processor
+    end
+
+    test "ActiveStorage.variant_processor uses vips by default" do
+      app "development"
+
+      assert_equal :vips, ActiveStorage.variant_processor
+    end
+
     test "hosts include .localhost in development" do
       app "development"
       assert_includes Rails.application.config.hosts, ".localhost"
@@ -3270,20 +3284,20 @@ module ApplicationTests
       assert_equal false, ActionDispatch::Request.return_only_media_type_on_content_type
     end
 
-    test "ActionDispatch::DebugExceptions.log_rescued_responses is true by default" do
+    test "action_dispatch.log_rescued_responses is true by default" do
       app "development"
 
-      assert_equal true, ActionDispatch::DebugExceptions.log_rescued_responses
+      assert_equal true, Rails.application.env_config["action_dispatch.log_rescued_responses"]
     end
 
-    test "ActionDispatch::DebugExceptions.log_rescued_responses can be configured" do
+    test "action_dispatch.log_rescued_responses can be configured" do
       add_to_config <<-RUBY
         config.action_dispatch.log_rescued_responses = false
       RUBY
 
       app "development"
 
-      assert_equal false, ActionDispatch::DebugExceptions.log_rescued_responses
+      assert_equal false, Rails.application.env_config["action_dispatch.log_rescued_responses"]
     end
 
     test "logs a warning when running SQLite3 in production" do
@@ -3426,6 +3440,23 @@ module ApplicationTests
       assert custom_middleware_one > custom_middleware_two
 
       assert_nil Rails.application.config.middleware.map(&:name).index("3rd custom middleware")
+    end
+
+    test "ActiveSupport::TimeWithZone.name uses default Ruby implementation by default" do
+      app "development"
+      assert_equal false, ActiveSupport::TimeWithZone.methods(false).include?(:name)
+    end
+
+    test "ActiveSupport::TimeWithZone.name can be configured in the new framework defaults" do
+      remove_from_config '.*config\.load_defaults.*\n'
+
+      app_file "config/initializers/new_framework_defaults_7_0.rb", <<-RUBY
+        Rails.application.config.active_support.remove_deprecated_time_with_zone_name = false
+      RUBY
+
+      app "development"
+
+      assert_equal true, ActiveSupport::TimeWithZone.methods(false).include?(:name)
     end
 
     private
