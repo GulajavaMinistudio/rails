@@ -168,6 +168,14 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
     end
   end
 
+  test "require_dependency raises ArgumentError if the argument is not a String and does not respond to #to_path" do
+    assert_raises(ArgumentError) { require_dependency(Object.new) }
+  end
+
+  test "require_dependency raises LoadError if the given argument is not found" do
+    assert_raise(LoadError) { require_dependency("nonexistent_filename") }
+  end
+
   test "eager loading loads the application code" do
     $zeitwerk_integration_test_user = false
     $zeitwerk_integration_test_post = false
@@ -339,6 +347,34 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
 
     assert_equal Module, Module.method(:const_missing).owner
     assert_equal :no_op, deps.unhook!
+  end
+
+  test "reloading invokes before_remove_const" do
+    $before_remove_const_invoked = false
+
+    app_file "app/models/foo.rb", <<~RUBY
+      # While the most common use case is classes/modules, the contract does not
+      # require values to be so. Let's weaken the test down to Object.new.
+      Foo = Object.new
+      def Foo.before_remove_const
+        $before_remove_const_invoked = true
+      end
+    RUBY
+
+    app_file "app/models/bar.rb", <<~RUBY
+      # This object does not implement before_remove_const. We define it to make
+      # sure reloading does not raise. That is, it does not blindly invoke the
+      # hook on all unloaded objects.
+      Bar = Object.new
+    RUBY
+
+    boot
+
+    assert Foo
+    assert Bar
+    ActiveSupport::Dependencies.clear
+
+    assert $before_remove_const_invoked
   end
 
   test "autoloaders.logger=" do
