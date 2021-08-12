@@ -94,18 +94,15 @@ If you wish to skip some files or components from being generated, you can appen
 
 | Argument                | Description                                                 |
 | ----------------------- | ----------------------------------------------------------- |
-| `--skip-gemfile`        | Don't create a Gemfile                                      |
 | `--skip-git`            | Skip .gitignore file                                        |
 | `--skip-keeps`          | Skip source control .keep files                             |
 | `--skip-action-mailer`  | Skip Action Mailer files                                    |
 | `--skip-action-text`    | Skip Action Text gem                                        |
 | `--skip-active-record`  | Skip Active Record files                                    |
 | `--skip-active-storage` | Skip Active Storage files                                   |
-| `--skip-puma`           | Skip Puma related files                                     |
 | `--skip-action-cable`   | Skip Action Cable files                                     |
 | `--skip-sprockets`      | Skip Sprockets files                                        |
 | `--skip-spring`         | Don't install Spring application preloader                  |
-| `--skip-listen`         | Don't generate configuration that depends on the listen gem |
 | `--skip-javascript`     | Skip JavaScript files                                       |
 | `--skip-turbolinks`     | Skip turbolinks gem                                         |
 | `--skip-test`           | Skip test files                                             |

@@ -116,15 +116,6 @@ class AppGeneratorTest < Rails::Generators::TestCase
     assert_webpack_installation_skipped(output)
   end
 
-  def test_skip_gemfile
-    generator([destination_root], skip_gemfile: true)
-    output = run_generator_instance
-
-    assert_empty @bundle_commands
-    assert_no_file "Gemfile"
-    assert_webpack_installation_skipped(output)
-  end
-
   def test_assets
     run_generator
 
@@ -652,12 +643,6 @@ class AppGeneratorTest < Rails::Generators::TestCase
     assert_gem "puma", '"~> 5.0"'
   end
 
-  def test_generator_if_skip_puma_is_given
-    run_generator [destination_root, "--skip-puma"]
-    assert_no_file "config/puma.rb"
-    assert_no_gem "puma"
-  end
-
   def test_generator_has_assets_gems
     run_generator
 
@@ -741,46 +726,6 @@ class AppGeneratorTest < Rails::Generators::TestCase
       assert_no_gem "byebug"
     else
       assert_gem "byebug"
-    end
-  end
-
-  def test_inclusion_of_listen_related_configuration_by_default
-    run_generator
-    if /darwin|linux/.match?(RbConfig::CONFIG["host_os"])
-      assert_listen_related_configuration
-    else
-      assert_no_listen_related_configuration
-    end
-  end
-
-  def test_inclusion_of_listen_related_configuration_on_other_rubies
-    ruby_engine = Object.send(:remove_const, :RUBY_ENGINE)
-    Object.const_set(:RUBY_ENGINE, "MyRuby")
-
-    run_generator
-    if /darwin|linux/.match?(RbConfig::CONFIG["host_os"])
-      assert_listen_related_configuration
-    else
-      assert_no_listen_related_configuration
-    end
-  ensure
-    Object.send(:remove_const, :RUBY_ENGINE)
-    Object.const_set(:RUBY_ENGINE, ruby_engine)
-  end
-
-  def test_non_inclusion_of_listen_related_configuration_if_skip_listen
-    run_generator [destination_root, "--skip-listen"]
-    assert_no_listen_related_configuration
-  end
-
-  def test_evented_file_update_checker_config
-    run_generator
-    assert_file "config/environments/development.rb" do |content|
-      if /darwin|linux/.match?(RbConfig::CONFIG["host_os"])
-        assert_match(/^\s*config\.file_watcher = ActiveSupport::EventedFileUpdateChecker/, content)
-      else
-        assert_match(/^\s*# config\.file_watcher = ActiveSupport::EventedFileUpdateChecker/, content)
-      end
     end
   end
 
@@ -1281,7 +1226,6 @@ class AppGeneratorTest < Rails::Generators::TestCase
 
     assert_no_gem "webpacker", app_root
     assert_no_gem "jbuilder", app_root
-    assert_no_gem "rack-mini-profiler", app_root
     assert_no_gem "spring", app_root
     assert_no_gem "web-console", app_root
   end
@@ -1309,22 +1253,6 @@ class AppGeneratorTest < Rails::Generators::TestCase
     def assert_no_gem(gem, app_path = ".")
       assert_file File.join(app_path, "Gemfile") do |content|
         assert_no_match(gem, content)
-      end
-    end
-
-    def assert_listen_related_configuration
-      assert_gem "listen"
-
-      assert_file "config/environments/development.rb" do |content|
-        assert_match(/^\s*config\.file_watcher = ActiveSupport::EventedFileUpdateChecker/, content)
-      end
-    end
-
-    def assert_no_listen_related_configuration
-      assert_no_gem "listen"
-
-      assert_file "config/environments/development.rb" do |content|
-        assert_match(/^\s*# config\.file_watcher = ActiveSupport::EventedFileUpdateChecker/, content)
       end
     end
 
