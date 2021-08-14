@@ -77,6 +77,18 @@ class ActionText::Generators::InstallGeneratorTest < Rails::Generators::TestCase
     assert_migration "db/migrate/create_action_text_tables.action_text.rb"
   end
 
+  test "uncomments image_processing gem" do
+    gemfile = Pathname("Gemfile").expand_path(destination_root)
+    gemfile.dirname.mkpath
+    gemfile.write(%(# gem "image_processing"))
+
+    run_generator_instance
+
+    assert_file gemfile do |content|
+      assert_equal %(gem "image_processing"), content
+    end
+  end
+
   test "#yarn_command runs bin/yarn via Ruby" do
     ran = nil
     run_stub = -> (command, *) { ran = command }
@@ -91,13 +103,13 @@ class ActionText::Generators::InstallGeneratorTest < Rails::Generators::TestCase
   test "run just for asset pipeline" do
     run_under_asset_pipeline
 
-    application_layout = Pathname("app/views/layouts/application.html.erb").expand_path(destination_root)
-    application_layout.dirname.mkpath
-    application_layout.write("</head>\n")
+    application_js = Pathname("app/assets/javascripts/application.js").expand_path(destination_root)
+    application_js.dirname.mkpath
+    application_js.write ""
 
     run_generator_instance
 
-    assert_file application_layout do |content|
+    assert_file application_js do |content|
       assert_match %r"trix", content
     end
   end
