@@ -16,45 +16,6 @@ module ModuleWithConstant
   InheritedConstant = "Hello"
 end
 
-class DependenciesTest < ActiveSupport::TestCase
-  setup do
-    @loaded_features_copy = $LOADED_FEATURES.dup
-    $LOAD_PATH << "test"
-  end
-
-  teardown do
-    ActiveSupport::Dependencies.clear
-    $LOADED_FEATURES.replace(@loaded_features_copy)
-    $LOAD_PATH.pop
-  end
-
-  def test_smart_name_error_strings
-    e = assert_raise NameError do
-      Object.module_eval "ImaginaryObject"
-    end
-    assert_includes "uninitialized constant ImaginaryObject", e.message
-  end
-
-  def test_qualified_const_defined
-    assert ActiveSupport::Dependencies.qualified_const_defined?("Object")
-    assert ActiveSupport::Dependencies.qualified_const_defined?("::Object")
-    assert ActiveSupport::Dependencies.qualified_const_defined?("::Object::Kernel")
-    assert ActiveSupport::Dependencies.qualified_const_defined?("::ActiveSupport::TestCase")
-  end
-
-  def test_qualified_const_defined_should_not_call_const_missing
-    ModuleWithMissing.missing_count = 0
-    assert_not ActiveSupport::Dependencies.qualified_const_defined?("ModuleWithMissing::A")
-    assert_equal 0, ModuleWithMissing.missing_count
-    assert_not ActiveSupport::Dependencies.qualified_const_defined?("ModuleWithMissing::A::B")
-    assert_equal 0, ModuleWithMissing.missing_count
-  end
-
-  def test_qualified_const_defined_explodes_with_invalid_const_name
-    assert_raises(NameError) { ActiveSupport::Dependencies.qualified_const_defined?("invalid") }
-  end
-end
-
 class RequireDependencyTest < ActiveSupport::TestCase
   setup do
     @loaded_features_copy = $LOADED_FEATURES.dup

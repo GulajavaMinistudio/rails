@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
+require "zeitwerk"
 require "active_support/core_ext/string/inflections"
 require "active_support/core_ext/array/conversions"
-require "zeitwerk"
+require "active_support/descendants_tracker"
+require "active_support/dependencies"
 
 module Rails
   class Application
@@ -27,17 +29,19 @@ module Rails
 
         unless config.cache_classes
           autoloader.enable_reloading
+
+          autoloader.on_load do |_cpath, value, _abspath|
+            if value.is_a?(Class) && value.singleton_class < ActiveSupport::DescendantsTracker
+              ActiveSupport::Dependencies._autoloaded_tracked_classes << value
+            end
+          end
+
           autoloader.on_unload do |_cpath, value, _abspath|
             value.before_remove_const if value.respond_to?(:before_remove_const)
           end
         end
 
         autoloader.setup
-      end
-
-      initializer :let_zeitwerk_take_over do
-        require "active_support/dependencies/zeitwerk_integration"
-        ActiveSupport::Dependencies::ZeitwerkIntegration.take_over
       end
 
       # Setup default session store if not already set in config/application.rb
@@ -170,7 +174,10 @@ module Rails
       # added in the hook are taken into account.
       initializer :set_clear_dependencies_hook, group: :all do |app|
         callback = lambda do
-          ActiveSupport::DescendantsTracker.clear
+          # Order matters.
+          ActiveSupport::DescendantsTracker.clear(
+            only: ActiveSupport::Dependencies._autoloaded_tracked_classes
+          )
           ActiveSupport::Dependencies.clear
         end
 

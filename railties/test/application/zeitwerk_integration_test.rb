@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "set"
 require "isolation/abstract_unit"
 require "active_support/dependencies/zeitwerk_integration"
 
@@ -22,14 +23,9 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
     ActiveSupport::Dependencies
   end
 
-  def decorated?
-    deps.singleton_class < deps::ZeitwerkIntegration::Decorations
-  end
-
-  test "ActiveSupport::Dependencies is decorated" do
+  test "The integration is minimally looking good" do
     boot
 
-    assert decorated?
     assert Rails.autoloaders.zeitwerk_enabled?
     assert_instance_of Zeitwerk::Loader, Rails.autoloaders.main
     assert_instance_of Zeitwerk::Loader, Rails.autoloaders.once
@@ -61,14 +57,6 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
     assert RESTfulController
   end
 
-  test "autoloaded? and overridden class names" do
-    invalid_constant_name = Module.new do
-      def self.name
-        "MyModule::SchemaMigration"
-      end
-    end
-    assert_not deps.autoloaded?(invalid_constant_name)
-  end
 
   test "the once autoloader can autoload from initializers" do
     app_file "extras0/x.rb", "X = 0"
@@ -116,49 +104,6 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
     boot("production")
 
     assert Object.const_defined?(:MoneySerializer)
-  end
-
-  test "unloadable constants (main)" do
-    app_file "app/models/user.rb", "class User; end"
-    app_file "app/models/post.rb", "class Post; end"
-    boot
-
-    assert Post
-
-    assert deps.autoloaded?("Post")
-    assert deps.autoloaded?(Post)
-    assert_not deps.autoloaded?("User")
-
-    assert_equal ["Post"], deps.autoloaded_constants
-  end
-
-  test "unloadable constants (once)" do
-    add_to_config 'config.autoload_once_paths << "#{Rails.root}/extras"'
-    app_file "extras/foo.rb", "class Foo; end"
-    app_file "extras/bar.rb", "class Bar; end"
-    boot
-
-    assert Foo
-
-    assert_not deps.autoloaded?("Foo")
-    assert_not deps.autoloaded?(Foo)
-    assert_not deps.autoloaded?("Bar")
-
-    assert_empty deps.autoloaded_constants
-  end
-
-  test "unloadable constants (reloading disabled)" do
-    app_file "app/models/user.rb", "class User; end"
-    app_file "app/models/post.rb", "class Post; end"
-    boot("production")
-
-    assert Post
-
-    assert_not deps.autoloaded?("Post")
-    assert_not deps.autoloaded?(Post)
-    assert_not deps.autoloaded?("User")
-
-    assert_empty deps.autoloaded_constants
   end
 
   test "eager loading loads the application code" do
@@ -353,6 +298,36 @@ class ZeitwerkIntegrationTest < ActiveSupport::TestCase
     ActiveSupport::Dependencies.clear
 
     assert $before_remove_const_invoked
+  end
+
+  test "reloading clears autoloaded tracked classes" do
+    eval <<~RUBY
+      class Parent
+        extend ActiveSupport::DescendantsTracker
+      end
+    RUBY
+
+    app_file "app/models/child.rb", <<~RUBY
+      class Child < #{self.class.name}::Parent
+      end
+    RUBY
+
+    app_file "app/models/grandchild.rb", <<~RUBY
+      class Grandchild < Child
+      end
+    RUBY
+
+    boot
+    assert Grandchild
+
+    # Preconditions, we add some redundancy about descendants tracking.
+    assert_equal Set[Child, Grandchild], ActiveSupport::Dependencies._autoloaded_tracked_classes
+    assert_equal [Child, Grandchild], Parent.descendants
+
+    Rails.application.reloader.reload!
+
+    assert_empty ActiveSupport::Dependencies._autoloaded_tracked_classes
+    assert_equal [], Parent.descendants
   end
 
   test "autoloaders.logger=" do
