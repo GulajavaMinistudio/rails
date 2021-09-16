@@ -1,3 +1,20 @@
+## Rails 7.0.0.alpha2 (September 15, 2021) ##
+
+*   No changes.
+
+
+## Rails 7.0.0.alpha1 (September 15, 2021) ##
+
+*   Remove warning when overwriting existing scopes
+
+    Removes the following unnecessary warning message that appeared when overwriting existing scopes
+
+    ```
+    Creating scope :my_scope_name. Overwriting existing method "MyClass.my_scope_name" when overwriting existing scopes
+    ```
+
+     *Weston Ganger*
+
 *   Use full precision for `updated_at` in `insert_all`/`upsert_all`
 
     `CURRENT_TIMESTAMP` provides differing precision depending on the database,

@@ -1,3 +1,10 @@
+## Rails 7.0.0.alpha2 (September 15, 2021) ##
+
+*   No changes.
+
+
+## Rails 7.0.0.alpha1 (September 15, 2021) ##
+
 *   Emit Active Support instrumentation events from Active Storage analyzers.
 
     Fixes #42930
