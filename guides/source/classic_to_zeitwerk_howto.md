@@ -14,6 +14,7 @@ After reading this guide, you will know:
 * How to verify your project loads OK in the command line
 * How to verify your project loads OK in the test suite
 * How to address possible edge cases
+* New features in Zeitwerk you can leverage
 
 --------------------------------------------------------------------------------
 
@@ -34,7 +35,7 @@ When upgrading to Rails 6.x, it is highly encouraged to switch to `zeitwerk` mod
 
 Rails 7 ends the transition period and does not include `classic` mode.
 
-I am scared
+I am Scared
 -----------
 
 Don't :).
@@ -51,7 +52,7 @@ How to Activate `zeitwerk` Mode
 
 ### Applications running Rails 5.x or Less
 
-In applications running a Rails version previous to 6.0, `zeitwerk` mode is not available. You need to be in at least Rails 6.0.
+In applications running a Rails version previous to 6.0, `zeitwerk` mode is not available. You need to be at least in Rails 6.0.
 
 ### Applications running Rails 6.x
 
@@ -67,7 +68,7 @@ config.autoloader = :classic # DELETE THIS LINE
 
 As noted, just delete the override, `zeitwerk` mode is the default.
 
-On the other hand, if the application is loading old framework defaults you need to enable `zeitwerk` mode explictly:
+On the other hand, if the application is loading old framework defaults you need to enable `zeitwerk` mode explicitly:
 
 ```ruby
 # config/application.rb
@@ -111,7 +112,7 @@ Hold on, I am eager loading the application.
 All is good!
 ```
 
-There can be additional ouput depending on the application configuration, but the last "All is good!" is what you are looking for.
+There can be additional output depending on the application configuration, but the last "All is good!" is what you are looking for.
 
 If there's any file that does not define the expected constant, the task will tell you. It does so one file at a time, because if it moved on, the failure loading one file could cascade into other failures unrelated to the check we want to run and the error report would be confusing.
 
@@ -131,7 +132,7 @@ VAT is an European tax. The file `app/models/vat.rb` defines `VAT` but the autol
 
 This is the most common kind of discrepancy you may find, it has to do with acronyms. Let's understand why do we get that error message.
 
-The classic autoloader is able to autoload `VAT` because its input is the name of the missing constant, `VAT`, invokes `underscore` on it, which yields `vat`, and looks for a file called `var.rb`. It works.
+The classic autoloader is able to autoload `VAT` because its input is the name of the missing constant, `VAT`, invokes `underscore` on it, which yields `vat`, and looks for a file called `vat.rb`. It works.
 
 The input of the new autoloader is the file system. Give the file `vat.rb`, Zeitwerk invokes `camelize` on `vat`, which yields `Vat`, and expects the file to define the constant `Vat`. That is what the error message says.
 
@@ -153,7 +154,7 @@ Rails.autoloaders.each do |autoloader|
 end
 ```
 
-With that in place, the check passes 🎉:
+With that in place, the check passes!
 
 ```
 % bin/rails zeitwerk:check
@@ -161,33 +162,45 @@ Hold on, I am eager loading the application.
 All is good!
 ```
 
-#### Concerns
+### Concerns
 
-You can autoload and eager load from a standard structure like
+You can autoload and eager load from a standard structure with `concerns` subdirectories like
 
 ```
 app/models
 app/models/concerns
 ```
 
-In that case, `app/models/concerns` is assumed to be a root directory (because it belongs to the autoload paths), and it is ignored as namespace. So, `app/models/concerns/foo.rb` should define `Foo`, not `Concerns::Foo`.
+By default, `app/models/concerns` belongs to the autoload paths and therefore it is assumed to be a root directory. So, by default, `app/models/concerns/foo.rb` should define `Foo`, not `Concerns::Foo`.
 
-The `Concerns::` namespace worked with the classic autoloader as a side-effect of the implementation, but it was not really an intended behavior. An application using `Concerns::` needs to rename those classes and modules to be able to run in `zeitwerk` mode.
+If your application uses `Concerns` as namespace, you have two options:
 
-#### Having `app` in the autoload paths
+1. Remove the `Concerns` namespace from those classes and modules and update client code.
+2. Leave things as they are by removing `app/models/concerns` from the autoload paths:
 
-Some projects want something like `app/api/base.rb` to define `API::Base`, and add `app` to the autoload paths to accomplish that in `classic` mode.
+  ```ruby
+  # config/initializers/zeitwerk.rb
+  ActiveSupport::Dependencies.
+    autoload_paths.
+    delete("#{Rails.root}/app/models/concerns")
+  ```
 
-Since Rails adds all subdirectories of `app` to the autoload paths automatically, we have another situation in which there are nested root directories, so that setup no longer works. Similar principle we explained above with `concerns`.
+### Having `app` in the autoload paths
 
-If you want to keep that structure, you'll need to delete the subdirectory from the autoload paths in an initializer:
+Some projects want something like `app/api/base.rb` to define `API::Base`, and add `app` to the autoload paths to accomplish that.
+
+Since Rails adds all subdirectories of `app` to the autoload paths automatically (with a few exceptions like directories for assets), we have another situation in which there are nested root directories, similar to what happens with `app/models/concerns`. That setup no longer works as is.
+
+However, you can keep that structure, just delete `app/api` from the autoload paths in an initializer:
 
 ```ruby
 # config/initializers/zeitwerk.rb
-ActiveSupport::Dependencies.autoload_paths.delete("#{Rails.root}/app/api")
+ActiveSupport::Dependencies.
+  autoload_paths.
+  delete("#{Rails.root}/app/api")
 ```
 
-#### Autoloaded Constants and Explicit Namespaces
+### Autoloaded Constants and Explicit Namespaces
 
 If a namespace is defined in a file, as `Hotel` is here:
 
@@ -221,7 +234,7 @@ won't work, child objects like `Hotel::Pricing` won't be found.
 
 This restriction only applies to explicit namespaces. Classes and modules not defining a namespace can be defined using those idioms.
 
-#### One file, one constant (at the same top-level)
+### One file, one constant (at the same top-level)
 
 In `classic` mode you could technically define several constants at the same top-level and have them all reloaded. For example, given
 
@@ -252,7 +265,23 @@ end
 
 If the application reloads `Foo`, it will reload `Foo::InnerClass` too.
 
-#### Spring and the `test` Environment
+### Globs in `config.autoload_paths`
+
+Beware of configurations that use wildcards like
+
+```ruby
+config.autoload_paths += Dir["#{config.root}/extras/**/"]
+```
+
+Every element of `config.autoload_paths` should represent the top-level namespace (`Object`). That won't work.
+
+To fix this, just remove the wildcards:
+
+```ruby
+config.autoload_paths << "#{config.root}/extras"
+```
+
+### Spring and the `test` Environment
 
 Spring reloads the application code if something changes. In the `test` environment you need to enable reloading for that to work:
 
@@ -269,7 +298,7 @@ reloading is disabled because config.cache_classes is true
 
 This has no performance penalty.
 
-#### Bootsnap
+### Bootsnap
 
 Please make sure to depend on at least Bootsnap 1.4.4.
 
@@ -288,7 +317,7 @@ require "test_helper"
 
 class ZeitwerkComplianceTest < ActiveSupport::TestCase
   test "eager loads all files without errors" do
-    Zeitwerk::Loader.eager_load_all
+    Rails.application.eager_load!
   rescue => e
     flunk(e.message)
   else
@@ -304,22 +333,22 @@ require "rails_helper"
 
 RSpec.describe "Zeitwerk compliance" do
   it "eager loads all files without errors" do
-    expect{ Zeitwerk::Loader.eager_load_all }.not_to raise_error
+    expect { Rails.application.eager_load! }.not_to raise_error
   end
 end
 ```
 
+New Features You Can Leverage
+-----------------------------
 
-Delete `require_dependency` calls
----------------------------------
+### Delete `require_dependency` calls
 
 All known use cases of `require_dependency` have been eliminated with Zeitwerk. You should grep the project and delete them.
 
 If your application uses Single Table Inheritance, please see the [Single Table Inheritance section](autoloading_and_reloading_constants.html#single-table-inheritance) of the Autoloading and Reloading Constants (Zeitwerk Mode) guide.
 
 
-Qualified Names in Class and Module Definitions Are Now Possible
-----------------------------------------------------------------
+### Qualified Names in Class and Module Definitions Are Now Possible
 
 You can now robustly use constant paths in class and module definitions:
 
@@ -356,35 +385,13 @@ module Foo
 end
 ```
 
-
-Thread-safety
--------------
+### Thread-safety Everywhere
 
 In classic mode, constant autoloading is not thread-safe, though Rails has locks in place for example to make web requests thread-safe.
 
 Constant autoloading is thread-safe in `zeitwerk` mode. For example, you can now autoload in multi-threaded scripts executed by the `runner` command.
 
-
-Globs in `config.autoload_paths`
---------------------------------
-
-Beware of configurations like
-
-```ruby
-config.autoload_paths += Dir["#{config.root}/lib/**/"]
-```
-
-Every element of `config.autoload_paths` should represent the top-level namespace (`Object`) and they cannot be nested in consequence (with the exception of `concerns` directories explained above).
-
-To fix this, just remove the wildcards:
-
-```ruby
-config.autoload_paths << "#{config.root}/lib"
-```
-
-
-Eager loading and autoloading are consistent
---------------------------------------------
+### Eager Loading and Autoloading are Consistent
 
 In `classic` mode, if `app/models/foo.rb` defines `Bar`, you won't be able to autoload that file, but eager loading will work because it loads files recursively blindly. This can be a source of errors if you test things first eager loading, execution may fail later autoloading.
 
