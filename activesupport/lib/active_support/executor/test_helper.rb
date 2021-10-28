@@ -2,6 +2,6 @@
 
 module ActiveSupport::Executor::TestHelper # :nodoc:
   def run(...)
-    Rails.application.executor.wrap { super }
+    Rails.application.executor.perform { super }
   end
 end
