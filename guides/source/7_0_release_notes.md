@@ -52,6 +52,14 @@ Please refer to the [Changelog][action-pack] for detailed changes.
 
 ### Removals
 
+*   Remove deprecated `ActionDispatch::Response.return_only_media_type_on_content_type`.
+
+*   Remove deprecated `Rails.config.action_dispatch.hosts_response_app`.
+
+*   Remove deprecated `ActionDispatch::SystemTestCase#host!`.
+
+*   Remove deprecated support to passing a path to `fixture_file_upload` relative to `fixture_path`.
+
 ### Deprecations
 
 ### Notable changes
@@ -63,6 +71,8 @@ Please refer to the [Changelog][action-view] for detailed changes.
 
 ### Removals
 
+*   Remove deprecated `Rails.config.action_view.raise_on_missing_translations`.
+
 ### Deprecations
 
 ### Notable changes
@@ -73,6 +83,9 @@ Action Mailer
 Please refer to the [Changelog][action-mailer] for detailed changes.
 
 ### Removals
+
+*   Remove deprecated `ActionMailer::DeliveryJob` and `ActionMailer::Parameterized::DeliveryJob`
+    in favor of `ActionMailer::MailDeliveryJob`.
 
 ### Deprecations
 
@@ -86,6 +99,30 @@ Please refer to the [Changelog][active-record] for detailed changes.
 ### Removals
 
 *   Remove deprecated `database` kwarg from `connected_to`.
+
+*   Remove deprecated  `ActiveRecord::Base.allow_unsafe_raw_sql`.
+
+*   Remove deprecated option `:spec_name` in the `configs_for` method.
+
+*   Remove deprecated support to YAML load `ActiveRecord::Base` instance in the Rails 4.2 and 4.1 formats.
+
+*   Remove deprecation warning when using `:interval` column is used in PostgreSQL database.
+
+    Now, interval columns will return `ActiveSupport::Duration` objects instead of strings.
+
+    To keep the old behavior, you can add this line to your model:
+
+    ```ruby
+    attribute :column, :string
+    ```
+
+*   Remove deprecacated support to resolve connection using `"primary"` as connection specification name.
+
+*   Remove deprecated support to quote `ActiveRecord::Base` objects.
+
+*   Remove deprecated support to type cast to database values `ActiveRecord::Base` objects.
+
+*   Remove deprecated support to pass a column to `type_cast`.
 
 ### Deprecations
 
@@ -109,6 +146,30 @@ Please refer to the [Changelog][active-model] for detailed changes.
 
 ### Removals
 
+*   Remove deprecated enumeration of `ActiveModel::Errors` instances as a Hash.
+
+*   Remove deprecated `ActiveModel::Errors#to_h`.
+
+*   Remove deprecated `ActiveModel::Errors#slice!`.
+
+*   Remove deprecated `ActiveModel::Errors#values`.
+
+*   Remove deprecated `ActiveModel::Errors#keys`.
+
+*   Remove deprecated `ActiveModel::Errors#to_xml`.
+
+*   Remove deprecated support concat errors to `ActiveModel::Errors#messages`.
+
+*   Remove deprecated support to `clear` errors from `ActiveModel::Errors#messages`.
+
+*   Remove deprecated support to `delete` errors from `ActiveModel::Errors#messages`.
+
+*   Remove deprecated support to use `[]=` in `ActiveModel::Errors#messages`.
+
+*   Remove support to Marshal and YAML load Rails 5.x error format.
+
+*   Remove support to Marshal load Rails 5.x `ActiveModel::AttributeSet` format.
+
 ### Deprecations
 
 ### Notable changes
@@ -131,7 +192,12 @@ Please refer to the [Changelog][active-job] for detailed changes.
 
 ### Removals
 
+*   Removed deprecated behavior that was not halting `after_enqueue`/`after_perform` callbacks when a
+    previous callback was halted with `throw :abort`.
+
 ### Deprecations
+
+*   Deprecated `Rails.config.active_job.skip_after_callbacks_if_terminated`.
 
 ### Notable changes
 
@@ -152,6 +218,10 @@ Action Mailbox
 Please refer to the [Changelog][action-mailbox] for detailed changes.
 
 ### Removals
+
+*   Removed deprecated `Rails.application.credentials.action_mailbox.mailgun_api_key`.
+
+*   Removed deprecated environment variable `MAILGUN_INGRESS_API_KEY`.
 
 ### Deprecations
 

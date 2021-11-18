@@ -1,3 +1,23 @@
+*   Remove deprecated `Rails.config.action_view.raise_on_missing_translations`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support to passing a path to `fixture_file_upload` relative to `fixture_path`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActionDispatch::SystemTestCase#host!`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `Rails.config.action_dispatch.hosts_response_app`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActionDispatch::Response.return_only_media_type_on_content_type`.
+
+    *Rafael Mendonça França*
+
 *   Raise `ActionController::Redirecting::UnsafeRedirectError` for unsafe `redirect_to` redirects.
 
     This allows `rescue_from` to be used to add a default fallback route:

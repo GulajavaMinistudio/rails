@@ -1,3 +1,51 @@
+*   Remove support to Marshal load Rails 5.x `ActiveModel::AttributeSet` format.
+
+    *Rafael Mendonça França*
+
+*   Remove support to Marshal and YAML load Rails 5.x error format.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support to use `[]=` in `ActiveModel::Errors#messages`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support to `delete` errors from `ActiveModel::Errors#messages`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support to `clear` errors from `ActiveModel::Errors#messages`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support concat errors to `ActiveModel::Errors#messages`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveModel::Errors#to_xml`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveModel::Errors#keys`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveModel::Errors#values`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveModel::Errors#slice!`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveModel::Errors#to_h`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated enumeration of `ActiveModel::Errors` instances as a Hash.
+
+    *Rafael Mendonça França*
+
 *   Clear secure password cache if password is set to `nil`
 
     Before:
@@ -32,7 +80,7 @@
 
 *   Fix dirty check for Float::NaN and BigDecimal::NaN.
 
-    Float::NaN and BigDecimal::NaN in Ruby are [special values](https://bugs.ruby-lang.org/issues/1720) 
+    Float::NaN and BigDecimal::NaN in Ruby are [special values](https://bugs.ruby-lang.org/issues/1720)
     and can't be compared with `==`.
 
     *Marcelo Lauxen*

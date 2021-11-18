@@ -229,14 +229,6 @@ module ActiveRecord
         klass
       end
 
-      def self.allow_unsafe_raw_sql # :nodoc:
-        ActiveSupport::Deprecation.warn("ActiveRecord::Base.allow_unsafe_raw_sql is deprecated and will be removed in Rails 7.0")
-      end
-
-      def self.allow_unsafe_raw_sql=(value) # :nodoc:
-        ActiveSupport::Deprecation.warn("ActiveRecord::Base.allow_unsafe_raw_sql= is deprecated and will be removed in Rails 7.0")
-      end
-
       self.default_connection_handler = ConnectionAdapters::ConnectionHandler.new
       self.default_role = ActiveRecord.writing_role
       self.default_shard = :default
@@ -497,7 +489,7 @@ module ActiveRecord
     #   post.init_with(coder)
     #   post.title # => 'hello world'
     def init_with(coder, &block)
-      coder = LegacyYamlAdapter.convert(self.class, coder)
+      coder = LegacyYamlAdapter.convert(coder)
       attributes = self.class.yaml_encoder.decode(coder)
       init_with_attributes(attributes, coder["new_record"], &block)
     end
