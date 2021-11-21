@@ -9,6 +9,12 @@ module ActiveSupport
 
     config.eager_load_namespaces << ActiveSupport
 
+    initializer "active_support.isolation_level" do |app|
+      if level = app.config.active_support.delete(:isolation_level)
+        ActiveSupport::IsolatedExecutionState.isolation_level = level
+      end
+    end
+
     initializer "active_support.remove_deprecated_time_with_zone_name" do |app|
       config.after_initialize do
         if app.config.active_support.remove_deprecated_time_with_zone_name
@@ -115,15 +121,6 @@ module ActiveSupport
 
     initializer "active_support.set_hash_digest_class" do |app|
       config.after_initialize do
-        if app.config.active_support.use_sha1_digests
-          ActiveSupport::Deprecation.warn(<<-MSG.squish)
-            config.active_support.use_sha1_digests is deprecated and will
-            be removed from Rails 7.0. Use
-            config.active_support.hash_digest_class = OpenSSL::Digest::SHA1 instead.
-          MSG
-          ActiveSupport::Digest.hash_digest_class = OpenSSL::Digest::SHA1
-        end
-
         if klass = app.config.active_support.hash_digest_class
           ActiveSupport::Digest.hash_digest_class = klass
         end

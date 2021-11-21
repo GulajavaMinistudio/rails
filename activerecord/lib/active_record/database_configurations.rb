@@ -65,19 +65,6 @@ module ActiveRecord
       end
     end
 
-    # Returns the config hash that corresponds with the environment
-    #
-    # If the application has multiple databases +default_hash+ will
-    # return the first config hash for the environment.
-    #
-    #   { database: "my_db", adapter: "mysql2" }
-    def default_hash(env = default_env)
-      default = find_db_config(env)
-      default.configuration_hash if default
-    end
-    alias :[] :default_hash
-    deprecate "[]": "Use configs_for", default_hash: "Use configs_for"
-
     # Returns a single DatabaseConfig object based on the requested environment.
     #
     # If the application has multiple databases +find_db_config+ will return
@@ -103,14 +90,6 @@ module ActiveRecord
       first_config = find_db_config(default_env)
       first_config && name == first_config.name
     end
-
-    # Returns the DatabaseConfigurations object as a Hash.
-    def to_h
-      configurations.inject({}) do |memo, db_config|
-        memo.merge(db_config.env_name => db_config.configuration_hash.stringify_keys)
-      end
-    end
-    deprecate to_h: "You can use `ActiveRecord::Base.configurations.configs_for(env_name: 'env', name: 'primary').configuration_hash` to get the configuration hashes."
 
     # Checks if the application's configurations are empty.
     #

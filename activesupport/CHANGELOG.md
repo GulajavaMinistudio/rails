@@ -1,3 +1,20 @@
+*   Remove deprecate `ActiveSupport::Multibyte::Unicode.default_normalization_form`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support to use `Range#include?` to check the inclusion of a value in
+    a date time range is deprecated.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `URI.parser`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `config.active_support.use_sha1_digests`.
+
+    *Rafael Mendonça França*
+
 *   Invoking `Object#with_options` without a `&block` argument returns the
     `ActiveSupport::OptionMerger` instance.
 

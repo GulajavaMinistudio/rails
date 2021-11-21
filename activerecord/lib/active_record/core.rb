@@ -77,6 +77,8 @@ module ActiveRecord
 
       class_attribute :default_shard, instance_writer: false
 
+      class_attribute :shard_selector, instance_accessor: false, default: nil
+
       def self.application_record_class? # :nodoc:
         if ActiveRecord.application_record_class
           self == ActiveRecord.application_record_class
@@ -418,11 +420,6 @@ module ActiveRecord
       def arel_table # :nodoc:
         @arel_table ||= Arel::Table.new(table_name, klass: self)
       end
-
-      def arel_attribute(name, table = arel_table) # :nodoc:
-        table[name]
-      end
-      deprecate :arel_attribute
 
       def predicate_builder # :nodoc:
         @predicate_builder ||= PredicateBuilder.new(table_metadata)

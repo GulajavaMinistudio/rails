@@ -43,10 +43,12 @@ module ActiveSupport
   autoload :ExecutionContext
   autoload :ExecutionWrapper
   autoload :Executor
+  autoload :ErrorReporter
   autoload :FileUpdateChecker
   autoload :EventedFileUpdateChecker
   autoload :ForkTracker
   autoload :LogSubscriber
+  autoload :IsolatedExecutionState
   autoload :Notifications
   autoload :Reloader
   autoload :SecureCompareRotator
@@ -113,10 +115,6 @@ module ActiveSupport
 
   def self.utc_to_local_returns_utc_offset_times=(value)
     DateAndTime::Compatibility.utc_to_local_returns_utc_offset_times = value
-  end
-
-  def self.current_attributes_use_thread_variables=(value)
-    CurrentAttributes._use_thread_variables = value
   end
 
   @has_native_class_descendants = Class.method_defined?(:descendants) # RUBY_VERSION >= "3.1"

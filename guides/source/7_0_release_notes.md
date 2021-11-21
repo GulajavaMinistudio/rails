@@ -124,9 +124,57 @@ Please refer to the [Changelog][active-record] for detailed changes.
 
 *   Remove deprecated support to pass a column to `type_cast`.
 
+*   Remove deprecated `DatabaseConfig#config` method.
+
+*   Remove deprecated rake tasks:
+
+    * `db:schema:load_if_ruby`
+    * `db:structure:dump`
+    * `db:structure:load`
+    * `db:structure:load_if_sql`
+    * `db:structure:dump:#{name}`
+    * `db:structure:load:#{name}`
+    * `db:test:load_structure`
+    * `db:test:load_structure:#{name}`
+
+*   Remove deprecated support to `Model.reorder(nil).first` to search using non-deterministic order.
+
+*   Remove deprecated `environment` and `name` arguments from `Tasks::DatabaseTasks.schema_up_to_date?`.
+
+*   Remove deprecated `Tasks::DatabaseTasks.dump_filename`.
+
+*   Remove deprecated `Tasks::DatabaseTasks.schema_file`.
+
+*   Remove deprecated `Tasks::DatabaseTasks.spec`.
+
+*   Remove deprecated `Tasks::DatabaseTasks.current_config`.
+
 ### Deprecations
 
+*   Deprecated `Tasks::DatabaseTasks.:schema_file_type`.
+
 ### Notable changes
+
+*   Rollback transactions when the block returns earlier than expected.
+
+    Before this change, when a transaction block returned early, the transaction would be committed.
+
+    The problem is that timeouts triggered inside the transaction block was also making the incomplete transaction
+    to be committed, so in order to avoid this mistake, the transaction block is rolled back.
+
+*   Merging conditions on the same column no longer maintain both conditions,
+    and will be consistently replaced by the latter condition.
+
+    ```ruby
+    # Rails 6.1 (IN clause is replaced by merger side equality condition)
+    Author.where(id: [david.id, mary.id]).merge(Author.where(id: bob)) # => [bob]
+    # Rails 6.1 (both conflict conditions exists, deprecated)
+    Author.where(id: david.id..mary.id).merge(Author.where(id: bob)) # => []
+    # Rails 6.1 with rewhere to migrate to Rails 7.0's behavior
+    Author.where(id: david.id..mary.id).merge(Author.where(id: bob), rewhere: true) # => [bob]
+    # Rails 7.0 (same behavior with IN clause, mergee side condition is consistently replaced)
+    Author.where(id: [david.id, mary.id]).merge(Author.where(id: bob)) # => [bob]
+    Author.where(id: david.id..mary.id).merge(Author.where(id: bob)) # => [bob]
 
 Active Storage
 --------------
@@ -181,6 +229,15 @@ Please refer to the [Changelog][active-support] for detailed changes.
 
 ### Removals
 
+*   Remove deprecated `config.active_support.use_sha1_digests`.
+
+*   Remove deprecated `URI.parser`.
+
+*   Remove deprecated support to use `Range#include?` to check the inclusion of a value in
+    a date time range is deprecated.
+
+*   Remove deprecate `ActiveSupport::Multibyte::Unicode.default_normalization_form`.
+
 ### Deprecations
 
 ### Notable changes
@@ -194,6 +251,18 @@ Please refer to the [Changelog][active-job] for detailed changes.
 
 *   Removed deprecated behavior that was not halting `after_enqueue`/`after_perform` callbacks when a
     previous callback was halted with `throw :abort`.
+
+*   Remove deprecated `:return_false_on_aborted_enqueue` option.
+
+*   Remove deprecated `ActiveRecord::Base.connection_config`.
+
+*   Remove deprecated `ActiveRecord::Base.arel_attribute`.
+
+*   Remove deprecated `ActiveRecord::Base.configurations.default_hash`.
+
+*   Remove deprecated `ActiveRecord::Base.configurations.to_h`.
+
+*   Remove deprecated `ActiveRecord::Result#map!` and `ActiveRecord::Result#collect!`.
 
 ### Deprecations
 

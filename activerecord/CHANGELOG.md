@@ -1,3 +1,125 @@
+*   Remove deprecated `ActiveRecord::Result#map!` and `ActiveRecord::Result#collect!`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveRecord::Base.configurations.to_h`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveRecord::Base.configurations.default_hash`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveRecord::Base.arel_attribute`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveRecord::Base.connection_config`.
+
+    *Rafael Mendonça França*
+
+*   Filter attributes in SQL logs
+
+    Previously, SQL queries in logs containing `ActiveRecord::Base.filter_attributes` were not filtered.
+
+    Now, the filter attributes will be masked `[FILTERED]` in the logs when `prepared_statement` is enabled.
+
+    ```
+    # Before:
+      Foo Load (0.2ms)  SELECT "foos".* FROM "foos" WHERE "foos"."passw" = ? LIMIT ?  [["passw", "hello"], ["LIMIT", 1]]
+
+    # After:
+      Foo Load (0.5ms)  SELECT "foos".* FROM "foos" WHERE "foos"."passw" = ? LIMIT ?  [["passw", "[FILTERED]"], ["LIMIT", 1]]
+    ```
+
+    *Aishwarya Subramanian*
+
+*   Remove deprecated `Tasks::DatabaseTasks.spec`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `Tasks::DatabaseTasks.current_config`.
+
+    *Rafael Mendonça França*
+
+*   Deprecate `Tasks::DatabaseTasks.schema_file_type`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `Tasks::DatabaseTasks.dump_filename`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `Tasks::DatabaseTasks.schema_file`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `environment` and `name` arguments from `Tasks::DatabaseTasks.schema_up_to_date?`.
+
+    *Rafael Mendonça França*
+
+*   Merging conditions on the same column no longer maintain both conditions,
+    and will be consistently replaced by the latter condition.
+
+    ```ruby
+    # Rails 6.1 (IN clause is replaced by merger side equality condition)
+    Author.where(id: [david.id, mary.id]).merge(Author.where(id: bob)) # => [bob]
+    # Rails 6.1 (both conflict conditions exists, deprecated)
+    Author.where(id: david.id..mary.id).merge(Author.where(id: bob)) # => []
+    # Rails 6.1 with rewhere to migrate to Rails 7.0's behavior
+    Author.where(id: david.id..mary.id).merge(Author.where(id: bob), rewhere: true) # => [bob]
+    # Rails 7.0 (same behavior with IN clause, mergee side condition is consistently replaced)
+    Author.where(id: [david.id, mary.id]).merge(Author.where(id: bob)) # => [bob]
+    Author.where(id: david.id..mary.id).merge(Author.where(id: bob)) # => [bob]
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support to `Model.reorder(nil).first` to search using non-deterministic order.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated rake tasks:
+
+    * `db:schema:load_if_ruby`
+    * `db:structure:dump`
+    * `db:structure:load`
+    * `db:structure:load_if_sql`
+    * `db:structure:dump:#{name}`
+    * `db:structure:load:#{name}`
+    * `db:test:load_structure`
+    * `db:test:load_structure:#{name}`
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `DatabaseConfig#config` method.
+
+    *Rafael Mendonça França*
+
+*   Rollback transactions when the block returns earlier than expected.
+
+    Before this change, when a transaction block returned early, the transaction would be committed.
+
+    The problem is that timeouts triggered inside the transaction block was also making the incomplete transaction
+    to be committed, so in order to avoid this mistake, the transaction block is rolled back.
+
+    *Rafael Mendonça França*
+
+*   Add middleware for automatic shard swapping.
+
+    Provides a basic middleware to perform automatic shard swapping. Applications will provide a resolver which will determine for an individual request which shard should be used. Example:
+
+    ```ruby
+    config.active_record.shard_resolver = ->(request) {
+      subdomain = request.subdomain
+      tenant = Tenant.find_by_subdomain!(subdomain)
+      tenant.shard
+    }
+    ```
+
+    See guides for more details.
+
+    *Eileen M. Uchitelle*, *John Crepezzi*
+
 *   Remove deprecated support to pass a column to `type_cast`.
 
     *Rafael Mendonça França*
