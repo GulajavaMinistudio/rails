@@ -148,15 +148,13 @@ class ActiveStorage::Blob < ActiveStorage::Record
     end
 
     # Concatenate multiple blobs into a single "composed" blob.
-    def compose(filename:, blobs:, content_type: nil, metadata: nil)
-      unless blobs.all?(&:persisted?)
-        raise(ActiveRecord::RecordNotSaved, "All blobs must be persisted.")
-      end
+    def compose(blobs, filename:, content_type: nil, metadata: nil)
+      raise ActiveRecord::RecordNotSaved, "All blobs must be persisted." if blobs.any?(&:new_record?)
 
       content_type ||= blobs.pluck(:content_type).compact.first
 
       new(filename: filename, content_type: content_type, metadata: metadata, byte_size: blobs.sum(&:byte_size)).tap do |combined_blob|
-        combined_blob.compose(*blobs.pluck(:key))
+        combined_blob.compose(blobs.pluck(:key))
         combined_blob.save!
       end
     end
@@ -270,9 +268,9 @@ class ActiveStorage::Blob < ActiveStorage::Record
     service.upload key, io, checksum: checksum, **service_metadata
   end
 
-  def compose(*keys) # :nodoc:
+  def compose(keys) # :nodoc:
     self.composed = true
-    service.compose(*keys, key, **service_metadata)
+    service.compose(keys, key, **service_metadata)
   end
 
   # Downloads the file associated with this blob. If no block is given, the entire file is read into memory and returned.

@@ -1,3 +1,45 @@
+*   Add `authenticate_by` when using `has_secure_password`.
+
+    `authenticate_by` is intended to replace code like the following, which
+    returns early when a user with a matching email is not found:
+
+    ```ruby
+    User.find_by(email: "...")&.authenticate("...")
+    ```
+
+    Such code is vulnerable to timing-based enumeration attacks, wherein an
+    attacker can determine if a user account with a given email exists. After
+    confirming that an account exists, the attacker can try passwords associated
+    with that email address from other leaked databases, in case the user
+    re-used a password across multiple sites (a common practice). Additionally,
+    knowing an account email address allows the attacker to attempt a targeted
+    phishing ("spear phishing") attack.
+
+    `authenticate_by` addresses the vulnerability by taking the same amount of
+    time regardless of whether a user with a matching email is found:
+
+    ```ruby
+    User.authenticate_by(email: "...", password: "...")
+    ```
+
+    *Jonathan Hefner*
+
+*   Remove deprecated `ActiveRecord::DatabaseConfigurations::DatabaseConfig#spec_name`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveRecord::Connection#in_clause_length`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveRecord::Connection#allowed_index_name_length`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveRecord::Base#remove_connection`.
+
+    *Rafael Mendonça França*
+
 *   Load STI Models in fixtures
 
     Data from Fixtures now loads based on the specific class for models with
@@ -5,7 +47,7 @@
     the value of these fields was not parsed and remained `nil`
 
     *Andres Howard*
-    
+
 *   `#authenticate` returns false when the password is blank instead of raising an error.
 
     *Muhammad Muhammad Ibrahim*
