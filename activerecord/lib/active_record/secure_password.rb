@@ -35,12 +35,14 @@ module ActiveRecord
       #   User.authenticate_by(email: "jdoe@example.com") # => ArgumentError
       #   User.authenticate_by(password: "abc123")        # => ArgumentError
       def authenticate_by(attributes)
-        passwords, finders = attributes.partition { |name, _| !has_attribute?(name) && has_attribute?("#{name}_digest") }.map(&:to_h)
+        passwords, identifiers = attributes.to_h.partition do |name, value|
+          !has_attribute?(name) && has_attribute?("#{name}_digest")
+        end.map(&:to_h)
 
         raise ArgumentError, "One or more password arguments are required" if passwords.empty?
-        raise ArgumentError, "One or more finder arguments are required"   if finders.empty?
+        raise ArgumentError, "One or more finder arguments are required" if identifiers.empty?
 
-        if record = find_by(finders)
+        if record = find_by(identifiers)
           record if passwords.count { |name, value| record.public_send(:"authenticate_#{name}", value) } == passwords.size
         else
           new(passwords)
