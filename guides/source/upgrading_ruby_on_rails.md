@@ -75,6 +75,9 @@ The new Rails version might have different configuration defaults than the previ
 
 To allow you to upgrade to new defaults one by one, the update task has created a file `config/initializers/new_framework_defaults_X.Y.rb` (with the desired Rails version in the filename). You should enable the new configuration defaults by uncommenting them in the file; this can be done gradually over several deployments. Once your application is ready to run with new defaults, you can remove this file and flip the `config.load_defaults` value.
 
+Upgrading from Rails 7.0 to Rails 7.1
+-------------------------------------
+
 Upgrading from Rails 6.1 to Rails 7.0
 -------------------------------------
 
@@ -87,6 +90,15 @@ undefined method `mechanism=' for ActiveSupport::Dependencies:Module
 ```
 
 Also, make sure `config.cache_classes` is set to `false` in `config/environments/test.rb`.
+
+### Sprockets is now an optional dependency
+
+The gem `rails` doesn't depend on `sprockets-rails` anymore. If your application still needs to use Sprockets,
+make sure to add `sprockets-rails` to your Gemfile.
+
+```
+gem "sprockets-rails"
+```
 
 ### Applications need to run in `zeitwerk` mode
 
@@ -224,7 +236,7 @@ processes have been updated you can set `config.active_support.cache_format_vers
 Rails 7.0 is able to read both formats so the cache won't be invalidated during the
 upgrade.
 
-### ActiveStorage video preview image generation
+### Active Storage video preview image generation
 
 Video preview image generation now uses FFmpeg's scene change detection to generate
 more meaningful preview images. Previously the first frame of the video would be used

@@ -1729,6 +1729,9 @@ Accepts a string for the HTML tag used to wrap attachments. Defaults to `"action
 
 `config.load_defaults` sets new defaults up to and including the version passed. Such that passing, say, `6.0` also gets the new defaults from every version before it.
 
+#### For '7.1', defaults from previous versions below and:
+
+
 #### For '7.0', defaults from previous versions below and:
 
 - `config.action_controller.raise_on_open_redirects`: `true`
@@ -1742,7 +1745,6 @@ Accepts a string for the HTML tag used to wrap attachments. Defaults to `"action
 - `config.active_support.use_rfc4122_namespaced_uuids`: `true`
 - `config.active_support.disable_to_s_conversion`: `true`
 - `config.action_dispatch.return_only_request_media_type_on_content_type`: `false`
-- `config.action_controller.silence_disabled_session_errors`: `false`
 - `config.action_mailer.smtp_timeout`: `5`
 - `config.active_storage.video_preview_arguments`: `"-vf 'select=eq(n\\,0)+eq(key\\,1)+gt(scene\\,0.015),loop=loop=-1:size=2,trim=start_frame=1' -frames:v 1 -f image2"`
 - `config.active_record.automatic_scope_inversing`: `true`
