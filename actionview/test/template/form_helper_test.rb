@@ -552,9 +552,36 @@ class FormHelperTest < ActionView::TestCase
     assert_dom_equal expected, file_field("import", "file", multiple: true)
   end
 
+  def test_file_field_with_multiple_behavior_configured_include_hidden
+    old_value = ActionView::Helpers::FormHelper.multiple_file_field_include_hidden
+    ActionView::Helpers::FormHelper.multiple_file_field_include_hidden = true
+
+    expected = '<input type="hidden" name="import[file][]" autocomplete="off" value="">' \
+               '<input id="import_file" multiple="multiple" name="import[file][]" type="file" />'
+    assert_dom_equal expected, file_field("import", "file", multiple: true)
+  ensure
+    ActionView::Helpers::FormHelper.multiple_file_field_include_hidden = old_value
+  end
+
+  def test_file_field_with_multiple_behavior_include_hidden_false
+    expected = '<input id="import_file" multiple="multiple" name="import[file][]" type="file" />'
+    assert_dom_equal expected, file_field("import", "file", multiple: true, include_hidden: false)
+  end
+
   def test_file_field_with_multiple_behavior_and_explicit_name
     expected = '<input id="import_file" multiple="multiple" name="custom" type="file" />'
     assert_dom_equal expected, file_field("import", "file", multiple: true, name: "custom")
+  end
+
+  def test_file_field_with_multiple_behavior_and_explicit_name_configured_include_hidden
+    old_value = ActionView::Helpers::FormHelper.multiple_file_field_include_hidden
+    ActionView::Helpers::FormHelper.multiple_file_field_include_hidden = true
+
+    expected = '<input type="hidden" name="custom" autocomplete="off" value="">' \
+               '<input id="import_file" multiple="multiple" name="custom" type="file" />'
+    assert_dom_equal expected, file_field("import", "file", multiple: true, name: "custom")
+  ensure
+    ActionView::Helpers::FormHelper.multiple_file_field_include_hidden = old_value
   end
 
   def test_file_field_with_direct_upload_when_rails_direct_uploads_url_is_not_defined
@@ -2580,7 +2607,19 @@ class FormHelperTest < ActionView::TestCase
     end
 
     expected = whole_form("/posts/123", "edit_post_123", "edit_post", method: "patch") do
-      %(<button type="submit" name="post[secret]" value="true">Update Post</button>)
+      %(<button type="submit" id="post_secret" name="post[secret]" value="true">Update Post</button>)
+    end
+
+    assert_dom_equal expected, output_buffer
+  end
+
+  def test_button_with_method_name_and_attributes
+    form_for(@post) do |f|
+      concat f.button(:secret, value: true, id: "not_generated", name: "post[not_generated]")
+    end
+
+    expected = whole_form("/posts/123", "edit_post_123", "edit_post", method: "patch") do
+      %(<button type="submit" id="not_generated" name="post[not_generated]" value="true">Update Post</button>)
     end
 
     assert_dom_equal expected, output_buffer
@@ -2592,7 +2631,7 @@ class FormHelperTest < ActionView::TestCase
     end
 
     expected = whole_form("/posts/123", "edit_post_123", "edit_post", method: "patch") do
-      %(<button type="submit" name="post[secret]" value="true">Update secret Post</button>)
+      %(<button type="submit" id="post_secret" name="post[secret]" value="true">Update secret Post</button>)
     end
 
     assert_dom_equal expected, output_buffer

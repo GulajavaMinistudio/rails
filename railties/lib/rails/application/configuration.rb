@@ -33,8 +33,12 @@ module Rails
         @filter_parameters                       = []
         @filter_redirect                         = []
         @helpers_paths                           = []
-        @hosts                                   = Rails.env.development? ? ActionDispatch::HostAuthorization::ALLOWED_HOSTS_IN_DEVELOPMENT : []
-        @hosts.concat(ENV["RAILS_DEVELOPMENT_HOSTS"].to_s.split(",").map(&:strip)) if Rails.env.development?
+        if Rails.env.development?
+          @hosts = ActionDispatch::HostAuthorization::ALLOWED_HOSTS_IN_DEVELOPMENT +
+            ENV["RAILS_DEVELOPMENT_HOSTS"].to_s.split(",").map(&:strip)
+        else
+          @hosts = []
+        end
         @host_authorization                      = {}
         @public_file_server                      = ActiveSupport::OrderedOptions.new
         @public_file_server.enabled              = true
@@ -84,6 +88,7 @@ module Rails
           if respond_to?(:action_controller)
             action_controller.per_form_csrf_tokens = true
             action_controller.forgery_protection_origin_check = true
+            action_controller.urlsafe_csrf_tokens = false
           end
 
           ActiveSupport.to_time_preserves_timezone = true
@@ -169,7 +174,7 @@ module Rails
           end
 
           if respond_to?(:action_controller)
-            action_controller.urlsafe_csrf_tokens = true
+            action_controller.delete(:urlsafe_csrf_tokens)
           end
 
           if respond_to?(:action_view)
@@ -236,6 +241,7 @@ module Rails
               " -frames:v 1 -f image2"
 
             active_storage.variant_processor = :vips
+            active_storage.multiple_file_field_include_hidden = true
           end
 
           if respond_to?(:active_record)
