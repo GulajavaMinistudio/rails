@@ -366,7 +366,9 @@ module ActionView
         html_options = convert_options_to_data_attributes(options, html_options)
         html_options["type"] = "submit"
 
-        button = if block_given? || button_to_generates_button_tag
+        button = if block_given?
+          content_tag("button", html_options, &block)
+        elsif button_to_generates_button_tag
           content_tag("button", name || url, html_options, &block)
         else
           html_options["value"] = name || url
@@ -743,7 +745,7 @@ module ActionView
         end
 
         def url_target(name, options)
-          if name.respond_to?(:model_name) && options.empty?
+          if name.respond_to?(:model_name) && options.is_a?(Hash) && options.empty?
             url_for(name)
           else
             url_for(options)
