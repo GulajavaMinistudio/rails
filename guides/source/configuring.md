@@ -1733,14 +1733,16 @@ The default is `:rails_storage_redirect`.
 
 Can be used to alter the way ffmpeg generates video preview images.
 
-By default, this is defined as:
+With `config.load_defaults 7.0`, the default is:
 
 ```ruby
 config.active_storage.video_preview_arguments = "-vf 'select=eq(n\\,0)+eq(key\\,1)+gt(scene\\,0.015),loop=loop=-1:size=2,trim=start_frame=1' -frames:v 1 -f image2"
 ```
 
+Which has the following behavior:
+
 1. `select=eq(n\,0)+eq(key\,1)+gt(scene\,0.015)`: Select the first video frame, plus keyframes, plus frames that meet the scene change threshold.
-2. `loop=loop=-1:size=2,trim=start_frame=1`: To use the first video frame as a fallback when no other frames meet the criteria, loop the first (one or) two selected frames, then drop the first looped frame.
+2. `loop=loop=-1:size=2,trim=start_frame=1`: Use the first video frame as a fallback when no other frames meet the criteria by looping the first (one or) two selected frames, then dropping the first looped frame.
 
 #### `config.active_storage.multiple_file_field_include_hidden`
 
@@ -1775,6 +1777,7 @@ Accepts a string for the HTML tag used to wrap attachments. Defaults to `"action
 - `config.active_support.use_rfc4122_namespaced_uuids`: `true`
 - `config.active_support.disable_to_s_conversion`: `true`
 - `config.action_dispatch.return_only_request_media_type_on_content_type`: `false`
+- `config.action_dispatch.cookies_serializer`: `:json`
 - `config.action_mailer.smtp_timeout`: `5`
 - `config.active_storage.video_preview_arguments`: `"-vf 'select=eq(n\\,0)+eq(key\\,1)+gt(scene\\,0.015),loop=loop=-1:size=2,trim=start_frame=1' -frames:v 1 -f image2"`
 - `config.active_storage.multiple_file_field_include_hidden`: `true`
