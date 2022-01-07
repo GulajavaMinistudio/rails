@@ -81,7 +81,10 @@ module Rails
         @server_timing                           = false
       end
 
-      # Loads default configurations. See {the result of the method for each version}[https://guides.rubyonrails.org/configuring.html#results-of-config-load-defaults].
+      # Loads default configuration values for a target version. This includes
+      # defaults for versions prior to the target version. See the
+      # {configuration guide}[https://guides.rubyonrails.org/configuring.html]
+      # for the default values associated with a particular version.
       def load_defaults(target_version)
         case target_version.to_s
         when "5.0"
@@ -257,6 +260,16 @@ module Rails
           end
         when "7.1"
           load_defaults "7.0"
+
+          if respond_to?(:action_dispatch)
+            action_dispatch.default_headers = {
+              "X-Frame-Options" => "SAMEORIGIN",
+              "X-XSS-Protection" => "0",
+              "X-Content-Type-Options" => "nosniff",
+              "X-Permitted-Cross-Domain-Policies" => "none",
+              "Referrer-Policy" => "strict-origin-when-cross-origin"
+            }
+          end
         else
           raise "Unknown version #{target_version.to_s.inspect}"
         end

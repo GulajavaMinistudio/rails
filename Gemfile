@@ -35,12 +35,6 @@ gem "terser", ">= 1.1.4", require: false
 # Explicitly avoid 1.x that doesn't support Ruby 2.4+
 gem "json", ">= 2.0.0"
 
-# net-smtp, net-imap and net-pop were removed from default gems in Ruby 3.1, but is used by the `mail` gem.
-# So we need to add them as dependencies until `mail` is fixed: https://github.com/mikel/mail/pull/1439
-gem "net-smtp", require: false
-gem "net-imap", require: false
-gem "net-pop", require: false
-
 group :rubocop do
   gem "rubocop", ">= 0.90", require: false
   gem "rubocop-minitest", require: false
@@ -50,7 +44,7 @@ group :rubocop do
 end
 
 group :doc do
-  gem "sdoc", ">= 2.2.0"
+  gem "sdoc", ">= 2.3.0"
   gem "redcarpet", "~> 3.2.3", platforms: :ruby
   gem "w3c_validators", "~> 1.3.6"
   gem "kindlerb", "~> 1.2.0"
@@ -145,7 +139,7 @@ platforms :ruby, :mswin, :mswin64, :mingw, :x64_mingw do
   gem "sqlite3", "~> 1.4"
 
   group :db do
-    gem "pg", "~> 1.1"
+    gem "pg", ">= 1.3.0.rc1"
     gem "mysql2", "~> 0.5", github: "brianmario/mysql2"
   end
 end
