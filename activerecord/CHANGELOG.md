@@ -1,3 +1,11 @@
+*   Allow column name with COLLATE (e.g., title COLLATE "C") as safe SQL string
+
+    *Shugo Maeda*
+
+*   Permit underscores in the VERSION argument to database rake tasks.
+
+    *Eddie Lebow*
+
 *   Reversed the order of `INSERT` statements in `structure.sql` dumps
 
     This should decrease the likelihood of merge conflicts. New migrations
