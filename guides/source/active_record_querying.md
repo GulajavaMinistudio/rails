@@ -419,11 +419,12 @@ as long as they have no ordering, since the method needs to force an order
 internally to iterate.
 
 If an order is present in the receiver the behaviour depends on the flag
-`config.active_record.error_on_ignored_order`. If true, `ArgumentError` is
+[`config.active_record.error_on_ignored_order`][]. If true, `ArgumentError` is
 raised, otherwise the order is ignored and a warning issued, which is the
 default. This can be overridden with the option `:error_on_ignore`, explained
 below.
 
+[`config.active_record.error_on_ignored_order`]: configuring.html#config-active-record-error-on-ignored-order
 [`find_each`]: https://api.rubyonrails.org/classes/ActiveRecord/Batches.html#method-i-find_each
 
 ##### Options for `find_each`
@@ -1291,7 +1292,7 @@ Or, in English: "return all books that have a review by a customer."
 ##### Joining Nested Associations (Multiple Level)
 
 ```ruby
-Author.joins(books: [{reviews: { customer: :orders} }, :supplier] )
+Author.joins(books: [{ reviews: { customer: :orders } }, :supplier] )
 ```
 
 This produces:
