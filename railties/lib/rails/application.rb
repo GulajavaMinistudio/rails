@@ -22,12 +22,12 @@ module Rails
   # Rails::Application::Bootstrap) and finishing initializers, after all the others
   # are executed (check Rails::Application::Finisher).
   #
-  # == Configuration
+  # == \Configuration
   #
   # Besides providing the same configuration as Rails::Engine and Rails::Railtie,
   # the application object has several specific configurations, for example
-  # "cache_classes", "consider_all_requests_local", "filter_parameters",
-  # "logger" and so forth.
+  # +cache_classes+, +consider_all_requests_local+, +filter_parameters+,
+  # +logger+, and so forth.
   #
   # Check Rails::Application::Configuration to see them all.
   #
@@ -52,9 +52,9 @@ module Rails
   #   4)  Run config.before_configuration callbacks
   #   5)  Load config/environments/ENV.rb
   #   6)  Run config.before_initialize callbacks
-  #   7)  Run Railtie#initializer defined by railties, engines and application.
-  #       One by one, each engine sets up its load paths, routes and runs its config/initializers/* files.
-  #   8)  Custom Railtie#initializers added by railties, engines and applications are executed
+  #   7)  Run Railtie#initializer defined by railties, engines, and application.
+  #       One by one, each engine sets up its load paths and routes, and runs its config/initializers/* files.
+  #   8)  Custom Railtie#initializers added by railties, engines, and applications are executed
   #   9)  Build the middleware stack and run to_prepare callbacks
   #   10) Run config.before_eager_load and eager_load! if eager_load is true
   #   11) Run config.after_initialize callbacks
@@ -408,8 +408,8 @@ module Rails
     # In development and test, this is randomly generated and stored in a
     # temporary file in <tt>tmp/development_secret.txt</tt>.
     #
-    # In all other environments, we look for it first in ENV["SECRET_KEY_BASE"],
-    # then credentials.secret_key_base, and finally secrets.secret_key_base. For most applications,
+    # In all other environments, we look for it first in <tt>ENV["SECRET_KEY_BASE"]</tt>,
+    # then +credentials.secret_key_base+, and finally +secrets.secret_key_base+. For most applications,
     # the correct place to store it is in the encrypted credentials file.
     def secret_key_base
       if Rails.env.development? || Rails.env.test?

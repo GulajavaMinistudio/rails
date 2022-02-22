@@ -240,14 +240,14 @@ module ActiveRecord
         @pool.connection_class
       end
 
-      # The role (ie :writing) for the current connection. In a
-      # non-multi role application, `:writing` is returned.
+      # The role (e.g. +:writing+) for the current connection. In a
+      # non-multi role application, +:writing+ is returned.
       def role
         @pool.role
       end
 
-      # The shard (ie :default) for the current connection. In
-      # a non-sharded application, `:default` is returned.
+      # The shard (e.g. +:default+) for the current connection. In
+      # a non-sharded application, +:default+ is returned.
       def shard
         @pool.shard
       end
