@@ -1,10 +1,16 @@
-*   Fix `ActionContoller::Live` to copy the IsolatedExecutionState in the ephemeral thread.
+*   Use non-capturing group for subdomain matching in `ActionDispatch::HostAuthorization`
 
-    Since it's inception `ActionContoller::Live` has been copying thread local variables
+    Since we do nothing with the captured subdomain group, we can use a non-capturing group instead.
+
+    *Sam Bostock*
+
+*   Fix `ActionController::Live` to copy the IsolatedExecutionState in the ephemeral thread.
+
+    Since its inception `ActionController::Live` has been copying thread local variables
     to keep things such as `CurrentAttributes` set from middlewares working in the controller action.
 
     With the introduction of `IsolatedExecutionState` in 7.0, some of that global state was lost in
-    `ActionContoller::Live` controllers.
+    `ActionController::Live` controllers.
 
     *Jean Boussier*
 
