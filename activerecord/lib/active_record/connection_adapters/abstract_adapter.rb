@@ -92,7 +92,7 @@ module ActiveRecord
       def initialize(connection, logger = nil, config = {}) # :nodoc:
         super()
 
-        @connection          = connection
+        @raw_connection      = connection
         @owner               = nil
         @instrumenter        = ActiveSupport::Notifications.instrumenter
         @logger              = logger
@@ -549,14 +549,14 @@ module ActiveRecord
       # new connection with the database. Implementors should call super if they
       # override the default implementation.
       def reconnect!
-        clear_cache!
+        clear_cache!(new_connection: true)
         reset_transaction
       end
 
       # Disconnects from the database if already connected. Otherwise, this
       # method does nothing.
       def disconnect!
-        clear_cache!
+        clear_cache!(new_connection: true)
         reset_transaction
       end
 
@@ -569,7 +569,7 @@ module ActiveRecord
       def discard!
         # This should be overridden by concrete adapters.
         #
-        # Prevent @connection's finalizer from touching the socket, or
+        # Prevent @raw_connection's finalizer from touching the socket, or
         # otherwise communicating with its server, when it is collected.
         if schema_cache.connection == self
           schema_cache.connection = nil
@@ -593,8 +593,16 @@ module ActiveRecord
       end
 
       # Clear any caching the database adapter may be doing.
-      def clear_cache!
-        @lock.synchronize { @statements.clear } if @statements
+      def clear_cache!(new_connection: false)
+        if @statements
+          @lock.synchronize do
+            if new_connection
+              @statements.reset
+            else
+              @statements.clear
+            end
+          end
+        end
       end
 
       # Returns true if its required to reload the connection between requests for development mode.
@@ -617,7 +625,7 @@ module ActiveRecord
       # PostgreSQL's lo_* methods.
       def raw_connection
         disable_lazy_transactions!
-        @connection
+        @raw_connection
       end
 
       def default_uniqueness_comparison(attribute, value) # :nodoc:
