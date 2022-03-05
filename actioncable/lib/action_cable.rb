@@ -25,11 +25,11 @@
 
 require "active_support"
 require "active_support/rails"
-require "action_cable/version"
+
+require_relative "action_cable/version"
+require_relative "action_cable/zeitwerk"
 
 module ActionCable
-  extend ActiveSupport::Autoload
-
   INTERNAL = {
     message_types: {
       welcome: "welcome",
@@ -51,12 +51,4 @@ module ActionCable
   module_function def server
     @server ||= ActionCable::Server::Base.new
   end
-
-  autoload :Server
-  autoload :Connection
-  autoload :Channel
-  autoload :RemoteConnections
-  autoload :SubscriptionAdapter
-  autoload :TestHelper
-  autoload :TestCase
 end
