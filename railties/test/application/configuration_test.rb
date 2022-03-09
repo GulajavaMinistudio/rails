@@ -2460,6 +2460,24 @@ module ApplicationTests
       assert_equal DummyDestroyAssociationAsyncJob, ActiveRecord::Base.destroy_association_async_job
     end
 
+    test "destroy association async batch size is nil by default" do
+      app "development"
+
+      assert_nil ActiveRecord::Base.destroy_association_async_batch_size
+    end
+
+    test "destroy association async batch size can be set in configs" do
+      app_file "config/environments/development.rb", <<-RUBY
+        Rails.application.configure do
+          config.active_record.destroy_association_async_batch_size = 100
+        end
+      RUBY
+
+      app "development"
+
+      assert_equal 100, ActiveRecord::Base.destroy_association_async_batch_size
+    end
+
     test "ActionView::Helpers::FormTagHelper.default_enforce_utf8 is false by default" do
       app "development"
       assert_equal false, ActionView::Helpers::FormTagHelper.default_enforce_utf8
@@ -3108,6 +3126,35 @@ module ApplicationTests
       app "development"
 
       assert_equal :vips, ActiveStorage.variant_processor
+    end
+
+    test "ActiveStorage.supported_image_processing_methods can be configured via config.active_storage.supported_image_processing_methods" do
+      remove_from_config '.*config\.load_defaults.*\n'
+
+      app_file "config/initializers/add_image_processing_methods.rb", <<-RUBY
+        Rails.application.config.active_storage.supported_image_processing_methods = ["write", "set"]
+      RUBY
+
+      app "development"
+
+      assert ActiveStorage.supported_image_processing_methods.include?("write")
+      assert ActiveStorage.supported_image_processing_methods.include?("set")
+    end
+
+    test "ActiveStorage.unsupported_image_processing_arguments can be configured via config.active_storage.unsupported_image_processing_arguments" do
+      remove_from_config '.*config\.load_defaults.*\n'
+
+      app_file "config/initializers/add_image_processing_arguments.rb", <<-RUBY
+      Rails.application.config.active_storage.unsupported_image_processing_arguments = %w(
+        -write
+        -danger
+      )
+      RUBY
+
+      app "development"
+
+      assert ActiveStorage.unsupported_image_processing_arguments.include?("-danger")
+      assert_not ActiveStorage.unsupported_image_processing_arguments.include?("-set")
     end
 
     test "hosts include .localhost in development" do
