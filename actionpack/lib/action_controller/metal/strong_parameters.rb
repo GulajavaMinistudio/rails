@@ -222,15 +222,7 @@ module ActionController
     #   value?(value)
     #
     # Returns true if the given value is present for some key in the parameters.
-
-    ##
-    # :method: values
-    #
-    # :call-seq:
-    #   values()
-    #
-    # Returns a new array of the values of the parameters.
-    delegate :keys, :key?, :has_key?, :member?, :values, :has_value?, :value?, :empty?, :include?,
+    delegate :keys, :key?, :has_key?, :member?, :has_value?, :value?, :empty?, :include?,
       :as_json, :to_s, :each_key, to: :@parameters
 
     # By default, never raise an UnpermittedParameters exception if these
@@ -276,7 +268,18 @@ module ActionController
       if other.respond_to?(:permitted?)
         permitted? == other.permitted? && parameters == other.parameters
       else
-        @parameters == other
+        if Hash === other
+          ActiveSupport::Deprecation.warn <<-WARNING.squish
+            Comparing equality between `ActionController::Parameters` and a
+            `Hash` is deprecated and will be removed in Rails 7.1. Please only do
+            comparisons between instances of `ActionController::Parameters`. If
+            you need to compare to a hash, first convert it using
+            `ActionController::Parameters#new`.
+          WARNING
+          @parameters == other
+        else
+          super
+        end
       end
     end
     alias eql? ==
@@ -390,6 +393,11 @@ module ActionController
       end
 
       self
+    end
+
+    # Returns a new array of the values of the parameters.
+    def values
+      to_enum(:each_value).to_a
     end
 
     # Attribute that keeps track of converted arrays, if any, to avoid double
