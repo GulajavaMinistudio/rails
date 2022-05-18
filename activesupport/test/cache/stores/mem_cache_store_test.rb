@@ -127,6 +127,11 @@ class MemCacheStoreTest < ActiveSupport::TestCase
     end
   end
 
+  def test_increment_unset_key
+    assert_equal 1, @cache.increment("foo")
+    assert_equal "1", @cache.read("foo", raw: true)
+  end
+
   def test_write_expires_at
     cache = lookup_store(raw: true, namespace: nil)
 
@@ -139,14 +144,19 @@ class MemCacheStoreTest < ActiveSupport::TestCase
 
   def test_increment_expires_in
     cache = lookup_store(raw: true, namespace: nil)
-    assert_called_with client(cache), :incr, [ "foo", 1, 60 ] do
+    assert_called_with client(cache), :incr, [ "foo", 1, 60, 1 ] do
       cache.increment("foo", 1, expires_in: 60)
     end
   end
 
+  def test_decrement_unset_key
+    assert_equal 0, @cache.decrement("foo")
+    assert_equal "0", @cache.read("foo", raw: true)
+  end
+
   def test_decrement_expires_in
     cache = lookup_store(raw: true, namespace: nil)
-    assert_called_with client(cache), :decr, [ "foo", 1, 60 ] do
+    assert_called_with client(cache), :decr, [ "foo", 1, 60, 0 ] do
       cache.decrement("foo", 1, expires_in: 60)
     end
   end
@@ -302,6 +312,16 @@ class MemCacheStoreTest < ActiveSupport::TestCase
 
     @cache.instance_variable_get(:@data).with { |c| c.set(@cache.send(:normalize_key, key, nil), nil, 0, compress: false) }
     assert_equal({}, @cache.send(:read_multi_entries, [key]))
+  end
+
+  def test_deprecated_connection_pool_works
+    assert_deprecated do
+      cache = ActiveSupport::Cache.lookup_store(:mem_cache_store, pool_size: 2, pool_timeout: 1)
+      pool = cache.instance_variable_get(:@data) # loads 'connection_pool' gem
+      assert_kind_of ::ConnectionPool, pool
+      assert_equal 2, pool.size
+      assert_equal 1, pool.instance_variable_get(:@timeout)
+    end
   end
 
   private
