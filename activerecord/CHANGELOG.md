@@ -1,3 +1,89 @@
+*   Run transactional callbacks on the freshest instance to save a given 
+    record within a transaction.
+
+    When multiple Active Record instances change the same record within a 
+    transaction, Rails runs `after_commit` or `after_rollback` callbacks for 
+    only one of them. `config.active_record.run_commit_callbacks_on_first_saved_instances_in_transaction` 
+    was added to specify how Rails chooses which instance receives the 
+    callbacks. The framework defaults were changed to use the new logic.
+
+    When `config.active_record.run_commit_callbacks_on_first_saved_instances_in_transaction` 
+    is `true`, transactional callbacks are run on the first instance to save, 
+    even though its instance state may be stale.
+
+    When it is `false`, which is the new framework default starting with version 
+    7.1, transactional callbacks are run on the instances with the freshest 
+    instance state. Those instances are chosen as follows:
+
+    - In general, run transactional callbacks on the last instance to save a 
+      given record within the transaction.
+    - There are two exceptions:
+        - If the record is created within the transaction, then updated by 
+          another instance, `after_create_commit` callbacks will be run on the 
+          second instance. This is instead of the `after_update_commit` 
+          callbacks that would naively be run based on that instance’s state.
+        - If the record is destroyed within the transaction, then 
+          `after_destroy_commit` callbacks will be fired on the last destroyed 
+          instance, even if a stale instance subsequently performed an update 
+          (which will have affected 0 rows).
+
+    *Cameron Bothner and Mitch Vollebregt*
+
+*   Enable strict strings mode for `SQLite3Adapter`.
+
+    Configures SQLite with a strict strings mode, which disables double-quoted string literals.
+
+    SQLite has some quirks around double-quoted string literals.
+    It first tries to consider double-quoted strings as identifier names, but if they don't exist
+    it then considers them as string literals. Because of this, typos can silently go unnoticed.
+    For example, it is possible to create an index for a non existing column.
+    See [SQLite documentation](https://www.sqlite.org/quirks.html#double_quoted_string_literals_are_accepted) for more details.
+
+    If you don't want this behavior, you can disable it via:
+
+    ```ruby
+    # config/application.rb
+    config.active_record.sqlite3_adapter_strict_strings_by_default = false
+    ```
+
+    Fixes #27782.
+
+    *fatkodima*, *Jean Boussier*
+
+*   Resolve issue where a relation cache_version could be left stale.
+
+    Previously, when `reset` was called on a relation object it did not reset the cache_versions
+    ivar. This led to a confusing situation where despite having the correct data the relation
+    still reported a stale cache_version.
+
+    Usage:
+
+    ```ruby
+    developers = Developer.all
+    developers.cache_version
+
+    Developer.update_all(updated_at: Time.now.utc + 1.second)
+
+    developers.cache_version # Stale cache_version
+    developers.reset
+    developers.cache_version # Returns the current correct cache_version
+    ```
+
+    Fixes #45341.
+
+    *Austen Madden*
+
+*   Add support for exclusion constraints (PostgreSQL-only).
+
+    ```ruby
+    add_exclusion_constraint :invoices, "daterange(start_date, end_date) WITH &&", using: :gist, name: "invoices_date_overlap"
+    remove_exclusion_constraint :invoices, name: "invoices_date_overlap"
+    ```
+
+    See PostgreSQL's [`CREATE TABLE ... EXCLUDE ...`](https://www.postgresql.org/docs/12/sql-createtable.html#SQL-CREATETABLE-EXCLUDE) documentation for more on exclusion constraints.
+
+    *Alex Robbin*
+
 *   `change_column_null` raises if a non-boolean argument is provided
 
     Previously if you provided a non-boolean argument, `change_column_null` would
