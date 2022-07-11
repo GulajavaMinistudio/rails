@@ -8,22 +8,22 @@
 
     *Ryo Nakamura*
 
-*   Support `:urlsafe` option for `MessageEncryptor`.
+*   Support `:url_safe` option for `MessageEncryptor`.
 
-    The `MessageEncryptor` constructor now accepts a `:urlsafe` option, similar
+    The `MessageEncryptor` constructor now accepts a `:url_safe` option, similar
     to the `MessageVerifier` constructor.  When enabled, this option ensures
     that messages use a URL-safe encoding.
 
     *Jonathan Hefner*
 
-*   Add `urlsafe` option to `ActiveSupport::MessageVerifier` initializer
+*   Add `url_safe` option to `ActiveSupport::MessageVerifier` initializer
 
-    `ActiveSupport::MessageVerifier.new` now takes optional `urlsafe` argument.
-    It can generate urlsafe strings by passing `urlsafe: true`.
+    `ActiveSupport::MessageVerifier.new` now takes optional `url_safe` argument.
+    It can generate URL-safe strings by passing `url_safe: true`.
 
     ```ruby
-    verifier = ActiveSupport::MessageVerifier.new(urlsafe: true)
-    message = verifier.generate(data) # => "urlsafe_string"
+    verifier = ActiveSupport::MessageVerifier.new(url_safe: true)
+    message = verifier.generate(data) # => URL-safe string
     ```
 
     This option is `false` by default to be backwards compatible.
@@ -126,6 +126,8 @@
 
 *   Deprecate `Notification::Event`'s `#children` and `#parent_of?`
 
+    *John Hawthorn*
+
 *   Change default serialization format of `MessageEncryptor` from `Marshal` to `JSON` for Rails 7.1.
 
     Existing apps are provided with an upgrade path to migrate to `JSON` as described in `guides/source/upgrading_ruby_on_rails.md`
@@ -141,6 +143,8 @@
     *Stephen Sugden*
 
 *   Improve `File.atomic_write` error handling
+
+    *Daniel Pepper*
 
 *   Fix `Class#descendants` and `DescendantsTracker#descendants` compatibility with Ruby 3.1.
 

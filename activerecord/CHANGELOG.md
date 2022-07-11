@@ -1,3 +1,15 @@
+*   Add `timestamptz` as a time zone aware type for PostgreSQL
+
+    This is required for correctly parsing `timestamp with time zone` values in your database.
+
+    If you don't want this, you can opt out by adding this initializer:
+
+    ```ruby
+    ActiveRecord::Base.time_zone_aware_types -= [:timestamptz]
+    ```
+
+    *Alex Ghiculescu*
+    
 *   Add new `ActiveRecord::Base::generates_token_for` API.
 
     Currently, `signed_id` fulfills the role of generating tokens for e.g.
@@ -30,6 +42,8 @@
     user.update!(password: "new password")
     User.find_by_token_for(:password_reset, token) # => nil
     ```
+    
+    *Jonathan Hefner*
 
 *   Optimize Active Record batching for whole table iterations.
 
