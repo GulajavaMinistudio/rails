@@ -599,6 +599,24 @@ module ActiveRecord
       #  # Ignores the method call if the column exists
       #  add_column(:shapes, :triangle, 'polygon', if_not_exists: true)
       def add_column(table_name, column_name, type, **options)
+        add_column_def = build_add_column_definition(table_name, column_name, type, **options)
+        return unless add_column_def
+
+        execute(add_column_def.ddl)
+      end
+
+      def add_columns(table_name, *column_names, type:, **options) # :nodoc:
+        column_names.each do |column_name|
+          add_column(table_name, column_name, type, **options)
+        end
+      end
+
+      # Builds an AlterTable object for adding a column to a table.
+      #
+      # This definition object contains information about the column that would be created
+      # if the same arguments were passed to #add_column. See #add_column for information about
+      # passing a +table_name+, +column_name+, +type+ and other options that can be passed.
+      def build_add_column_definition(table_name, column_name, type, **options) # :nodoc:
         return if options[:if_not_exists] == true && column_exists?(table_name, column_name)
 
         if supports_datetime_with_precision?
@@ -607,15 +625,10 @@ module ActiveRecord
           end
         end
 
-        at = create_alter_table table_name
-        at.add_column(column_name, type, **options)
-        execute schema_creation.accept at
-      end
-
-      def add_columns(table_name, *column_names, type:, **options) # :nodoc:
-        column_names.each do |column_name|
-          add_column(table_name, column_name, type, **options)
-        end
+        alter_table = create_alter_table(table_name)
+        alter_table.add_column(column_name, type, **options)
+        schema_creation.accept(alter_table)
+        alter_table
       end
 
       # Removes the given columns from the table definition.
@@ -834,10 +847,21 @@ module ActiveRecord
       #
       # For more information see the {"Transactional Migrations" section}[rdoc-ref:Migration].
       def add_index(table_name, column_name, **options)
+        create_index = build_create_index_definition(table_name, column_name, **options)
+        execute(create_index.ddl)
+      end
+
+      # Builds a CreateIndexDefinition object.
+      #
+      # This definition object contains information about the index that would be created
+      # if the same arguments were passed to #add_index. See #add_index for information about
+      # passing a +table_name+, +column_name+, and other additional options that can be passed.
+      def build_create_index_definition(table_name, column_name, **options) # :nodoc:
         index, algorithm, if_not_exists = add_index_options(table_name, column_name, **options)
 
         create_index = CreateIndexDefinition.new(index, algorithm, if_not_exists)
-        execute schema_creation.accept(create_index)
+        schema_creation.accept(create_index)
+        create_index
       end
 
       # Removes the given index from the table.
