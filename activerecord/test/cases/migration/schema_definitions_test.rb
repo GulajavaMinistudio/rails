@@ -36,6 +36,28 @@ module ActiveRecord
         assert id_column.sql_type
       end
 
+      def test_build_create_join_table_definition_with_block
+        assert connection.table_exists?(:posts)
+        assert connection.table_exists?(:comments)
+
+        join_td = connection.build_create_join_table_definition(:posts, :comments) do |t|
+          t.column :another_col, :string
+        end
+
+        assert_equal :comments_posts, join_td.name
+        assert_equal ["another_col", "comment_id", "post_id"], join_td.columns.map(&:name).sort
+      end
+
+      def test_build_create_join_table_definition_without_block
+        assert connection.table_exists?(:posts)
+        assert connection.table_exists?(:comments)
+
+        join_td = connection.build_create_join_table_definition(:posts, :comments)
+
+        assert_equal :comments_posts, join_td.name
+        assert_equal ["comment_id", "post_id"], join_td.columns.map(&:name).sort
+      end
+
       def test_build_create_index_definition
         connection.create_table(:test) do |t|
           t.column :foo, :string
@@ -62,21 +84,22 @@ module ActiveRecord
         end
       end
 
-      def test_build_add_column_definition
-        connection.create_table(:test)
-        add_col_td = connection.build_add_column_definition(:test, :foo, :string)
+      unless current_adapter?(:SQLite3Adapter)
+        def test_build_change_column_definition
+          connection.create_table(:test) do |t|
+            t.column :foo, :string
+          end
 
-        assert_match "ALTER TABLE", add_col_td.ddl
+          change_cd = connection.build_change_column_definition(:test, :foo, :integer)
+          assert change_cd.ddl
 
-        add_cols = add_col_td.adds
-        assert_equal 1, add_cols.size
-
-        add_col = add_cols.first.column
-        assert_equal "foo", add_col.name
-        assert add_col.type
-        assert add_col.sql_type
-      ensure
-        connection.drop_table(:test) if connection.table_exists?(:test)
+          change_col = change_cd.column
+          assert_equal "foo", change_col.name.to_s
+          assert change_col.type
+          assert change_col.sql_type
+        ensure
+          connection.drop_table(:test) if connection.table_exists?(:test)
+        end
       end
     end
   end
