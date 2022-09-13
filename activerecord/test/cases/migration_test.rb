@@ -81,7 +81,7 @@ class MigrationTest < ActiveRecord::TestCase
 
   def test_passing_a_schema_migration_class_to_migration_context_is_deprecated
     migrations_path = MIGRATIONS_ROOT + "/valid"
-    migrator = assert_deprecated { ActiveRecord::MigrationContext.new(migrations_path, ActiveRecord::SchemaMigration) }
+    migrator = assert_deprecated { ActiveRecord::MigrationContext.new(migrations_path, ActiveRecord::SchemaMigration, ActiveRecord::InternalMetadata) }
     migrator.up
 
     assert_equal 3, migrator.current_version
@@ -671,21 +671,20 @@ class MigrationTest < ActiveRecord::TestCase
   def test_internal_metadata_table_name
     original_internal_metadata_table_name = ActiveRecord::Base.internal_metadata_table_name
 
-    assert_equal "ar_internal_metadata", ActiveRecord::InternalMetadata.table_name
+    assert_equal "ar_internal_metadata", @internal_metadata.table_name
     ActiveRecord::Base.table_name_prefix = "p_"
     ActiveRecord::Base.table_name_suffix = "_s"
     Reminder.reset_table_name
-    assert_equal "p_ar_internal_metadata_s", ActiveRecord::InternalMetadata.table_name
+    assert_equal "p_ar_internal_metadata_s", @internal_metadata.table_name
     ActiveRecord::Base.internal_metadata_table_name = "changed"
     Reminder.reset_table_name
-    assert_equal "p_changed_s", ActiveRecord::InternalMetadata.table_name
+    assert_equal "p_changed_s", @internal_metadata.table_name
     ActiveRecord::Base.table_name_prefix = ""
     ActiveRecord::Base.table_name_suffix = ""
     Reminder.reset_table_name
-    assert_equal "changed", ActiveRecord::InternalMetadata.table_name
+    assert_equal "changed", @internal_metadata.table_name
   ensure
     ActiveRecord::Base.internal_metadata_table_name = original_internal_metadata_table_name
-    ActiveRecord::InternalMetadata.reset_table_name
     Reminder.reset_table_name
   end
 
@@ -714,7 +713,7 @@ class MigrationTest < ActiveRecord::TestCase
   end
 
   def test_internal_metadata_stores_environment_when_migration_fails
-    @internal_metadata.delete_all
+    @internal_metadata.delete_all_entries
     current_env = ActiveRecord::ConnectionHandling::DEFAULT_ENV.call
 
     migration = Class.new(ActiveRecord::Migration::Current) {
@@ -730,7 +729,7 @@ class MigrationTest < ActiveRecord::TestCase
   end
 
   def test_internal_metadata_stores_environment_when_other_data_exists
-    @internal_metadata.delete_all
+    @internal_metadata.delete_all_entries
     @internal_metadata[:foo] = "bar"
 
     current_env     = ActiveRecord::ConnectionHandling::DEFAULT_ENV.call
@@ -761,6 +760,31 @@ class MigrationTest < ActiveRecord::TestCase
   ensure
     ActiveRecord::Base.connection.instance_variable_set("@config", original_config)
     @internal_metadata.create_table
+  end
+
+  def test_inserting_a_new_entry_into_internal_metadata
+    @internal_metadata[:version] = "foo"
+    assert_equal "foo", @internal_metadata[:version]
+  ensure
+    @internal_metadata.delete_all_entries
+  end
+
+  def test_updating_an_existing_entry_into_internal_metadata
+    @internal_metadata[:version] = "foo"
+    updated_at = @internal_metadata.send(:select_entry, :version)["updated_at"]
+    assert_equal "foo", @internal_metadata[:version]
+
+    # same version doesn't update timestamps
+    @internal_metadata[:version] = "foo"
+    assert_equal "foo", @internal_metadata[:version]
+    assert_equal updated_at, @internal_metadata.send(:select_entry, :version)["updated_at"]
+
+    # updated version updates timestamps
+    @internal_metadata[:version] = "not_foo"
+    assert_equal "not_foo", @internal_metadata[:version]
+    assert_not_equal updated_at, @internal_metadata.send(:select_entry, :version)["updated_at"]
+  ensure
+    @internal_metadata.delete_all_entries
   end
 
   def test_internal_metadata_create_table_wont_be_affected_by_schema_cache

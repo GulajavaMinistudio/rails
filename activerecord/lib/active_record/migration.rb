@@ -952,11 +952,13 @@ module ActiveRecord
       copied = []
 
       FileUtils.mkdir_p(destination) unless File.exist?(destination)
+      schema_migration = SchemaMigration::NullSchemaMigration.new
+      internal_metadata = InternalMetadata::NullInternalMetadata.new
 
-      destination_migrations = ActiveRecord::MigrationContext.new(destination, SchemaMigration::NullSchemaMigration.new).migrations
+      destination_migrations = ActiveRecord::MigrationContext.new(destination, schema_migration, internal_metadata).migrations
       last = destination_migrations.last
       sources.each do |scope, path|
-        source_migrations = ActiveRecord::MigrationContext.new(path, SchemaMigration::NullSchemaMigration.new).migrations
+        source_migrations = ActiveRecord::MigrationContext.new(path, schema_migration, internal_metadata).migrations
 
         source_migrations.each do |migration|
           source = File.binread(migration.filename)
@@ -1081,16 +1083,32 @@ module ActiveRecord
   class MigrationContext
     attr_reader :migrations_paths, :schema_migration, :internal_metadata
 
-    def initialize(migrations_paths, schema_migration = nil, internal_metadata = InternalMetadata)
+    def initialize(migrations_paths, schema_migration = nil, internal_metadata = nil)
       if schema_migration == SchemaMigration
-        schema_migration = SchemaMigration.new(ActiveRecord::Base.connection)
+        ActiveSupport::Deprecation.warn(<<-MSG.squish)
+          SchemaMigration no longer inherits from ActiveRecord::Base. If you want
+          to use the default connection, remove this argument. If you want to use a
+          specific connection, instaniate MigrationContext with the connection's schema
+          migration, for example `MigrationContext.new(path, Dog.connection.schema_migration)`.
+        MSG
 
-        ActiveSupport::Deprecation.warn("SchemaMigration no longer inherits from ActiveRecord::Base. Please instaniate a new SchemaMigration object with the desired connection, ie `ActiveRecord::SchemaMigration.new(ActiveRecord::Base.connection)`.")
+        schema_migration = nil
+      end
+
+      if internal_metadata == InternalMetadata
+        ActiveSupport::Deprecation.warn(<<-MSG.squish)
+          SchemaMigration no longer inherits from ActiveRecord::Base. If you want
+          to use the default connection, remove this argument. If you want to use a
+          specific connection, instaniate MigrationContext with the connection's internal
+          metadata, for example `MigrationContext.new(path, nil, Dog.connection.internal_metadata)`.
+        MSG
+
+        internal_metadata = nil
       end
 
       @migrations_paths = migrations_paths
       @schema_migration = schema_migration || SchemaMigration.new(ActiveRecord::Base.connection)
-      @internal_metadata = internal_metadata
+      @internal_metadata = internal_metadata || InternalMetadata.new(ActiveRecord::Base.connection)
     end
 
     # Runs the migrations in the +migrations_path+.
@@ -1263,8 +1281,9 @@ module ActiveRecord
       # For cases where a table doesn't exist like loading from schema cache
       def current_version
         schema_migration = SchemaMigration.new(ActiveRecord::Base.connection)
+        internal_metadata = InternalMetadata.new(ActiveRecord::Base.connection)
 
-        MigrationContext.new(migrations_paths, schema_migration, InternalMetadata).current_version
+        MigrationContext.new(migrations_paths, schema_migration, internal_metadata).current_version
       end
     end
 
