@@ -128,7 +128,6 @@ module Rails
           hotwire_gemfile_entry,
           css_gemfile_entry,
           jbuilder_gemfile_entry,
-          psych_gemfile_entry,
           cable_gemfile_entry,
         ].flatten.compact.select(&@gem_filter)
       end
@@ -434,14 +433,6 @@ module Rails
         end
       end
 
-      def psych_gemfile_entry
-        return unless defined?(Rubinius)
-
-        comment = "Use Psych as the YAML engine, instead of Syck, so serialized " \
-                  "data can be read safely from different rubies"
-        GemfileEntry.new("psych", "~> 2.0", comment, platforms: :rbx)
-      end
-
       def cable_gemfile_entry
         return if options[:skip_action_cable]
 
@@ -477,6 +468,10 @@ module Rails
 
       def bundle_install?
         !(options[:skip_bundle] || options[:pretend])
+      end
+
+      def bundler_windows_platforms
+        Gem.rubygems_version >= Gem::Version.new("3.3.22") ? "windows" : "mswin mswin64 mingw x64_mingw"
       end
 
       def depends_on_system_test?

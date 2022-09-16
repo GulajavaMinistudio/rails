@@ -128,7 +128,7 @@ group :test do
   gem "benchmark-ips"
 end
 
-platforms :ruby, :mswin, :mswin64, :mingw, :x64_mingw do
+platforms :ruby, :windows do
   gem "nokogiri", ">= 1.8.1", "!= 1.11.0"
 
   # Needed for compiling the ActionDispatch::Journey parser.
@@ -159,12 +159,6 @@ platforms :jruby do
   end
 end
 
-platforms :rbx do
-  # The rubysl-yaml gem doesn't ship with Psych by default as it needs
-  # libyaml that isn't always available.
-  gem "psych", "~> 3.0"
-end
-
 # Gems that are necessary for Active Record tests with Oracle.
 if ENV["ORACLE_ENHANCED"]
   platforms :ruby do
@@ -173,8 +167,8 @@ if ENV["ORACLE_ENHANCED"]
   gem "activerecord-oracle_enhanced-adapter", github: "rsim/oracle-enhanced", branch: "master"
 end
 
-gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw, :jruby]
-gem "wdm", ">= 0.1.0", platforms: [:mingw, :mswin, :x64_mingw, :mswin64]
+gem "tzinfo-data", platforms: [:windows, :jruby]
+gem "wdm", ">= 0.1.0", platforms: [:windows]
 
 # The error_highlight gem only works on CRuby 3.1 or later.
 # Also, Rails depends on a new API available since error_highlight 0.4.0.

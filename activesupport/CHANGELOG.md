@@ -1,3 +1,76 @@
+*   Add `assert_error_reported` and `assert_no_error_reported`
+
+    Allows to easily asserts an error happened but was handled
+
+    ```ruby
+    report = assert_error_reported(IOError) do
+      # ...
+    end
+    assert_equal "Oops", report.error.message
+    assert_equal "admin", report.context[:section]
+    assert_equal :warning, report.severity
+    assert_predicate report, :handled?
+    ```
+
+    *Jean Boussier*
+
+*   `ActiveSupport::Deprecation` behavior callbacks can now receive the
+    deprecator instance as an argument.  This makes it easier for such callbacks
+    to change their behavior based on the deprecator's state.  For example,
+    based on the deprecator's `debug` flag.
+
+    3-arity and splat-args callbacks such as the following will now be passed
+    the deprecator instance as their third argument:
+
+    * `->(message, callstack, deprecator) { ... }`
+    * `->(*args) { ... }`
+    * `->(message, *other_args) { ... }`
+
+    2-arity and 4-arity callbacks such as the following will continue to behave
+    the same as before:
+
+    * `->(message, callstack) { ... }`
+    * `->(message, callstack, deprecation_horizon, gem_name) { ... }`
+    * `->(message, callstack, *deprecation_details) { ... }`
+
+    *Jonathan Hefner*
+
+*   `ActiveSupport::Deprecation#disallowed_warnings` now affects the instance on
+    which it is configured.
+
+    This means that individual `ActiveSupport::Deprecation` instances can be
+    configured with their own disallowed warnings, and the global
+    `ActiveSupport::Deprecation.disallowed_warnings` now only affects the global
+    `ActiveSupport::Deprecation.warn`.
+
+    **Before**
+
+    ```ruby
+    ActiveSupport::Deprecation.disallowed_warnings = ["foo"]
+    deprecator = ActiveSupport::Deprecation.new("2.0", "MyCoolGem")
+    deprecator.disallowed_warnings = ["bar"]
+
+    ActiveSupport::Deprecation.warn("foo") # => raise ActiveSupport::DeprecationException
+    ActiveSupport::Deprecation.warn("bar") # => print "DEPRECATION WARNING: bar"
+    deprecator.warn("foo")                 # => raise ActiveSupport::DeprecationException
+    deprecator.warn("bar")                 # => print "DEPRECATION WARNING: bar"
+    ```
+
+    **After**
+
+    ```ruby
+    ActiveSupport::Deprecation.disallowed_warnings = ["foo"]
+    deprecator = ActiveSupport::Deprecation.new("2.0", "MyCoolGem")
+    deprecator.disallowed_warnings = ["bar"]
+
+    ActiveSupport::Deprecation.warn("foo") # => raise ActiveSupport::DeprecationException
+    ActiveSupport::Deprecation.warn("bar") # => print "DEPRECATION WARNING: bar"
+    deprecator.warn("foo")                 # => print "DEPRECATION WARNING: foo"
+    deprecator.warn("bar")                 # => raise ActiveSupport::DeprecationException
+    ```
+
+    *Jonathan Hefner*
+
 *   Add italic and underline support to `ActiveSupport::LogSubscriber#color`
 
     Previously, only bold text was supported via a positional argument.
