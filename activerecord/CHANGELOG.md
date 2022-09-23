@@ -1,3 +1,38 @@
+*   Fix erroneous nil default precision on virtual datetime columns.
+
+    Prior to this change, virtual datetime columns did not have the same
+    default precision as regular datetime columns, resulting in the following
+    being erroneously equivalent:
+
+        t.virtual :name, type: datetime,                 as: "expression"
+        t.virtual :name, type: datetime, precision: nil, as: "expression"
+
+    This change fixes the default precision lookup, so virtual and regular
+    datetime column default precisions match.
+
+    *Sam Bostock*
+
+*   Use connection from `#with_raw_connection` in `#quote_string`.
+
+    This ensures that the string quoting is wrapped in the reconnect and retry logic
+    that `#with_raw_connection` offers.
+
+    *Adrianna Chang*
+
+*   Add `expires_in` option to `signed_id`.
+
+    *Shouichi Kamiya*
+
+*   Allow applications to set retry deadline for query retries.
+
+    Building on the work done in #44576 and #44591, we extend the logic that automatically
+    reconnects database connections to take into account a timeout limit. We won't retry
+    a query if a given amount of time has elapsed since the query was first attempted. This
+    value defaults to nil, meaning that all retryable queries are retried regardless of time elapsed,
+    but this can be changed via the `retry_deadline` option in the database config.
+
+    *Adrianna Chang*
+
 *   Fix a case where the query cache can return wrong values. See #46044
 
     *Aaron Patterson*
