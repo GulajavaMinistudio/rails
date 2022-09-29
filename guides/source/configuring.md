@@ -1125,6 +1125,10 @@ Define an `Array` specifying the key/value tags to be inserted in an SQL
 comment. Defaults to `[ :application ]`, a predefined tag returning the
 application name.
 
+#### `config.active_record.query_log_tags_format`
+
+A `Symbol` specifying the formatter to use for tags. Valid values are `:sqlcommenter` and `:legacy`.  Defaults to `:legacy`.
+
 #### `config.active_record.cache_query_log_tags`
 
 Specifies whether or not to enable caching of query log tags. For applications
@@ -1355,7 +1359,7 @@ Rendered recordings/threads/_thread.html.erb in 1.5 ms [cache miss]
 
 #### `config.action_controller.raise_on_open_redirects`
 
-Raises an `ArgumentError` when an unpermitted open redirect occurs.
+Raises an `ActionController::Redirecting::UnsafeRedirectError` when an unpermitted open redirect occurs.
 
 The default value depends on the `config.load_defaults` target version:
 
