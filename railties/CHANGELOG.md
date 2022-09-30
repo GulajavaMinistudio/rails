@@ -1,3 +1,32 @@
+*   Move dbconsole logic to Active Record connection adapter.
+
+    Instead of hosting the connection logic in the command object, the
+    database adapter should be responsible for connecting to a console session.
+    This patch moves #find_cmd_and_exec to the adapter and exposes a new API to
+    lookup the adapter class without instantiating it.
+
+    *Gannon McGibbon, Paarth Madan*
+
+*   Add `Rails.application.message_verifiers` as a central point to configure
+    and create message verifiers for an application.
+
+    This allows applications to, for example, rotate old `secret_key_base`
+    values:
+
+    ```ruby
+    config.before_initialize do |app|
+      app.message_verifiers.rotate(secret_key_base: "old secret_key_base")
+    end
+    ```
+
+    And for libraries to create preconfigured message verifiers:
+
+    ```ruby
+    ActiveStorage.verifier = Rails.application.message_verifiers["ActiveStorage"]
+    ```
+
+    *Jonathan Hefner*
+
 *   Support MySQL's ssl-mode option for the dbconsole command.
 
     Verifying the identity of the database server requires setting the ssl-mode
