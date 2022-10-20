@@ -1,3 +1,42 @@
+*   Fix encryption of column default values.
+
+    Previously, encrypted attributes that used column default values appeared to
+    be encrypted on create, but were not:
+
+      ```ruby
+      Book.encrypts :name
+
+      book = Book.create!
+      book.name
+      # => "<untitled>"
+      book.name_before_type_cast
+      # => "{\"p\":\"abc..."
+      book.reload.name_before_type_cast
+      # => "<untitled>"
+      ```
+
+    Now, attributes with column default values are encrypted:
+
+      ```ruby
+      Book.encrypts :name
+
+      book = Book.create!
+      book.name
+      # => "<untitled>"
+      book.name_before_type_cast
+      # => "{\"p\":\"abc..."
+      book.reload.name_before_type_cast
+      # => "{\"p\":\"abc..."
+      ```
+
+    *Jonathan Hefner*
+
+*   Deprecate delegation from `Base` to `connection_handler`.
+
+    Calling `Base.clear_all_connections!`, `Base.clear_active_connections!`, `Base.clear_reloadable_connections!` and `Base.flush_idle_connections!` is deprecated. Please call these methods on the connection handler directly. In future Rails versions, the delegation from `Base` to the `connection_handler` will be removed.
+
+    *Eileen M. Uchitelle*
+
 *   Allow ActiveRecord::QueryMethods#reselect to receive hash values, similar to ActiveRecord::QueryMethods#select
 
     *Sampat Badhe*
