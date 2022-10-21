@@ -1,3 +1,41 @@
+*   Fix `ciphertext_for` for yet-to-be-encrypted values.
+
+    Previously, `ciphertext_for` returned the cleartext of values that had not
+    yet been encrypted, such as with an unpersisted record:
+
+      ```ruby
+      Post.encrypts :body
+
+      post = Post.create!(body: "Hello")
+      post.ciphertext_for(:body)
+      # => "{\"p\":\"abc..."
+
+      post.body = "World"
+      post.ciphertext_for(:body)
+      # => "World"
+      ```
+
+    Now, `ciphertext_for` will always return the ciphertext of encrypted
+    attributes:
+
+      ```ruby
+      Post.encrypts :body
+
+      post = Post.create!(body: "Hello")
+      post.ciphertext_for(:body)
+      # => "{\"p\":\"abc..."
+
+      post.body = "World"
+      post.ciphertext_for(:body)
+      # => "{\"p\":\"xyz..."
+      ```
+
+    *Jonathan Hefner*
+
+*   Fix a bug where using groups and counts with long table names would return incorrect results.
+
+    *Shota Toguchi*, *Yusaku Ono*
+
 *   Fix encryption of column default values.
 
     Previously, encrypted attributes that used column default values appeared to
@@ -53,7 +91,7 @@
 
     It is now possible to opt into sqlcommenter-formatted query log tags with `config.active_record.query_log_tags_format = :sqlcommenter`.
 
-    *Modulitos and Iheanyi*
+    *Modulitos* and *Iheanyi*
 
 *   Allow any ERB in the database.yml when creating rake tasks.
 
