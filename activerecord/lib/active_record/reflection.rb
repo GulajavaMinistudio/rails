@@ -425,15 +425,21 @@ module ActiveRecord
 
         begin
           klass = active_record.send(:compute_type, name)
-
-          unless klass < ActiveRecord::Base
-            raise ArgumentError, compute_class_error_message(klass)
+        rescue NameError => error
+          if error.name.match?(/(?:\A|::)#{name}\z/)
+            message = "Missing model class #{name} for the #{active_record}##{self.name} association."
+            message += " You can specify a different model class with the :class_name option." unless options[:class_name]
+            raise NameError.new(message, name)
+          else
+            raise
           end
-
-          klass
-        rescue NameError
-          raise ArgumentError, compute_class_error_message
         end
+
+        unless klass < ActiveRecord::Base
+          raise ArgumentError, "The #{name} model class for the #{active_record}##{self.name} association is not an ActiveRecord::Base subclass."
+        end
+
+        klass
       end
 
       attr_reader :type, :foreign_type
@@ -599,16 +605,6 @@ module ActiveRecord
       end
 
       private
-        def compute_class_error_message(klass = nil)
-          msg = +"Rails couldn't find a valid model for the #{name} association. "
-          if !options[:class_name]
-            msg << "Use the :class_name option on the association declaration to tell Rails which model to use."
-          else
-            msg << "Ensure the class provided to :class_name exists and is an ActiveRecord::Base subclass."
-          end
-          msg
-        end
-
         # Attempts to find the inverse association name automatically.
         # If it cannot find a suitable inverse association name, it returns
         # +nil+.
@@ -627,7 +623,9 @@ module ActiveRecord
 
             begin
               reflection = klass._reflect_on_association(inverse_name)
-            rescue NameError
+            rescue NameError => error
+              raise unless error.name.to_s == class_name
+
               # Give up: we couldn't compute the klass type so we won't be able
               # to find any associations either.
               reflection = false
