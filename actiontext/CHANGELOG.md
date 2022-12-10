@@ -1,3 +1,11 @@
+*   Focus rich-text editor after calling `fill_in_rich_text_area`
+
+    *Sean Doyle*
+
+*   Support `strict_loading:` option for `has_rich_text` declaration
+
+    *Sean Doyle*
+
 *   Update ContentAttachment so that it can encapsulate arbitrary HTML content in a document.
 
     *Jamis Buck*
