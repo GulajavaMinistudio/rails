@@ -352,7 +352,7 @@ Sets the path where your app's JavaScript lives relative to the `app` directory.
 
 #### `config.log_file_size`
 
-Defines the maximum size of the Rails log file. Defaults to 100 MB in development and test, and unlimited in all other environments.
+Defines the maximum size of the Rails log file in bytes. Defaults to `104_857_600` (100 MiB) in development and test, and unlimited in all other environments.
 
 #### `config.log_formatter`
 
