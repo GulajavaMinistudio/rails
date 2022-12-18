@@ -10,7 +10,7 @@ else
 end
 
 # We need a newish Rake since Active Job sets its test tasks' descriptions.
-gem "rake", ">= 11.1"
+gem "rake", ">= 13"
 
 gem "sprockets-rails", ">= 2.0.0"
 gem "propshaft", ">= 0.1.7"
@@ -140,7 +140,7 @@ platforms :ruby, :windows do
   gem "racc", ">=1.4.6", require: false
 
   # Active Record.
-  gem "sqlite3", "~> 1.4", "< 1.5"
+  gem "sqlite3", "~> 1.4"
 
   group :db do
     gem "pg", "~> 1.3"

@@ -1,3 +1,22 @@
+*   Add ENV["SECRET_KEY_BASE_DUMMY"] for starting production environment with a generated secret base key,
+    which can be used to run tasks like `assets:precompile` without making the RAILS_MASTER_KEY available
+    to the build process.
+
+    Dockerfile layer example:
+
+    ```
+    RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
+    ```
+
+    *DHH*
+
+*   Show descriptions for all commands in Rails help
+
+    When calling `rails help` most commands missed their description. We now
+    show the same descriptions as shown in `rails -T`.
+
+    *Petrik de Heus*
+
 *   Always generate the storage/ directory with rails new to ensure there's a stable place to
     put permanent files, and a single mount point for containers to map. Then default sqlite3 databases
     to live there instead of db/, which is only meant for configuration, not data.
