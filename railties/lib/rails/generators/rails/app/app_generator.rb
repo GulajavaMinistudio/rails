@@ -70,6 +70,14 @@ module Rails
       template "gitattributes", ".gitattributes"
     end
 
+    def dockerfiles
+      template "Dockerfile"
+      template "dockerignore", ".dockerignore"
+
+      template "docker-entrypoint", "bin/docker-entrypoint"
+      chmod "bin/docker-entrypoint", 0755 & ~File.umask, verbose: false
+    end
+
     def version_control
       if !options[:skip_git] && !options[:pretend]
         run git_init_command, capture: options[:quiet], abort_on_failure: false
@@ -341,6 +349,11 @@ module Rails
         end
       end
       remove_task :update_active_storage
+
+      def create_dockerfiles
+        return if options[:skip_docker] || options[:dummy_app]
+        build(:dockerfiles)
+      end
 
       def create_config_files
         build(:config)
