@@ -207,8 +207,8 @@ module ActiveRecord
         ensure
           [:primary, :secondary].each do |db|
             ActiveRecord::Base.establish_connection(db)
-            ActiveRecord::Base.connection.schema_migration.drop_table
-            ActiveRecord::Base.connection.internal_metadata.drop_table
+            ActiveRecord::Base.connection.schema_migration.delete_all_versions
+            ActiveRecord::Base.connection.internal_metadata.delete_all_entries
           end
           ActiveRecord::Base.configurations = old_configurations
           ActiveRecord::Base.establish_connection(:arunit)
@@ -1142,7 +1142,7 @@ module ActiveRecord
         assert_match(/down    001             Valid people have last names/, output)
         assert_match(/down    002             We need reminders/, output)
         assert_match(/down    003             Innocent jointable/, output)
-        @schema_migration.drop_table
+        @schema_migration.delete_all_versions
       end
 
       private
