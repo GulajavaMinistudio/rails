@@ -231,13 +231,15 @@ While booting, applications can autoload from the autoload once paths, which are
 
 However, you cannot autoload from the autoload paths, which are managed by the `main` autoloader. This applies to code in `config/initializers` as well as application or engines initializers.
 
-Why? Initializers only run once, when the application boots. If you reboot the server, they run again in a new process, but reloading does not reboot the server, and initializers don't run again. Let's see the two main use cases.
+Why? Initializers only run once, when the application boots. They do not run again on reloads. If the application used a reloadable class in an initializer, and the class was edited, on reload changes would not be reflected in whatever the initializer did. Therefore, referring to reloadable constants during initialization is disallowed.
+
+Let's see what to do instead.
 
 ### Use Case 1: During Boot, Load Reloadable Code
 
 #### Autoload on Boot and on Each Reload
 
-Let's imagine `ApiGateway` is a reloadable class from `app/services` managed by the `main` autoloader and you need to configure its endpoint while the application boots:
+Let's imagine `ApiGateway` is a reloadable class and you need to configure its endpoint while the application boots:
 
 ```ruby
 # config/initializers/api_gateway_setup.rb
@@ -310,6 +312,30 @@ Corollary: Those classes or modules **cannot be reloadable**.
 The easiest way to refer to those classes or modules during boot is to have them defined in a directory which does not belong to the autoload paths. For instance, `lib` is an idiomatic choice. It does not belong to the autoload paths by default, but it does belong to `$LOAD_PATH`. Just perform a regular `require` to load it.
 
 As noted above, another option is to have the directory that defines them in the autoload once paths and autoload. Please check the [section about config.autoload_once_paths](#config-autoload-once-paths) for details.
+
+### Use Case 3: Configure Application Classes for Engines
+
+Let's suppose an engine works with the reloadable application class that models users, and has a configuration point for it:
+
+```ruby
+# config/initializers/my_engine.rb
+MyEngine.configure do |config|
+  config.user_model = User # DO NOT DO THIS
+end
+```
+
+On reload, `config.user_model` would be pointing to a stale object, because the reloaded `User` class would not be reset in the engine configuration. Therefore, edits to `User` would be missed by the engine.
+
+In order to play well with reloadable application code, the engine instead needs applications to configure the _name_ of that class:
+
+```ruby
+# config/initializers/my_engine.rb
+MyEngine.configure do |config|
+  config.user_model = "User" # OK
+end
+```
+
+Then, at run time, `config.user_model.constantize` gives you the current class object.
 
 Eager Loading
 -------------
