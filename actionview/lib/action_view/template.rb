@@ -154,12 +154,24 @@ module ActionView
       end
     end
 
+    def spot(location) # :nodoc:
+      ast = RubyVM::AbstractSyntaxTree.parse(compiled_source, keep_script_lines: true)
+      node_id = RubyVM::AbstractSyntaxTree.node_id_for_backtrace_location(location)
+      node = find_node_by_id(ast, node_id)
+
+      ErrorHighlight.spot(node)
+    end
+
     # Translate an error location returned by ErrorHighlight to the correct
     # source location inside the template.
     def translate_location(backtrace_location, spot)
       if handler.respond_to?(:translate_location)
-        handler.translate_location(spot, backtrace_location, source)
+        handler.translate_location(spot, backtrace_location, encode!)
       else
+        ActionView.deprecator.warn(<<-MSG.squish)
+          The templating engine being used does not define `translate_location`
+          so Rails is unable to highlight the source location inside the template.
+        MSG
         spot
       end
     end
@@ -303,6 +315,17 @@ module ActionView
     end
 
     private
+      def find_node_by_id(node, node_id)
+        return node if node.node_id == node_id
+
+        node.children.grep(node.class).each do |child|
+          found = find_node_by_id(child, node_id)
+          return found if found
+        end
+
+        false
+      end
+
       # Compile a template. This method ensures a template is compiled
       # just once and removes the source after it is compiled.
       def compile!(view)
