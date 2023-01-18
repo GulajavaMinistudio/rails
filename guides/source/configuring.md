@@ -946,6 +946,46 @@ Specifies if an error should be raised if the order of a query is ignored during
 
 Controls whether migrations are numbered with serial integers or with timestamps. The default is `true`, to use timestamps, which are preferred if there are multiple developers working on the same application.
 
+#### `config.active_record.db_warnings_action`
+
+Controls the action to be taken when a SQL query produces a warning. The following options are available:
+
+  * `:ignore` - Database warnings wil be ignored. This is the default.
+
+  * `:log` - Database warnings will be logged via `ActiveRecord.logger` at the `:warn` level.
+
+  * `:raise` - Database warnings will be raised as `ActiveRecord::SQLWarning`.
+
+  * `:report` - Database warnings be will reported to subscribers of Rails' error reporter.
+
+  * Custom proc - A custom proc can be provided. It should accept a `SQLWarning` error object.
+
+    For example:
+
+    ```ruby
+    config.active_record.db_warnings_action = ->(warning) do
+      # Report to custom exception reporting service
+      Bugsnag.notify(warning.message) do |notification|
+        notification.add_metadata(:warning_code, warning.code)
+        notification.add_metadata(:warning_level, warning.level)
+      end
+    end
+    ```
+
+#### `config.active_record.db_warnings_ignore`
+
+Specifies an allowlist of warnings that will be ignored, regardless of the configured `db_warnings_action`.
+The default behavior is to report all warnings. Warnings to ignore can be specified as Strings or Regexps. For example:
+
+  ```ruby
+  config.active_record.db_warnings_action = :raise
+  # The following warnings will not be raised
+  config.active_record.db_warnings_ignore = [
+    /Invalid utf8mb4 character string/,
+    "An exact warning message",
+  ]
+  ```
+
 #### `config.active_record.migration_strategy`
 
 Controls the strategy class used to perform schema statement methods in a migration. The default class
@@ -1288,6 +1328,12 @@ Defaults to `[Symbol]`. Allows applications to include additional permitted clas
 #### `config.active_record.use_yaml_unsafe_load`
 
 Defaults to `false`. Allows applications to opt into using `unsafe_load` on the `ActiveRecord::Coders::YAMLColumn`.
+
+#### `config.active_record.raise_int_wider_than_64bit`
+
+Defaults to `true`. Determines whether to raise an exception or not when
+the PostgreSQL adapter is provided an integer that is wider than signed
+64bit representation.
 
 #### `ActiveRecord::ConnectionAdapters::Mysql2Adapter.emulate_booleans`
 
