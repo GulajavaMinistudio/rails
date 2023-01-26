@@ -194,6 +194,10 @@ be set to `false` if application code is not thread safe. Defaults to `true`.
 
 Sets the host for the assets. Useful when CDNs are used for hosting assets, or when you want to work around the concurrency constraints built-in in browsers using different domain aliases. Shorter version of `config.action_controller.asset_host`.
 
+#### `config.assume_ssl`
+
+Makes application believe that all requests are arring over SSL. This is useful when proxying through a load balancer that terminates SSL, the forwarded request will appear as though its HTTP instead of HTTPS to the application. This makes redirects and cookie security target HTTP instead of HTTPS. This middleware makes the server assume that the proxy already terminated SSL, and that the request really is HTTPS.
+
 #### `config.autoflush_log`
 
 Enables writing log file output immediately instead of buffering. Defaults to
@@ -256,11 +260,23 @@ Guide
 
 #### `config.credentials.content_path`
 
-Configures lookup path for encrypted credentials.
+The path of the encrypted credentials file.
+
+Defaults to `config/credentials/#{Rails.env}.yml.enc` if it exists, or
+`config/credentials.yml.enc` otherwise.
+
+NOTE: In order for the `bin/rails credentials` commands to recognize this value,
+it must be set in `config/application.rb`.
 
 #### `config.credentials.key_path`
 
-Configures lookup path for encryption key.
+The path of the encrypted credentials key file.
+
+Defaults to `config/credentials/#{Rails.env}.key` if it exists, or
+`config/master.key` otherwise.
+
+NOTE: In order for the `bin/rails credentials` commands to recognize this value,
+it must be set in `config/application.rb`.
 
 #### `config.debug_exception_response_format`
 

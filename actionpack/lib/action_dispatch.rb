@@ -40,6 +40,7 @@ module ActionDispatch
 
   class IllegalStateError < StandardError
   end
+  deprecate_constant :IllegalStateError
 
   class MissingController < NameError
   end
@@ -54,6 +55,7 @@ module ActionDispatch
   end
 
   autoload_under "middleware" do
+    autoload :AssumeSSL
     autoload :HostAuthorization
     autoload :RequestId
     autoload :Callbacks
