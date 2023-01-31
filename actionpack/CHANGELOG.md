@@ -1,3 +1,19 @@
+*   Change `ActionDispatch::Testing::TestResponse#parsed_body` to parse HTML as
+    a Nokogiri document
+
+    ```ruby
+    get "/posts"
+    response.content_type         # => "text/html; charset=utf-8"
+    response.parsed_body.class    # => Nokogiri::HTML5::Document
+    response.parsed_body.to_html  # => "<!DOCTYPE html>\n<html>\n..."
+    ```
+
+    *Sean Doyle*
+
+*   Deprecate `ActionDispatch::IllegalStateError`.
+
+    *Samuel Williams*
+
 *   Add HTTP::Request#route_uri_pattern that returns URI pattern of matched route.
 
     *Joel Hawksley*, *Kate Higa*
