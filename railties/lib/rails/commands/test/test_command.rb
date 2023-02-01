@@ -36,27 +36,47 @@ module Rails
       end
 
       # Define Thor tasks to avoid going through Rake and booting twice when using bin/rails test:*
-
       Rails::TestUnit::Runner::TEST_FOLDERS.each do |name|
+        desc name, "Run tests in test/#{name}"
         define_method(name) do |*|
           args.prepend("test/#{name}")
           perform
         end
       end
 
-      desc "test:all", "Runs all tests, including system tests", hide: true
+      desc "all", "Run all tests, including system tests"
       def all(*)
         @force_prepare = true
         args.prepend("test/**/*_test.rb")
         perform
       end
 
+      desc "functionals", "Run tests in test/controllers, test/mailers, and test/functional"
+      def functionals(*)
+        @force_prepare = true
+        args.prepend("test/controllers")
+        args.prepend("test/mailers")
+        args.prepend("test/functional")
+        perform
+      end
+
+      desc "units", "Run tests in test/models, test/helpers, and test/unit"
+      def units(*)
+        @force_prepare = true
+        args.prepend("test/models")
+        args.prepend("test/helpers")
+        args.prepend("test/unit")
+        perform
+      end
+
+      desc "system", "Run system tests only"
       def system(*)
         @force_prepare = true
         args.prepend("test/system")
         perform
       end
 
+      desc "generators", "Run tests in test/lib/generators"
       def generators(*)
         args.prepend("test/lib/generators")
         perform
@@ -65,8 +85,10 @@ module Rails
       private
         def run_prepare_task(args)
           if @force_prepare || args.empty?
-            Rails::Command::RakeCommand.perform("test:prepare", nil, {}, optional: true)
+            Rails::Command::RakeCommand.perform("test:prepare", [], {})
           end
+        rescue UnrecognizedCommandError => error
+          raise unless error.name == "test:prepare"
         end
     end
   end
