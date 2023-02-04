@@ -8,24 +8,24 @@ module Rails
       include EnvironmentArgument
 
       no_commands do
-        def help
-          super("runner")
-          say self.class.desc
+        def help(command_name = nil, *)
+          super
+          if command_name == "runner"
+            say ""
+            say self.class.class_usage
+          end
         end
       end
 
-      def self.banner(*)
-        "#{super} [<'Some.ruby(code)'> | <filename.rb> | -]"
-      end
-
-      desc "runner", "Run Ruby code in the context of your application"
+      desc "runner [<'Some.ruby(code)'> | <filename.rb> | -]",
+        "Run Ruby code in the context of your application"
       def perform(code_or_file = nil, *command_argv)
         unless code_or_file
           help
           exit 1
         end
 
-        require_application_and_environment!
+        boot_application!
         Rails.application.load_runner
 
         ARGV.replace(command_argv)
