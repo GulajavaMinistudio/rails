@@ -448,7 +448,7 @@ module ActiveRecord
     # In both instances, valid attribute keys are determined by the column names of the associated table --
     # hence you can't have attributes that aren't part of the table columns.
     #
-    # ==== Example:
+    # ==== Example
     #   # Instantiates a single new object
     #   User.new(first_name: 'Jamie')
     def initialize(attributes = nil)
@@ -639,19 +639,24 @@ module ActiveRecord
     #   user.comments
     #   => ActiveRecord::StrictLoadingViolationError
     #
-    # === Parameters:
+    # ==== Parameters
     #
-    # * value - Boolean specifying whether to enable or disable strict loading.
-    # * mode - Symbol specifying strict loading mode. Defaults to :all. Using
-    #          :n_plus_one_only mode will only raise an error if an association
-    #          that will lead to an n plus one query is lazily loaded.
+    # * +value+ - Boolean specifying whether to enable or disable strict loading.
+    # * <tt>:mode</tt> - Symbol specifying strict loading mode. Defaults to :all. Using
+    #   :n_plus_one_only mode will only raise an error if an association that
+    #   will lead to an n plus one query is lazily loaded.
     #
-    # === Example:
+    # ==== Examples
     #
     #   user = User.first
     #   user.strict_loading!(false) # => false
     #   user.comments
     #   => #<ActiveRecord::Associations::CollectionProxy>
+    #
+    #   user.strict_loading!(mode: :n_plus_one_only)
+    #   user.address.city # => "Tatooine"
+    #   user.comments
+    #   => ActiveRecord::StrictLoadingViolationError
     def strict_loading!(value = true, mode: :all)
       unless [:all, :n_plus_one_only].include?(mode)
         raise ArgumentError, "The :mode option must be one of [:all, :n_plus_one_only] but #{mode.inspect} was provided."

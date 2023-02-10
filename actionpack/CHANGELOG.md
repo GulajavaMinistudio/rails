@@ -1,3 +1,13 @@
+*   Change `ActionController::Instrumentation` to pass `filtered_path` instead of `fullpath` in the event payload to filter sensitive query params
+
+    ```ruby
+    get "/posts?password=test"
+    request.fullpath         # => "/posts?password=test"
+    request.filtered_path    # => "/posts?password=[FILTERED]"
+    ```
+
+    *Ritikesh G*
+
 *   Deprecate `AbstractController::Helpers::MissingHelperError`
 
     *Hartley McGuire*

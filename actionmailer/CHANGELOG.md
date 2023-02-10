@@ -1,3 +1,11 @@
+*   Email previews now include an expandable section to show all headers.
+
+    Headers like `Message-ID` for threading or email service provider specific
+    features like analytics tags or account metadata can now be viewed directly
+    in the mailer preview.
+
+    *Matt Swanson*
+
 *   Default `ActionMailer::Parameterized#params` to an empty `Hash`
 
     *Sean Doyle*
