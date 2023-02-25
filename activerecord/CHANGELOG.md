@@ -1,3 +1,44 @@
+*   `ActiveRecord::Base.serialize` no longer uses YAML by default.
+
+    YAML isn't particularly performant and can lead to security issues
+    if not used carefully.
+
+    Unfortunately there isn't really any good serializers in Ruby's stdlib
+    to replace it.
+
+    The obvious choice would be JSON, which is a fine format for this use case,
+    however the JSON serializer in Ruby's stdlib isn't strict enough, as it fallback
+    to casting unknown types to strings, which could lead to corrupted data.
+
+    Some third party JSON libraries like `Oj` have a suitable strict mode.
+
+    So it's preferable that users choose a serializer based on their own constraints.
+
+    The original default can be restored by setting `config.active_record.default_column_serializer = YAML`.
+
+    *Jean Boussier*
+
+*   `ActiveRecord::Base.serialize` signature changed.
+
+    Rather than a single positional argument that accepts two possible
+    types of values, `serialize` now accepts two distinct keyword arguments.
+
+    Before:
+
+    ```ruby
+      serialize :content, JSON
+      serialize :backtrace, Array
+    ```
+
+    After:
+
+    ```ruby
+      serialize :content, coder: JSON
+      serialize :backtrace, type: Array
+    ```
+
+    *Jean Boussier*
+
 *   YAML columns use `YAML.safe_dump` is available.
 
     As of `psych 5.1.0`, `YAML.safe_dump` can now apply the same permitted
