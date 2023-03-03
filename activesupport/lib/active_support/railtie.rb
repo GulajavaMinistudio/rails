@@ -6,7 +6,6 @@ require "active_support/i18n_railtie"
 module ActiveSupport
   class Railtie < Rails::Railtie # :nodoc:
     config.active_support = ActiveSupport::OrderedOptions.new
-    config.active_support.disable_to_s_conversion = false
 
     config.eager_load_namespaces << ActiveSupport
 
@@ -26,15 +25,6 @@ module ActiveSupport
       config.after_initialize do
         if app.config.active_support.raise_on_invalid_cache_expiration_time
           ActiveSupport::Cache::Store.raise_on_invalid_cache_expiration_time = true
-        end
-      end
-    end
-
-    initializer "active_support.remove_deprecated_time_with_zone_name" do |app|
-      config.after_initialize do
-        if app.config.active_support.remove_deprecated_time_with_zone_name
-          require "active_support/time_with_zone"
-          TimeWithZone.singleton_class.remove_method(:name)
         end
       end
     end
@@ -127,8 +117,16 @@ module ActiveSupport
 
     initializer "active_support.set_configs" do |app|
       app.config.active_support.each do |k, v|
-        k = "#{k}="
-        ActiveSupport.public_send(k, v) if ActiveSupport.respond_to? k
+        if k == "disable_to_s_conversion"
+          ActiveSupport.deprecator.warn("config.active_support.disable_to_s_conversion is deprecated and will be removed in Rails 7.2.")
+        elsif k == "remove_deprecated_time_with_zone_name"
+          ActiveSupport.deprecator.warn("config.active_support.remove_deprecated_time_with_zone_name is deprecated and will be removed in Rails 7.2.")
+        elsif k == "use_rfc4122_namespaced_uuids"
+          ActiveSupport.deprecator.warn("config.active_support.use_rfc4122_namespaced_uuids is deprecated and will be removed in Rails 7.2.")
+        else
+          k = "#{k}="
+          ActiveSupport.public_send(k, v) if ActiveSupport.respond_to? k
+        end
       end
     end
 
@@ -144,15 +142,6 @@ module ActiveSupport
       config.after_initialize do
         if klass = app.config.active_support.key_generator_hash_digest_class
           ActiveSupport::KeyGenerator.hash_digest_class = klass
-        end
-      end
-    end
-
-    initializer "active_support.set_rfc4122_namespaced_uuids" do |app|
-      config.after_initialize do
-        if app.config.active_support.use_rfc4122_namespaced_uuids
-          require "active_support/core_ext/digest"
-          ::Digest::UUID.use_rfc4122_namespaced_uuids = app.config.active_support.use_rfc4122_namespaced_uuids
         end
       end
     end

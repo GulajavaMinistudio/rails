@@ -166,6 +166,18 @@ class AssociationsTest < ActiveRecord::TestCase
     assert_match(/#{Regexp.escape(Sharded::Comment.connection.quote_table_name("sharded_comments.blog_id"))} =/, sql)
   end
 
+  def test_belongs_to_association_does_not_use_parent_query_constraints_if_not_configured_to
+    comment = sharded_comments(:great_comment_blog_post_one)
+    blog_post = Sharded::BlogPost.new(blog_id: comment.blog_id, title: "Following best practices")
+
+    comment.blog_post_by_id = blog_post
+
+    comment.save
+
+    assert_predicate blog_post, :persisted?
+    assert_equal(blog_post, comment.blog_post_by_id)
+  end
+
   def test_append_composite_foreign_key_has_many_association
     blog_post = sharded_blog_posts(:great_post_blog_one)
     comment = Sharded::Comment.new(body: "Great post! :clap:")
@@ -175,6 +187,21 @@ class AssociationsTest < ActiveRecord::TestCase
     assert_includes(blog_post.comments, comment)
     assert_equal(blog_post.id, comment.blog_post_id)
     assert_equal(blog_post.blog_id, comment.blog_id)
+  end
+
+  def test_nullify_composite_foreign_key_has_many_association
+    blog_post = sharded_blog_posts(:great_post_blog_one)
+    comment = sharded_comments(:great_comment_blog_post_one)
+
+    assert_not_empty(blog_post.comments)
+    blog_post.comments = []
+
+    comment = Sharded::Comment.find(comment.id)
+    assert_nil(comment.blog_post_id)
+    assert_nil(comment.blog_id)
+
+    assert_empty(blog_post.comments)
+    assert_empty(blog_post.reload.comments)
   end
 
   def test_assign_persisted_composite_foreign_key_belongs_to_association
@@ -190,6 +217,19 @@ class AssociationsTest < ActiveRecord::TestCase
     assert_equal(comment.blog_id, blog_post.blog_id)
     assert_equal(another_blog.id, comment.blog_id)
     assert_equal(comment.blog_post_id, blog_post.id)
+  end
+
+  def test_nullify_composite_foreign_key_belongs_to_association
+    comment = sharded_comments(:great_comment_blog_post_one)
+    assert_not_nil(comment.blog_post)
+
+    comment.blog_post = nil
+    assert_nil(comment.blog_id)
+    assert_nil(comment.blog_post_id)
+
+    comment.save
+    assert_nil(comment.blog_post)
+    assert_nil(comment.reload.blog_post)
   end
 
   def test_assign_composite_foreign_key_belongs_to_association

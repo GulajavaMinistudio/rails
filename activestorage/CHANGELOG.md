@@ -1,3 +1,21 @@
+*   Remove deprecated `purge` and `purge_later` methods from the attachments association.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated behavior when assigning to a collection of attachments.
+
+    Instead of appending to the collection, the collection is now replaced.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveStorage::Current#host` and `ActiveStorage::Current#host=` methods.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated invalid default content types in Active Storage configurations.
+
+    *Rafael Mendonça França*
+
 *   Add missing preview event to `ActiveStorage::LogSubscriber`
 
     A `preview` event is being instrumented in `ActiveStorage::Previewer`.

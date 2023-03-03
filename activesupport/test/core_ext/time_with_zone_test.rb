@@ -146,22 +146,8 @@ class TimeWithZoneTest < ActiveSupport::TestCase
     assert_equal "1999-12-31 19:00:00.000000000 -0500", @twz.to_fs(:inspect)
   end
 
-  def test_to_s_db
-    assert_deprecated(ActiveSupport.deprecator) do
-      assert_equal "2000-01-01 00:00:00", @twz.to_s(:db)
-    end
-  end
-
-  def test_to_s_inspect
-    assert_deprecated(ActiveSupport.deprecator) do
-      assert_equal "1999-12-31 19:00:00.000000000 -0500", @twz.to_s(:inspect)
-    end
-  end
-
-  def test_to_s_not_existent
-    assert_deprecated(ActiveSupport.deprecator) do
-      assert_equal "1999-12-31 19:00:00 -0500", @twz.to_s(:not_existent)
-    end
+  def test_to_fs_not_existent
+    assert_equal "1999-12-31 19:00:00 -0500", @twz.to_fs(:not_existent)
   end
 
   def test_xmlschema
@@ -591,13 +577,6 @@ class TimeWithZoneTest < ActiveSupport::TestCase
     assert_kind_of Time, @twz
     assert_kind_of Time, @twz
     assert_kind_of ActiveSupport::TimeWithZone, @twz
-  end
-
-  def test_class_name
-    # TODO: Remove assertion in Rails 7.1 and change expected value
-    assert_deprecated("ActiveSupport::TimeWithZone.name has been deprecated", ActiveSupport.deprecator) do
-      assert_equal "Time", ActiveSupport::TimeWithZone.name
-    end
   end
 
   def test_method_missing_with_time_return_value

@@ -86,7 +86,6 @@ Below are the default values associated with each target version. In cases of co
 - [`config.action_controller.wrap_parameters_by_default`](#config-action-controller-wrap-parameters-by-default): `true`
 - [`config.action_dispatch.cookies_serializer`](#config-action-dispatch-cookies-serializer): `:json`
 - [`config.action_dispatch.default_headers`](#config-action-dispatch-default-headers): `{ "X-Frame-Options" => "SAMEORIGIN", "X-XSS-Protection" => "0", "X-Content-Type-Options" => "nosniff", "X-Download-Options" => "noopen", "X-Permitted-Cross-Domain-Policies" => "none", "Referrer-Policy" => "strict-origin-when-cross-origin" }`
-- [`config.action_dispatch.return_only_request_media_type_on_content_type`](#config-action-dispatch-return-only-request-media-type-on-content-type): `false`
 - [`config.action_mailer.smtp_timeout`](#config-action-mailer-smtp-timeout): `5`
 - [`config.action_view.apply_stylesheet_media_default`](#config-action-view-apply-stylesheet-media-default): `false`
 - [`config.action_view.button_to_generates_button_tag`](#config-action-view-button-to-generates-button-tag): `true`
@@ -97,13 +96,10 @@ Below are the default values associated with each target version. In cases of co
 - [`config.active_storage.variant_processor`](#config-active-storage-variant-processor): `:vips`
 - [`config.active_storage.video_preview_arguments`](#config-active-storage-video-preview-arguments): `"-vf 'select=eq(n\\,0)+eq(key\\,1)+gt(scene\\,0.015),loop=loop=-1:size=2,trim=start_frame=1' -frames:v 1 -f image2"`
 - [`config.active_support.cache_format_version`](#config-active-support-cache-format-version): `7.0`
-- [`config.active_support.disable_to_s_conversion`](#config-active-support-disable-to-s-conversion): `true`
 - [`config.active_support.executor_around_test_case`](#config-active-support-executor-around-test-case): `true`
 - [`config.active_support.hash_digest_class`](#config-active-support-hash-digest-class): `OpenSSL::Digest::SHA256`
 - [`config.active_support.isolation_level`](#config-active-support-isolation-level): `:thread`
 - [`config.active_support.key_generator_hash_digest_class`](#config-active-support-key-generator-hash-digest-class): `OpenSSL::Digest::SHA256`
-- [`config.active_support.remove_deprecated_time_with_zone_name`](#config-active-support-remove-deprecated-time-with-zone-name): `true`
-- [`config.active_support.use_rfc4122_namespaced_uuids`](#config-active-support-use-rfc4122-namespaced-uuids): `true`
 
 #### Default Values for Target Version 6.1
 
@@ -129,7 +125,6 @@ Below are the default values associated with each target version. In cases of co
 - [`config.active_record.collection_cache_versioning`](#config-active-record-collection-cache-versioning): `true`
 - [`config.active_storage.queues.analysis`](#config-active-storage-queues-analysis): `:active_storage_analysis`
 - [`config.active_storage.queues.purge`](#config-active-storage-queues-purge): `:active_storage_purge`
-- [`config.active_storage.replace_on_assign_to_many`](#config-active-storage-replace-on-assign-to-many): `true`
 
 #### Default Values for Target Version 5.2
 
@@ -1776,18 +1771,6 @@ config.action_dispatch.rescue_responses = {
 
 Any exceptions that are not configured will be mapped to 500 Internal Server Error.
 
-#### `config.action_dispatch.return_only_request_media_type_on_content_type`
-
-Change the return value of `ActionDispatch::Request#content_type` to the
-Content-Type header without modification.
-
-The default value depends on the `config.load_defaults` target version:
-
-| Starting with version | The default value is |
-| --------------------- | -------------------- |
-| (original)            | `true`               |
-| 7.0                   | `false`              |
-
 #### `config.action_dispatch.cookies_same_site_protection`
 
 Configures the default value of the `SameSite` attribute when setting cookies.
@@ -2284,45 +2267,9 @@ When `false`, disables all deprecation warnings, including disallowed deprecatio
 
 In the default generated `config/environments` files, this is set to `false` for production.
 
-#### `config.active_support.remove_deprecated_time_with_zone_name`
-
-Specifies whether to remove the deprecated override of the [`ActiveSupport::TimeWithZone.name`](https://api.rubyonrails.org/classes/ActiveSupport/TimeWithZone.html#method-c-name) method, to avoid triggering its deprecation warning.
-
-The default value depends on the `config.load_defaults` target version:
-
-| Starting with version | The default value is |
-| --------------------- | -------------------- |
-| (original)            | `nil`                |
-| 7.0                   | `true`               |
-
 #### `config.active_support.isolation_level`
 
 Configures the locality of most of Rails internal state. If you use a fiber based server or job processor (e.g. `falcon`), you should set it to `:fiber`. Otherwise it is best to use `:thread` locality. Defaults to `:thread`.
-
-#### `config.active_support.use_rfc4122_namespaced_uuids`
-
-Specifies whether generated namespaced UUIDs follow the RFC 4122 standard for namespace IDs provided as a `String` to `Digest::UUID.uuid_v3` or `Digest::UUID.uuid_v5` method calls.
-
-If set to `true`:
-
-* Only UUIDs are allowed as namespace IDs. If a namespace ID value provided is not allowed, an `ArgumentError` will be raised.
-* No deprecation warning will be generated, no matter if the namespace ID used is one of the constants defined on `Digest::UUID` or a `String`.
-* Namespace IDs are case-insensitive.
-* All generated namespaced UUIDs should be compliant to the standard.
-
-If set to `false`:
-
-* Any `String` value can be used as namespace ID (although not recommended). No `ArgumentError` will be raised in this case in order to preserve backwards-compatibility.
-* A deprecation warning will be generated if the namespace ID provided is not one of the constants defined on `Digest::UUID`.
-* Namespace IDs are case-sensitive.
-* Only namespaced UUIDs generated using one of the namespace ID constants defined on `Digest::UUID` are compliant to the standard.
-
-The default value depends on the `config.load_defaults` target version:
-
-| Starting with version | The default value is |
-| --------------------- | -------------------- |
-| (original)            | `false`              |
-| 7.0                   | `true`               |
 
 #### `config.active_support.executor_around_test_case`
 
@@ -2330,20 +2277,6 @@ Configure the test suite to call `Rails.application.executor.wrap` around test c
 This makes test cases behave closer to an actual request or job.
 Several features that are normally disabled in test, such as Active Record query cache
 and asynchronous queries will then be enabled.
-
-The default value depends on the `config.load_defaults` target version:
-
-| Starting with version | The default value is |
-| --------------------- | -------------------- |
-| (original)            | `false`              |
-| 7.0                   | `true`               |
-
-#### `config.active_support.disable_to_s_conversion`
-
-Disables the override of the `#to_s` methods in some Ruby core classes. This config is for applications that want to
-take advantage early of a [Ruby 3.1 optimization](https://github.com/ruby/ruby/commit/b08dacfea39ad8da3f1fd7fdd0e4538cc892ec44).
-This configuration needs to be set in `config/application.rb` inside the application class, otherwise it will not take
-effect.
 
 The default value depends on the `config.load_defaults` target version:
 
@@ -2656,14 +2589,6 @@ By default, this is defined as:
 config.active_storage.content_types_allowed_inline` = %w(image/png image/gif image/jpeg image/tiff image/vnd.adobe.photoshop image/vnd.microsoft.icon application/pdf)
 ```
 
-#### `config.active_storage.silence_invalid_content_types_warning`
-
-Since Rails 7, Active Storage will warn if you use an invalid content type that was incorrectly supported in Rails 6. You can use this config to turn the warning off.
-
-```ruby
-config.active_storage.silence_invalid_content_types_warning = false
-```
-
 #### `config.active_storage.queues.analysis`
 
 Accepts a symbol indicating the Active Job queue to use for analysis jobs. When this option is `nil`, analysis jobs are sent to the default Active Job queue (see `config.active_job.default_queue_name`).
@@ -2721,17 +2646,6 @@ config.active_storage.routes_prefix = '/files'
 ```
 
 The default is `/rails/active_storage`.
-
-#### `config.active_storage.replace_on_assign_to_many`
-
-Determines whether assigning to a collection of attachments declared with `has_many_attached` replaces any existing attachments or appends to them.
-
-The default value depends on the `config.load_defaults` target version:
-
-| Starting with version | The default value is |
-| --------------------- | -------------------- |
-| (original)            | `false`              |
-| 6.0                   | `true`               |
 
 #### `config.active_storage.track_variants`
 

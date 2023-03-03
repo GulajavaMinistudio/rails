@@ -1,3 +1,19 @@
+*   Remove deprecated `poltergeist` and `webkit` (capybara-webkit) driver registration for system testing.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated ability to assign a single value to `config.action_dispatch.trusted_proxies`.
+
+    *Rafael Mendonça França*
+
+*   Deprecate `config.action_dispatch.return_only_request_media_type_on_content_type`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated behavior on `Request#content_type`.
+
+    *Rafael Mendonça França*
+
 *   Change `ActionController::Instrumentation` to pass `filtered_path` instead of `fullpath` in the event payload to filter sensitive query params
 
     ```ruby

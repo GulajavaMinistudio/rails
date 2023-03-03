@@ -169,8 +169,6 @@ module Rails
           if respond_to?(:active_storage)
             active_storage.queues.analysis = :active_storage_analysis
             active_storage.queues.purge    = :active_storage_purge
-
-            active_storage.replace_on_assign_to_many = true
           end
 
           if respond_to?(:active_record)
@@ -226,7 +224,6 @@ module Rails
               "X-Permitted-Cross-Domain-Policies" => "none",
               "Referrer-Policy" => "strict-origin-when-cross-origin"
             }
-            action_dispatch.return_only_request_media_type_on_content_type = false
             action_dispatch.cookies_serializer = :json
           end
 
@@ -238,12 +235,9 @@ module Rails
           if respond_to?(:active_support)
             active_support.hash_digest_class = OpenSSL::Digest::SHA256
             active_support.key_generator_hash_digest_class = OpenSSL::Digest::SHA256
-            active_support.remove_deprecated_time_with_zone_name = true
             active_support.cache_format_version = 7.0
-            active_support.use_rfc4122_namespaced_uuids = true
             active_support.executor_around_test_case = true
             active_support.isolation_level = :thread
-            active_support.disable_to_s_conversion = true
           end
 
           if respond_to?(:action_mailer)

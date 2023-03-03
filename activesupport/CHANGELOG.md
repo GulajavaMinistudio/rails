@@ -1,3 +1,49 @@
+*   Remove deprecated support to generate incorrect RFC 4122 UUIDs when providing a namespace ID that is not one of the
+    constants defined on `Digest::UUID`.
+
+    *Rafael Mendonça França*
+
+*   Deprecate `config.active_support.use_rfc4122_namespaced_uuids`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveSupport::Notifications::Event#children` and  `ActiveSupport::Notifications::Event#parent_of?`.
+
+    *Rafael Mendonça França*
+
+*   Remove implicit conversion of objects into `String` by `ActiveSupport::SafeBuffer`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `active_support/core_ext/range/include_time_with_zone` file.
+
+    *Rafael Mendonça França*
+
+*   Deprecate `config.active_support.remove_deprecated_time_with_zone_name`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated override of `ActiveSupport::TimeWithZone.name`.
+
+    *Rafael Mendonça França*
+
+*   Deprecate `config.active_support.disable_to_s_conversion`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated option to passing a format to `#to_s` in `Array`, `Range`, `Date`, `DateTime`, `Time`,
+    `BigDecimal`, `Float` and, `Integer`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated `ActiveSupport::PerThreadRegistry`.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated override of `Enumerable#sum`.
+
+    *Rafael Mendonça França*
+
 *   Deprecated initializing a `ActiveSupport::Cache::MemCacheStore` with an instance of `Dalli::Client`.
 
     Deprecate the undocumented option of providing an already-initialized instance of `Dalli::Client` to `ActiveSupport::Cache::MemCacheStore`. Such clients could be configured with unrecognized options, which could lead to unexpected behavior. Instead, provide addresses as documented.
