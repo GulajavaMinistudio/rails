@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1
 
-# Make sure it matches the Ruby version in .ruby-version and Gemfile
+# Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
 ARG RUBY_VERSION=<%= Gem.ruby_version %>
 FROM ruby:$RUBY_VERSION-slim as base
 
@@ -17,15 +17,14 @@ ENV RAILS_ENV="production" \
 # Throw-away build stage to reduce size of final image
 FROM base as build
 
-# Install packages need to build gems<%= using_node? ? " and node modules" : "" %>
+# Install packages needed to build gems<%= using_node? ? " and node modules" : "" %>
 RUN apt-get update -qq && \
-    apt-get install -y <%= dockerfile_build_packages.join(" ") %>
+    apt-get install --no-install-recommends -y <%= dockerfile_build_packages.join(" ") %>
 
 <% if using_node? -%>
 # Install JavaScript dependencies
 ARG NODE_VERSION=<%= dockerfile_node_version %>
 ARG YARN_VERSION=<%= dockerfile_yarn_version %>
-
 ENV PATH=/usr/local/node/bin:$PATH
 RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
     /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
@@ -34,7 +33,7 @@ RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz
 
 <% end -%>
 # Install application gems
-COPY --link Gemfile Gemfile.lock ./
+COPY Gemfile Gemfile.lock ./
 RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git<% if depend_on_bootsnap? -%> && \
     bundle exec bootsnap precompile --gemfile
@@ -42,12 +41,12 @@ RUN bundle install && \
 
 <% if using_node? -%>
 # Install node modules
-COPY --link package.json yarn.lock ./
+COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 <% end -%>
 # Copy application code
-COPY --link . .
+COPY . .
 
 <% if depend_on_bootsnap? -%>
 # Precompile bootsnap code for faster boot times
@@ -68,12 +67,13 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 # Final stage for app image
 FROM base
 
+# Install packages needed for deployment
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y <%= dockerfile_deploy_packages.join(" ") %> && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Run and own the application files as a non-root user for security
-RUN useradd rails
+RUN useradd rails --home /rails --shell /bin/bash
 USER rails:rails
 
 # Copy built artifacts: gems, application

@@ -1,3 +1,21 @@
+*   Improve typography of user facing error messages. In English contractions,
+    the Unicode APOSTROPHE (`U+0027`) is now RIGHT SINGLE QUOTATION MARK
+    (`U+2019`). For example, "can't be blank" is now "can’t be blank".
+
+    *Jon Dufresne*
+
+*   Add class to `ActiveModel::MissingAttributeError` error message.
+
+    Show which class is missing the attribute in the error message:
+
+    ```ruby
+    user = User.first
+    user.pets.select(:id).first.user_id
+    # => ActiveModel::MissingAttributeError: missing attribute 'user_id' for Pet
+    ```
+
+    *Petrik de Heus*
+
 *   Raise `NoMethodError` in `ActiveModel::Type::Value#as_json` to avoid unpredictable
     results.
 
