@@ -11,17 +11,22 @@
     #
     # In this example we define the module on the spot. Could also be created
     # elsewhere and its definition loaded here with an ordinary `require`. In
-    # any case, `push_dir` expects a class or module object as second argument.
+    # any case, `push_dir` expects a class or module object.
     module Services; end
 
-    Rails.autoloaders.main.push_dir("#{Rails.root}/app/services", Services)
+    Rails.autoloaders.main.push_dir("#{Rails.root}/app/services", namespace: Services)
     ```
 
-    Before this change, Rails would later override the configuration. You had to
-    delete `app/services` from `ActiveSupport::Dependencies.autoload_paths` as
-    well.
+    Check the autoloading guide for further details.
 
     *Xavier Noria*
+
+*   Railties now requires the irb gem as a dependency, which means when you install Rails, irb will also
+    be installed as a gem. Rails will then use the installed version of irb for its console instead of
+    relying on Ruby's built-in version.
+    This ensures that Rails has access to the most up-to-date and reliable version of irb for its console.
+
+    *Stan Lo*
 
 *   Use infinitive form for all rails command descriptions verbs.
 
