@@ -1,3 +1,10 @@
+*   Remove mini_mime usage in favour of marcel.
+
+    We have two libraries that are have similar usage. This change removes
+    dependency on mini_mime and makes use of similar methods from marcel.
+
+    *Vipul A M*
+
 *   Allow destroying active storage variants
 
     ```ruby
@@ -144,5 +151,13 @@
     streamed.
 
     *Luke Lau*
+
+*   Safe for direct upload on Libraries or Frameworks
+
+    Enable the use of custom headers during direct uploads, which allows for
+    the inclusion of Authorization bearer tokens or other forms of authorization
+    tokens through headers.
+
+    *Radamés Roriz*
 
 Please check [7-0-stable](https://github.com/rails/rails/blob/7-0-stable/activestorage/CHANGELOG.md) for previous changes.
