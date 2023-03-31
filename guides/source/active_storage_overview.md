@@ -183,6 +183,7 @@ amazon:
     server_side_encryption: "" # 'aws:kms' or 'AES256'
     cache_control: "private, max-age=<%= 1.day.to_i %>"
 ```
+
 TIP: Set sensible client HTTP timeouts and retry limits for your application. In certain failure scenarios, the default AWS client configuration may cause connections to be held for up to several minutes and lead to request queuing.
 
 Add the [`aws-sdk-s3`](https://github.com/aws/aws-sdk-ruby) gem to your `Gemfile`:
@@ -1289,6 +1290,7 @@ class Uploader {
 
 To implement customized authentication, a new controller must be created on
 the Rails application, similar to the following:
+
 ```ruby
 class DirectUploadsController < ActiveStorage::DirectUploadsController
   skip_before_action :verify_authenticity_token

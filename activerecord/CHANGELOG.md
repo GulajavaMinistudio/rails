@@ -1,3 +1,40 @@
+*   Infer `foerign_key` when `inverse_of` is present on `has_one` and `has_many` associations.
+
+    ```ruby
+    has_many :citations, foreign_key: "book1_id", inverse_of: :book
+    ```
+
+    can be simplified to
+
+    ```ruby
+    has_many :citations, inverse_of: :book
+    ```
+
+    and the foreign_key will be read from the corresponding `belongs_to` association.
+
+    *Daniel Whitney*
+
+*   Limit max length of auto generated index names
+
+    Auto generated index names are now limited to 62 bytes, which fits within
+    the default index name length limits for MySQL, Postgres and SQLite.
+
+    Any index name over the limit will fallback to the new short format.
+
+    Before (too long):
+    ```
+    index_testings_on_foo_and_bar_and_first_name_and_last_name_and_administrator
+    ```
+
+    After (short format):
+    ```
+    idx_on_foo_bar_first_name_last_name_administrator_5939248142
+    ```
+
+    The short format includes a hash to ensure the name is unique database-wide.
+
+    *Mike Coutermarsh*
+
 *   Introduce a more stable and optimized Marshal serializer for Active Record models.
 
     Can be enabled with `config.active_record.marshalling_format_version = 7.1`.

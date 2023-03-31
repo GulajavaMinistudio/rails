@@ -34,6 +34,7 @@ require "active_record/deprecator"
 require "active_model/attribute_set"
 require "active_record/errors"
 
+# :include: activerecord/README.rdoc
 module ActiveRecord
   extend ActiveSupport::Autoload
 
@@ -99,7 +100,6 @@ module ActiveRecord
     autoload :DisableJoinsAssociationRelation
     autoload :FutureResult
     autoload :LegacyYamlAdapter
-    autoload :NullRelation
     autoload :Promise
     autoload :Relation
     autoload :Result
