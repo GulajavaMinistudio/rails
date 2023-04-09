@@ -1004,6 +1004,7 @@ class Person < ApplicationRecord
   # with the actual value of the attribute. %{attribute} and %{model}
   # are also available.
   validates :age, numericality: { message: "%{value} seems wrong" }
+end
 ```
 
 A `Proc` `:message` value is given two arguments: the object being validated, and
@@ -1240,7 +1241,7 @@ the `validates_with` method.
 class MyValidator < ActiveModel::Validator
   def validate(record)
     unless record.name.start_with? 'X'
-      record.errors.add :name, "Need a name starting with X please!"
+      record.errors.add :name, "Provide a name starting with X, please!"
     end
   end
 end
