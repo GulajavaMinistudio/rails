@@ -269,7 +269,7 @@ module ActiveRecord
         relation = apply_join_dependency
         relation.pluck(*column_names)
       else
-        klass.disallow_raw_sql!(column_names)
+        klass.disallow_raw_sql!(column_names.flatten)
         columns = arel_columns(column_names)
         relation = spawn
         relation.select_values = columns
@@ -322,7 +322,7 @@ module ActiveRecord
     # Returns the base model's ID's for the relation using the table's primary key
     #
     #   Person.ids # SELECT people.id FROM people
-    #   Person.joins(:companies).ids # SELECT people.id FROM people INNER JOIN companies ON companies.person_id = people.id
+    #   Person.joins(:companies).ids # SELECT people.id FROM people INNER JOIN companies ON companies.id = people.company_id
     def ids
       if loaded?
         result = records.pluck(*Array(primary_key))
