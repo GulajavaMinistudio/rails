@@ -400,6 +400,10 @@ module ActiveRecord
   #     monkey_id: <%= ActiveRecord::FixtureSet.identify(:reginald) %>
   #     pirate_id: <%= ActiveRecord::FixtureSet.identify(:george) %>
   #
+  # If the model uses UUID values for identifiers, add the `:uuid` argument:
+  #
+  #   ActiveRecord::FixtureSet.identify(:boaty_mcboatface, :uuid)
+  #
   # == Support for YAML defaults
   #
   # You can set and reuse defaults in your fixtures YAML file.
@@ -583,6 +587,18 @@ module ActiveRecord
         else
           Zlib.crc32(label.to_s) % MAX_ID
         end
+      end
+
+      # Returns a consistent, platform-independent hash representing a mapping
+      # between the label and the subcomponents of the provided composite key.
+      #
+      # Example:
+      # composite_identify("label", [:a, :b, :c]) => { a: hash_1, b: hash_2, c: hash_3 }
+      def composite_identify(label, key)
+        key
+          .index_with
+          .with_index { |sub_key, index| (identify(label) << index) % MAX_ID }
+          .with_indifferent_access
       end
 
       # Superclass for the evaluation contexts used by ERB fixtures.
