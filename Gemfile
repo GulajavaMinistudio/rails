@@ -68,6 +68,7 @@ gem "listen", "~> 3.3", require: false
 gem "libxml-ruby", platforms: :ruby
 gem "connection_pool", require: false
 gem "rexml", require: false
+gem "msgpack", ">= 1.7.0", require: false
 
 # for railties
 gem "bootsnap", ">= 1.4.4", require: false
@@ -149,6 +150,7 @@ platforms :ruby, :windows do
   group :db do
     gem "pg", "~> 1.3"
     gem "mysql2", "~> 0.5"
+    gem "trilogy", "~> 2.4"
   end
 end
 
