@@ -6,7 +6,7 @@ module ActiveRecord
       module DatabaseStatements
         def explain(arel, binds = [], options = [])
           sql    = build_explain_clause(options) + " " + to_sql(arel, binds)
-          result = exec_query(sql, "EXPLAIN", binds)
+          result = internal_exec_query(sql, "EXPLAIN", binds)
           PostgreSQL::ExplainPrettyPrinter.new.pp(result)
         end
 
@@ -41,36 +41,24 @@ module ActiveRecord
         #
         # Note: the PG::Result object is manually memory managed; if you don't
         # need it specifically, you may want consider the <tt>exec_query</tt> wrapper.
-        def execute(sql, name = nil, allow_retry: false)
-          sql = transform_query(sql)
-          check_if_write_query(sql)
-
-          mark_transaction_written_if_write(sql)
-
-          with_raw_connection(allow_retry: allow_retry) do |conn|
-            log(sql, name) do
-              result = conn.async_exec(sql)
-              handle_warnings(sql)
-              result
-            end
-          end
+        def execute(...) # :nodoc:
+          super
         ensure
           @notice_receiver_sql_warnings = []
         end
 
-        def internal_execute(sql, name = "SCHEMA", allow_retry: true, uses_transaction: false)
-          sql = transform_query(sql)
-          check_if_write_query(sql)
-
-          with_raw_connection(allow_retry: allow_retry, uses_transaction: uses_transaction) do |conn|
-            log(sql, name) do
-              conn.async_exec(sql)
+        def raw_execute(sql, name, async: false, allow_retry: false, materialize_transactions: true)
+          log(sql, name, async: async) do
+            with_raw_connection(allow_retry: allow_retry, materialize_transactions: materialize_transactions) do |conn|
+              result = conn.async_exec(sql)
+              handle_warnings(result)
+              result
             end
           end
         end
 
-        def exec_query(sql, name = "SQL", binds = [], prepare: false, async: false, allow_retry: false, uses_transaction: true) # :nodoc:
-          execute_and_clear(sql, name, binds, prepare: prepare, async: async, allow_retry: allow_retry, uses_transaction: uses_transaction) do |result|
+        def internal_exec_query(sql, name = "SQL", binds = [], prepare: false, async: false, allow_retry: false, materialize_transactions: true) # :nodoc:
+          execute_and_clear(sql, name, binds, prepare: prepare, async: async, allow_retry: allow_retry, materialize_transactions: materialize_transactions) do |result|
             types = {}
             fields = result.fields
             fields.each_with_index do |fname, i|
@@ -106,7 +94,7 @@ module ActiveRecord
           if use_insert_returning? || pk == false
             super
           else
-            result = exec_query(sql, name, binds)
+            result = internal_exec_query(sql, name, binds)
             unless sequence_name
               table_ref = extract_table_ref_from_insert_sql(sql)
               if table_ref
@@ -122,27 +110,27 @@ module ActiveRecord
 
         # Begins a transaction.
         def begin_db_transaction # :nodoc:
-          internal_execute("BEGIN", "TRANSACTION")
+          internal_execute("BEGIN", "TRANSACTION", allow_retry: true, materialize_transactions: false)
         end
 
         def begin_isolated_db_transaction(isolation) # :nodoc:
-          internal_execute("BEGIN ISOLATION LEVEL #{transaction_isolation_levels.fetch(isolation)}", "TRANSACTION")
+          internal_execute("BEGIN ISOLATION LEVEL #{transaction_isolation_levels.fetch(isolation)}", "TRANSACTION", allow_retry: true, materialize_transactions: false)
         end
 
         # Commits a transaction.
         def commit_db_transaction # :nodoc:
-          internal_execute("COMMIT", "TRANSACTION", allow_retry: false, uses_transaction: true)
+          internal_execute("COMMIT", "TRANSACTION", allow_retry: false, materialize_transactions: true)
         end
 
         # Aborts a transaction.
         def exec_rollback_db_transaction # :nodoc:
           cancel_any_running_query
-          internal_execute("ROLLBACK", "TRANSACTION", allow_retry: false, uses_transaction: true)
+          internal_execute("ROLLBACK", "TRANSACTION", allow_retry: false, materialize_transactions: true)
         end
 
         def exec_restart_db_transaction # :nodoc:
           cancel_any_running_query
-          internal_execute("ROLLBACK AND CHAIN", "TRANSACTION", allow_retry: false, uses_transaction: true)
+          internal_execute("ROLLBACK AND CHAIN", "TRANSACTION", allow_retry: false, materialize_transactions: true)
         end
 
         # From https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-CURRENT
@@ -181,7 +169,7 @@ module ActiveRecord
 
           # Returns the current ID of a table's sequence.
           def last_insert_id_result(sequence_name)
-            exec_query("SELECT currval(#{quote(sequence_name)})", "SQL")
+            internal_exec_query("SELECT currval(#{quote(sequence_name)})", "SQL")
           end
 
           def suppress_composite_primary_key(pk)

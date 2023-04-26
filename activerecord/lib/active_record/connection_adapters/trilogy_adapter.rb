@@ -5,6 +5,7 @@ require "active_record/connection_adapters/abstract_mysql_adapter"
 gem "trilogy", "~> 2.4"
 require "trilogy"
 
+require "active_record/connection_adapters/trilogy/database_statements"
 require "active_record/connection_adapters/trilogy/lost_connection_exception_translator"
 require "active_record/connection_adapters/trilogy/errors"
 
@@ -37,86 +38,13 @@ module ActiveRecord
   end
   module ConnectionAdapters
     class TrilogyAdapter < AbstractMysqlAdapter
-      module DatabaseStatements
-        READ_QUERY = AbstractAdapter.build_read_query_regexp(
-          :desc, :describe, :set, :show, :use
-        ) # :nodoc:
-        private_constant :READ_QUERY
-
-        HIGH_PRECISION_CURRENT_TIMESTAMP = Arel.sql("CURRENT_TIMESTAMP(6)").freeze # :nodoc:
-        private_constant :HIGH_PRECISION_CURRENT_TIMESTAMP
-
-        def select_all(*, **) # :nodoc:
-          result = nil
-          with_raw_connection do |conn|
-            result = super
-            conn.next_result while conn.more_results_exist?
-          end
-          result
-        end
-
-        def write_query?(sql) # :nodoc:
-          !READ_QUERY.match?(sql)
-        rescue ArgumentError # Invalid encoding
-          !READ_QUERY.match?(sql.b)
-        end
-
-        def explain(arel, binds = [], options = [])
-          sql     = build_explain_clause(options) + " " + to_sql(arel, binds)
-          start   = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-          result  = exec_query(sql, "EXPLAIN", binds)
-          elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
-
-          MySQL::ExplainPrettyPrinter.new.pp(result, elapsed)
-        end
-
-        def exec_query(sql, name = "SQL", binds = [], prepare: false, async: false)
-          result = execute(sql, name, async: async)
-          ActiveRecord::Result.new(result.fields, result.to_a)
-        end
-
-        alias exec_without_stmt exec_query
-
-        def exec_insert(sql, name, binds, pk = nil, sequence_name = nil)
-          execute(to_sql(sql, binds), name)
-        end
-
-        def exec_delete(sql, name = nil, binds = [])
-          result = execute(to_sql(sql, binds), name)
-          result.affected_rows
-        end
-
-        alias :exec_update :exec_delete
-
-        def high_precision_current_timestamp
-          HIGH_PRECISION_CURRENT_TIMESTAMP
-        end
-
-        def build_explain_clause(options = [])
-          return "EXPLAIN" if options.empty?
-
-          explain_clause = "EXPLAIN #{options.join(" ").upcase}"
-
-          if analyze_without_explain? && explain_clause.include?("ANALYZE")
-            explain_clause.sub("EXPLAIN ", "")
-          else
-            explain_clause
-          end
-        end
-
-        private
-          def last_inserted_id(result)
-            result.last_insert_id
-          end
-      end
-
       ER_BAD_DB_ERROR = 1049
       ER_DBACCESS_DENIED_ERROR = 1044
       ER_ACCESS_DENIED_ERROR = 1045
 
       ADAPTER_NAME = "Trilogy"
 
-      include DatabaseStatements
+      include Trilogy::DatabaseStatements
 
       SSL_MODES = {
         SSL_MODE_DISABLED: ::Trilogy::SSL_DISABLED,
@@ -185,7 +113,7 @@ module ActiveRecord
       end
 
       def quote_string(string)
-        with_raw_connection(allow_retry: true, uses_transaction: false) do |conn|
+        with_raw_connection(allow_retry: true, materialize_transactions: false) do |conn|
           conn.escape(string)
         end
       end
@@ -214,28 +142,28 @@ module ActiveRecord
         end
       end
 
-      def each_hash(result)
-        return to_enum(:each_hash, result) unless block_given?
+      private
+        def each_hash(result)
+          return to_enum(:each_hash, result) unless block_given?
 
-        keys = result.fields.map(&:to_sym)
-        result.rows.each do |row|
-          hash = {}
-          idx = 0
-          row.each do |value|
-            hash[keys[idx]] = value
-            idx += 1
+          keys = result.fields.map(&:to_sym)
+          result.rows.each do |row|
+            hash = {}
+            idx = 0
+            row.each do |value|
+              hash[keys[idx]] = value
+              idx += 1
+            end
+            yield hash
           end
-          yield hash
+
+          nil
         end
 
-        nil
-      end
+        def error_number(exception)
+          exception.error_code if exception.respond_to?(:error_code)
+        end
 
-      def error_number(exception)
-        exception.error_code if exception.respond_to?(:error_code)
-      end
-
-      private
         def connection
           @raw_connection
         end
@@ -323,7 +251,7 @@ module ActiveRecord
         end
 
         def get_full_version
-          with_raw_connection(allow_retry: true, uses_transaction: false) do |conn|
+          with_raw_connection(allow_retry: true, materialize_transactions: false) do |conn|
             conn.server_info[:version]
           end
         end

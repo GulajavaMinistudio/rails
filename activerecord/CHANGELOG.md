@@ -1,3 +1,30 @@
+*   `AbstractAdapter#execute` and `#exec_query` now clear the query cache
+
+    If you need to perform a read only SQL query without clearing the query
+    cache, use `AbstractAdapter#select_all`.
+
+    *Jean Boussier*
+
+*   Make `.joins` / `.left_outer_joins` work with CTEs.
+
+    For example:
+
+    ```ruby
+    Post
+     .with(commented_posts: Comment.select(:post_id).distinct)
+     .joins(:commented_posts)
+    #=> WITH (...) SELECT ... INNER JOIN commented_posts on posts.id = commented_posts.post_id
+    ```
+
+    *Vladimir Dementyev*
+
+*   Add a load hook for `ActiveRecord::ConnectionAdapters::Mysql2Adapter`
+    (named `active_record_mysql2adapter`) to allow for overriding aspects of the
+    `ActiveRecord::ConnectionAdapters::Mysql2Adapter` class. This makes `Mysql2Adapter`
+    consistent with `PostgreSQLAdapter` and `SQLite3Adapter` that already have load hooks.
+
+    *fatkodima*
+
 *   Introduce adapter for Trilogy database client
 
     Trilogy is a MySQL-compatible database client. Rails applications can use Trilogy

@@ -19,6 +19,7 @@ module ActiveRecord
   end
 
   module ConnectionAdapters
+    # = Active Record MySQL2 Adapter
     class Mysql2Adapter < AbstractMysqlAdapter
       ER_BAD_DB_ERROR        = 1049
       ER_ACCESS_DENIED_ERROR = 1045
@@ -103,7 +104,7 @@ module ActiveRecord
 
       # Quotes strings for use in SQL input.
       def quote_string(string)
-        with_raw_connection(allow_retry: true, uses_transaction: false) do |connection|
+        with_raw_connection(allow_retry: true, materialize_transactions: false) do |connection|
           connection.escape(string)
         end
       end
@@ -178,5 +179,6 @@ module ActiveRecord
           false
         end
     end
+    ActiveSupport.run_load_hooks(:active_record_mysql2adapter, Mysql2Adapter)
   end
 end

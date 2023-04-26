@@ -18,10 +18,6 @@ module ActiveRecord
           result
         end
 
-        def query(sql, name = nil) # :nodoc:
-          execute(sql, name).to_a
-        end
-
         READ_QUERY = ActiveRecord::ConnectionAdapters::AbstractAdapter.build_read_query_regexp(
           :desc, :describe, :set, :show, :use
         ) # :nodoc:
@@ -36,13 +32,13 @@ module ActiveRecord
         def explain(arel, binds = [], options = [])
           sql     = build_explain_clause(options) + " " + to_sql(arel, binds)
           start   = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-          result  = exec_query(sql, "EXPLAIN", binds)
+          result  = internal_exec_query(sql, "EXPLAIN", binds)
           elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
 
           MySQL::ExplainPrettyPrinter.new.pp(result, elapsed)
         end
 
-        def exec_query(sql, name = "SQL", binds = [], prepare: false, async: false) # :nodoc:
+        def internal_exec_query(sql, name = "SQL", binds = [], prepare: false, async: false) # :nodoc:
           if without_prepared_statement?(binds)
             execute_and_free(sql, name, async: async) do |result|
               if result
@@ -167,6 +163,17 @@ module ActiveRecord
 
           def max_allowed_packet
             @max_allowed_packet ||= show_variable("max_allowed_packet")
+          end
+
+          def raw_execute(sql, name, async: false, allow_retry: false, materialize_transactions: true)
+            log(sql, name, async: async) do
+              with_raw_connection(allow_retry: allow_retry, materialize_transactions: materialize_transactions) do |conn|
+                sync_timezone_changes(conn)
+                result = conn.query(sql)
+                handle_warnings(sql)
+                result
+              end
+            end
           end
 
           def exec_stmt_and_free(sql, name, binds, cache_stmt: false, async: false)

@@ -32,6 +32,8 @@ module ActiveRecord
   end
 
   module ConnectionAdapters
+    # = Active Record PostgreSQL Adapter
+    #
     # The PostgreSQL adapter works with the native C (https://github.com/ged/ruby-pg) driver.
     #
     # Options:
@@ -457,7 +459,7 @@ module ActiveRecord
         sql = +"CREATE EXTENSION IF NOT EXISTS \"#{name}\""
         sql << " SCHEMA #{schema}" if schema
 
-        exec_query(sql).tap { reload_type_map }
+        internal_exec_query(sql).tap { reload_type_map }
       end
 
       # Removes an extension from the database.
@@ -466,7 +468,7 @@ module ActiveRecord
       #   Set to +:cascade+ to drop dependent objects as well.
       #   Defaults to false.
       def disable_extension(name, force: false)
-        exec_query("DROP EXTENSION IF EXISTS \"#{name}\"#{' CASCADE' if force == :cascade}").tap {
+        internal_exec_query("DROP EXTENSION IF EXISTS \"#{name}\"#{' CASCADE' if force == :cascade}").tap {
           reload_type_map
         }
       end
@@ -480,7 +482,7 @@ module ActiveRecord
       end
 
       def extensions
-        exec_query("SELECT extname FROM pg_extension", "SCHEMA", allow_retry: true, uses_transaction: false).cast_values
+        internal_exec_query("SELECT extname FROM pg_extension", "SCHEMA", allow_retry: true, materialize_transactions: false).cast_values
       end
 
       # Returns a list of defined enum types, and their values.
@@ -498,7 +500,7 @@ module ActiveRecord
           GROUP BY type.OID, n.nspname, type.typname;
         SQL
 
-        exec_query(query, "SCHEMA", allow_retry: true, uses_transaction: false).cast_values.each_with_object({}) do |row, memo|
+        internal_exec_query(query, "SCHEMA", allow_retry: true, materialize_transactions: false).cast_values.each_with_object({}) do |row, memo|
           name, schema = row[0], row[2]
           schema = nil if schema == current_schema
           full_name = [schema, name].compact.join(".")
@@ -525,7 +527,7 @@ module ActiveRecord
           END
           $$;
         SQL
-        exec_query(query)
+        internal_exec_query(query)
       end
 
       # Drops an enum type.
@@ -541,7 +543,7 @@ module ActiveRecord
         query = <<~SQL
           DROP TYPE#{' IF EXISTS' if options[:if_exists]} #{quote_table_name(name)};
         SQL
-        exec_query(query)
+        internal_exec_query(query)
       end
 
       # Returns the configured supported identifier length supported by PostgreSQL
@@ -560,7 +562,7 @@ module ActiveRecord
       # Set the authorized user for this session
       def session_auth=(user)
         clear_cache!
-        internal_execute("SET SESSION AUTHORIZATION #{user}", nil, uses_transaction: true)
+        internal_execute("SET SESSION AUTHORIZATION #{user}", nil, materialize_transactions: true)
       end
 
       def use_insert_returning?
@@ -799,7 +801,7 @@ module ActiveRecord
         def load_additional_types(oids = nil)
           initializer = OID::TypeMapInitializer.new(type_map)
           load_types_queries(initializer, oids) do |query|
-            execute_and_clear(query, "SCHEMA", [], allow_retry: true, uses_transaction: false) do |records|
+            execute_and_clear(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false) do |records|
               initializer.run(records)
             end
           end
@@ -822,14 +824,14 @@ module ActiveRecord
 
         FEATURE_NOT_SUPPORTED = "0A000" # :nodoc:
 
-        def execute_and_clear(sql, name, binds, prepare: false, async: false, allow_retry: false, uses_transaction: true)
+        def execute_and_clear(sql, name, binds, prepare: false, async: false, allow_retry: false, materialize_transactions: true)
           sql = transform_query(sql)
           check_if_write_query(sql)
 
           if !prepare || without_prepared_statement?(binds)
-            result = exec_no_cache(sql, name, binds, async: async, allow_retry: allow_retry, uses_transaction: uses_transaction)
+            result = exec_no_cache(sql, name, binds, async: async, allow_retry: allow_retry, materialize_transactions: materialize_transactions)
           else
-            result = exec_cache(sql, name, binds, async: async, allow_retry: allow_retry, uses_transaction: uses_transaction)
+            result = exec_cache(sql, name, binds, async: async, allow_retry: allow_retry, materialize_transactions: materialize_transactions)
           end
           begin
             ret = yield result
@@ -839,7 +841,7 @@ module ActiveRecord
           ret
         end
 
-        def exec_no_cache(sql, name, binds, async:, allow_retry:, uses_transaction:)
+        def exec_no_cache(sql, name, binds, async:, allow_retry:, materialize_transactions:)
           mark_transaction_written_if_write(sql)
 
           # make sure we carry over any changes to ActiveRecord.default_timezone that have been
@@ -854,7 +856,7 @@ module ActiveRecord
           end
         end
 
-        def exec_cache(sql, name, binds, async:, allow_retry:, uses_transaction:)
+        def exec_cache(sql, name, binds, async:, allow_retry:, materialize_transactions:)
           mark_transaction_written_if_write(sql)
 
           update_typemap_for_default_timezone
@@ -862,8 +864,8 @@ module ActiveRecord
           stmt_key = prepare_statement(sql, binds)
           type_casted_binds = type_casted_binds(binds)
 
-          log(sql, name, binds, type_casted_binds, stmt_key, async: async) do
-            with_raw_connection do |conn|
+          with_raw_connection do |conn|
+            log(sql, name, binds, type_casted_binds, stmt_key, async: async) do
               conn.exec_prepared(stmt_key, type_casted_binds)
             end
           end
@@ -913,7 +915,7 @@ module ActiveRecord
         # Prepare the statement if it hasn't been prepared, return
         # the statement key.
         def prepare_statement(sql, binds)
-          with_raw_connection(allow_retry: true, uses_transaction: false) do |conn|
+          with_raw_connection(allow_retry: true, materialize_transactions: false) do |conn|
             sql_key = sql_key(sql)
             unless @statements.key? sql_key
               nextkey = @statements.next_key
@@ -1073,7 +1075,7 @@ module ActiveRecord
                     AND castsource = #{quote column.sql_type}::regtype
                 )
               SQL
-              execute_and_clear(sql, "SCHEMA", [], allow_retry: true, uses_transaction: false) do |result|
+              execute_and_clear(sql, "SCHEMA", [], allow_retry: true, materialize_transactions: false) do |result|
                 result.getvalue(0, 0)
               end
             end
@@ -1094,7 +1096,7 @@ module ActiveRecord
               PG::TextDecoder::TimestampUtc :
               PG::TextDecoder::TimestampWithoutTimeZone
 
-            @timestamp_decoder = decoder_class.new(@timestamp_decoder.to_h)
+            @timestamp_decoder = decoder_class.new(**@timestamp_decoder.to_h)
             @raw_connection.type_map_for_results.add_coder(@timestamp_decoder)
 
             @mapped_default_timezone = default_timezone
@@ -1130,7 +1132,7 @@ module ActiveRecord
             FROM pg_type as t
             WHERE t.typname IN (%s)
           SQL
-          coders = execute_and_clear(query, "SCHEMA", [], allow_retry: true, uses_transaction: false) do |result|
+          coders = execute_and_clear(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false) do |result|
             result.filter_map { |row| construct_coder(row, coders_by_name[row["typname"]]) }
           end
 

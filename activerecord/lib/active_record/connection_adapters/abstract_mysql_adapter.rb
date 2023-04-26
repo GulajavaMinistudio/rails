@@ -220,44 +220,36 @@ module ActiveRecord
       # DATABASE STATEMENTS ======================================
       #++
 
-      # Executes the SQL statement in the context of this connection.
-      #
-      # Setting +allow_retry+ to true causes the db to reconnect and retry
-      # executing the SQL statement in case of a connection-related exception.
-      # This option should only be enabled for known idempotent queries.
-      def execute(sql, name = nil, async: false, allow_retry: false)
-        sql = transform_query(sql)
-        check_if_write_query(sql)
-
-        raw_execute(sql, name, async: async, allow_retry: allow_retry)
-      end
-
       # Mysql2Adapter doesn't have to free a result after using it, but we use this method
       # to write stuff in an abstract way without concerning ourselves about whether it
       # needs to be explicitly freed or not.
       def execute_and_free(sql, name = nil, async: false) # :nodoc:
-        yield execute(sql, name, async: async)
+        sql = transform_query(sql)
+        check_if_write_query(sql)
+
+        mark_transaction_written_if_write(sql)
+        yield raw_execute(sql, name, async: async)
       end
 
       def begin_db_transaction # :nodoc:
-        internal_execute("BEGIN", "TRANSACTION")
+        internal_execute("BEGIN", "TRANSACTION", allow_retry: true, materialize_transactions: false)
       end
 
       def begin_isolated_db_transaction(isolation) # :nodoc:
-        internal_execute "SET TRANSACTION ISOLATION LEVEL #{transaction_isolation_levels.fetch(isolation)}", "TRANSACTION"
+        internal_execute("SET TRANSACTION ISOLATION LEVEL #{transaction_isolation_levels.fetch(isolation)}", "TRANSACTION", allow_retry: true, materialize_transactions: false)
         begin_db_transaction
       end
 
       def commit_db_transaction # :nodoc:
-        internal_execute("COMMIT", "TRANSACTION", allow_retry: false, uses_transaction: true)
+        internal_execute("COMMIT", "TRANSACTION", allow_retry: false, materialize_transactions: true)
       end
 
       def exec_rollback_db_transaction # :nodoc:
-        internal_execute("ROLLBACK", "TRANSACTION", allow_retry: false, uses_transaction: true)
+        internal_execute("ROLLBACK", "TRANSACTION", allow_retry: false, materialize_transactions: true)
       end
 
       def exec_restart_db_transaction # :nodoc:
-        internal_execute("ROLLBACK AND CHAIN", "TRANSACTION", allow_retry: false, uses_transaction: true)
+        internal_execute("ROLLBACK AND CHAIN", "TRANSACTION", allow_retry: false, materialize_transactions: true)
       end
 
       def empty_insert_statement_value(primary_key = nil) # :nodoc:
@@ -472,7 +464,7 @@ module ActiveRecord
 
         scope = quoted_scope(table_name)
 
-        fk_info = exec_query(<<~SQL, "SCHEMA")
+        fk_info = internal_exec_query(<<~SQL, "SCHEMA")
           SELECT fk.referenced_table_name AS 'to_table',
                  fk.referenced_column_name AS 'primary_key',
                  fk.column_name AS 'column',
@@ -519,7 +511,7 @@ module ActiveRecord
           SQL
           sql += " AND cc.table_name = #{scope[:name]}" if mariadb?
 
-          chk_info = exec_query(sql, "SCHEMA")
+          chk_info = internal_exec_query(sql, "SCHEMA")
 
           chk_info.map do |row|
             options = {
@@ -733,19 +725,6 @@ module ActiveRecord
           end
         end
 
-        def raw_execute(sql, name, async: false, allow_retry: false, uses_transaction: true)
-          mark_transaction_written_if_write(sql)
-
-          log(sql, name, async: async) do
-            with_raw_connection(allow_retry: allow_retry, uses_transaction: uses_transaction) do |conn|
-              sync_timezone_changes(conn)
-              result = conn.query(sql)
-              handle_warnings(sql)
-              result
-            end
-          end
-        end
-
         def handle_warnings(sql)
           return if ActiveRecord.db_warnings_action.nil? || @raw_connection.warning_count == 0
 
@@ -766,10 +745,6 @@ module ActiveRecord
         # Make sure we carry over any changes to ActiveRecord.default_timezone that have been
         # made since we established the connection
         def sync_timezone_changes(raw_connection)
-        end
-
-        def internal_execute(sql, name = "SCHEMA", allow_retry: true, uses_transaction: false)
-          raw_execute(sql, name, allow_retry: allow_retry, uses_transaction: uses_transaction)
         end
 
         # See https://dev.mysql.com/doc/mysql-errors/en/server-error-reference.html
@@ -855,7 +830,7 @@ module ActiveRecord
             comment: column.comment
           }
 
-          current_type = exec_query("SHOW COLUMNS FROM #{quote_table_name(table_name)} LIKE #{quote(column_name)}", "SCHEMA").first["Type"]
+          current_type = internal_exec_query("SHOW COLUMNS FROM #{quote_table_name(table_name)} LIKE #{quote(column_name)}", "SCHEMA").first["Type"]
           td = create_table_definition(table_name)
           cd = td.new_column_definition(new_column_name, current_type, **options)
           schema_creation.accept(ChangeColumnDefinition.new(cd, column.name))
@@ -945,7 +920,7 @@ module ActiveRecord
         end
 
         def create_table_info(table_name) # :nodoc:
-          exec_query("SHOW CREATE TABLE #{quote_table_name(table_name)}", "SCHEMA").first["Create Table"]
+          internal_exec_query("SHOW CREATE TABLE #{quote_table_name(table_name)}", "SCHEMA").first["Create Table"]
         end
 
         def arel_visitor

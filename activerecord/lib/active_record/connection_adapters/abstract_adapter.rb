@@ -13,6 +13,8 @@ require "arel/collectors/substitute_binds"
 
 module ActiveRecord
   module ConnectionAdapters # :nodoc:
+    # = Active Record Abstract Adapter
+    #
     # Active Record supports multiple database systems. AbstractAdapter and
     # related classes form the abstraction layer which makes this possible.
     # An AbstractAdapter represents a connection to a database, and provides an
@@ -796,6 +798,10 @@ module ActiveRecord
       #
       # This is useful for when you need to call a proprietary method such as
       # PostgreSQL's lo_* methods.
+      #
+      # Active Record cannot track if the database is getting modified using
+      # this client. If that is the case, generally you'll want to invalidate
+      # the query cache using +ActiveRecord::Base.clear_query_cache+.
       def raw_connection
         with_raw_connection do |conn|
           disable_lazy_transactions!
@@ -957,7 +963,7 @@ module ActiveRecord
         # the connection's configured +connection_retries+ setting
         # and the configured +retry_deadline+ limit.
         #
-        # If +uses_transaction+ is false, the block will be run without
+        # If +materialize_transactions+ is false, the block will be run without
         # ensuring virtual transactions have been materialized in the DB
         # server's state. The active transaction will also remain clean
         # (if it is not already dirty), meaning it's able to be restored
@@ -977,11 +983,11 @@ module ActiveRecord
         # still-yielded connection in the outer block), but we currently
         # provide no special enforcement there.
         #
-        def with_raw_connection(allow_retry: false, uses_transaction: true)
+        def with_raw_connection(allow_retry: false, materialize_transactions: true)
           @lock.synchronize do
             connect! if @raw_connection.nil? && reconnect_can_restore_state?
 
-            materialize_transactions if uses_transaction
+            self.materialize_transactions if materialize_transactions
 
             retries_available = allow_retry ? connection_retries : 0
             deadline = retry_deadline && Process.clock_gettime(Process::CLOCK_MONOTONIC) + retry_deadline
@@ -1038,7 +1044,7 @@ module ActiveRecord
 
               raise translated_exception
             ensure
-              dirty_current_transaction if uses_transaction
+              dirty_current_transaction if materialize_transactions
             end
           end
         end
@@ -1086,7 +1092,7 @@ module ActiveRecord
             # `allow_retry: false`, to force verification: the block won't
             # raise, so a retry wouldn't help us get the valid connection we
             # need.
-            with_raw_connection(allow_retry: false, uses_transaction: false) { |conn| conn }
+            with_raw_connection(allow_retry: false, materialize_transactions: false) { |conn| conn }
         end
 
         def extended_type_map_key
