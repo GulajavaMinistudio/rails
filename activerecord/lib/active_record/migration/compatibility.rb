@@ -122,7 +122,7 @@ module ActiveRecord
         def change_column(table_name, column_name, type, **options)
           options[:_skip_validate_options] = true
           if connection.adapter_name == "Mysql2" || connection.adapter_name == "Trilogy"
-            options[:collation] = :no_collation
+            options[:collation] ||= :no_collation
           end
           super
         end
@@ -134,6 +134,13 @@ module ActiveRecord
         def disable_extension(name, **options)
           if connection.adapter_name == "PostgreSQL"
             options[:force] = :cascade
+          end
+          super
+        end
+
+        def add_foreign_key(from_table, to_table, **options)
+          if connection.adapter_name == "PostgreSQL" && options[:deferrable] == true
+            options[:deferrable] = :immediate
           end
           super
         end

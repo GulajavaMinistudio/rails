@@ -18,12 +18,14 @@ module ActiveRecord
 
           def visit_AddForeignKey(o)
             super.dup.tap do |sql|
-              if o.deferrable
-                sql << " DEFERRABLE"
-                sql << " INITIALLY #{o.deferrable.to_s.upcase}" unless o.deferrable == true
-              end
-
+              sql << " DEFERRABLE INITIALLY #{o.options[:deferrable].to_s.upcase}" if o.deferrable
               sql << " NOT VALID" unless o.validate?
+            end
+          end
+
+          def visit_ForeignKeyDefinition(o)
+            super.dup.tap do |sql|
+              sql << " DEFERRABLE INITIALLY #{o.deferrable.to_s.upcase}" if o.deferrable
             end
           end
 
