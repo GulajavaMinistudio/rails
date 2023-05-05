@@ -74,6 +74,7 @@ Below are the default values associated with each target version. In cases of co
 - [`config.active_record.run_after_transaction_callbacks_in_order_defined`](#config-active-record-run-after-transaction-callbacks-in-order-defined): `true`
 - [`config.active_record.run_commit_callbacks_on_first_saved_instances_in_transaction`](#config-active-record-run-commit-callbacks-on-first-saved-instances-in-transaction): `false`
 - [`config.active_record.sqlite3_adapter_strict_strings_by_default`](#config-active-record-sqlite3-adapter-strict-strings-by-default): `true`
+- [`config.active_support.cache_format_version`](#config-active-support-cache-format-version): `7.1`
 - [`config.active_support.default_message_encryptor_serializer`](#config-active-support-default-message-encryptor-serializer): `:json`
 - [`config.active_support.default_message_verifier_serializer`](#config-active-support-default-message-verifier-serializer): `:json`
 - [`config.active_support.raise_on_invalid_cache_expiration_time`](#config-active-support-raise-on-invalid-cache-expiration-time): `true`
@@ -2265,7 +2266,20 @@ The default value depends on the `config.load_defaults` target version:
 
 #### `config.active_support.cache_format_version`
 
-Specifies which version of the cache serializer to use. Possible values are `6.1` and `7.0`.
+Specifies which serialization format to use for the cache. Possible values are
+`6.1`, `7.0`, `7.1`, and `:message_pack`.
+
+The `6.1`, `7.0`, and `7.1` formats all use `Marshal`, but `7.0` uses a more
+efficient representation for cache entries, and `7.1` includes an additional
+optimization for bare string values such as view fragments.
+
+The `:message_pack` format uses `ActiveSupport::MessagePack`, and may further
+reduce cache entry sizes and improve performance, but requires the
+[`msgpack` gem](https://rubygems.org/gems/msgpack).
+
+All formats are backward and forward compatible, meaning cache entries written
+in one format can be read when using another format. This behavior makes it
+easy to migrate between formats without invalidating the entire cache.
 
 The default value depends on the `config.load_defaults` target version:
 
@@ -2273,6 +2287,7 @@ The default value depends on the `config.load_defaults` target version:
 | --------------------- | -------------------- |
 | (original)            | `6.1`                |
 | 7.0                   | `7.0`                |
+| 7.1                   | `7.1`                |
 
 #### `config.active_support.deprecation`
 
