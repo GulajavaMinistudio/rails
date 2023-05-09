@@ -1,3 +1,39 @@
+*   Active Record query cache is now evicts least recently used entries
+
+    By default it only keeps the `100` most recently used queries.
+
+    The cache size can be configured via `database.yml`
+
+    ```yaml
+    development:
+      adapter: mysql2
+      query_cache: 200
+    ```
+
+    It can also be entirely disabled:
+
+    ```yaml
+    development:
+      adapter: mysql2
+      query_cache: false
+    ```
+
+    *Jean Boussier*
+
+*   Deprecate `check_pending!` in favor of `check_pending_migrations!`.
+
+    `check_pending!` will only check for pending migrations on the current database connection or the one passed in. This has been deprecated in favor of `check_pending_migrations!` which will find all pending migrations for the database configurations in a given environment.
+
+    *Eileen M. Uchitelle*
+
+*   Make `increment_counter`/`decrement_counter` accept an amount argument
+
+    ```ruby
+    Post.increment_counter(:comments_count, 5, by: 3)
+    ```
+
+    *fatkodima*
+
 *   Add support for `Array#intersect?` to `ActiveRecord::Relation`.
 
     `Array#intersect?` is only available on Ruby 3.1 or later.

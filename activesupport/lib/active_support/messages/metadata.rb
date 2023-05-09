@@ -2,6 +2,7 @@
 
 require "time"
 require "active_support/json"
+require_relative "serializer_with_fallback"
 
 module ActiveSupport
   module Messages # :nodoc:
@@ -9,17 +10,20 @@ module ActiveSupport
       singleton_class.attr_accessor :use_message_serializer_for_metadata
 
       ENVELOPE_SERIALIZERS = [
-        ::JSON,
+        *SerializerWithFallback::SERIALIZERS.values,
         ActiveSupport::JSON,
-        ActiveSupport::JsonWithMarshalFallback,
+        ::JSON,
         Marshal,
       ]
 
-      TIMESTAMP_SERIALIZERS = []
+      TIMESTAMP_SERIALIZERS = [
+        SerializerWithFallback::SERIALIZERS.fetch(:message_pack),
+        SerializerWithFallback::SERIALIZERS.fetch(:message_pack_allow_marshal),
+      ]
 
       ActiveSupport.on_load(:message_pack) do
-        ENVELOPE_SERIALIZERS.unshift ActiveSupport::MessagePack
-        TIMESTAMP_SERIALIZERS.unshift ActiveSupport::MessagePack
+        ENVELOPE_SERIALIZERS << ActiveSupport::MessagePack
+        TIMESTAMP_SERIALIZERS << ActiveSupport::MessagePack
       end
 
       private

@@ -147,6 +147,10 @@ module CacheStoreBehavior
     assert_equal({ key => "bar", other_key => "baz" }, @cache.read_multi(key, other_key))
   end
 
+  def test_read_multi_empty_list
+    assert_equal({}, @cache.read_multi())
+  end
+
   def test_read_multi_with_expires
     time = Time.now
     key = SecureRandom.uuid
@@ -157,6 +161,17 @@ module CacheStoreBehavior
     Time.stub(:now, time + 11) do
       assert_equal({ other_key => "baz" }, @cache.read_multi(other_key, SecureRandom.alphanumeric))
     end
+  end
+
+  def test_write_multi
+    key = SecureRandom.uuid
+    @cache.write_multi("#{key}1" => 1, "#{key}2" => 2)
+    assert_equal 1, @cache.read("#{key}1")
+    assert_equal 2, @cache.read("#{key}2")
+  end
+
+  def test_write_multi_empty_hash
+    assert @cache.write_multi({})
   end
 
   def test_fetch_multi
@@ -170,6 +185,10 @@ module CacheStoreBehavior
 
     assert_equal({ key => "bar", other_key => "biz", third_key => (third_key * 2) }, values)
     assert_equal((third_key * 2), @cache.read(third_key))
+  end
+
+  def test_fetch_multi_empty_hash
+    assert_equal({}, @cache.fetch_multi() { raise "Not called" })
   end
 
   def test_fetch_multi_without_expires_in
@@ -237,6 +256,14 @@ module CacheStoreBehavior
 
     assert_equal({ key => key, other_key => nil }, values)
     assert_equal(false, @cache.exist?(other_key))
+  end
+
+  def test_fetch_multi_uses_write_multi_entries_store_provider_interface
+    assert_called(@cache, :write_multi_entries) do
+      @cache.fetch_multi "a", "b", "c" do |key|
+        key * 2
+      end
+    end
   end
 
   # Use strings that are guaranteed to compress well, so we can easily tell if
@@ -505,6 +532,10 @@ module CacheStoreBehavior
     assert_equal 2, @cache.delete_multi([key, SecureRandom.uuid, other_key])
     assert_not @cache.exist?(key)
     assert_not @cache.exist?(other_key)
+  end
+
+  def test_delete_multi_empty_list
+    assert_equal(0, @cache.delete_multi([]))
   end
 
   def test_original_store_objects_should_not_be_immutable
