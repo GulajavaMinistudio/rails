@@ -1,3 +1,37 @@
+*   `ERB::Util.html_escape_once` always returns an `html_safe` string.
+
+    This method previously maintained the `html_safe?` property of a string on the return
+    value. Because this string has been escaped, however, not marking it as `html_safe` causes
+    entities to be double-escaped.
+
+    As an example, take this view snippet:
+
+      ```html
+      <p><%= html_escape_once("this & that &amp; the other") %></p>
+      ```
+
+    Before this change, that would be double-escaped and render as:
+
+      ```html
+      <p>this &amp;amp; that &amp;amp; the other</p>
+      ```
+
+    After this change, it renders correctly as:
+
+      ```html
+      <p>this &amp; that &amp; the other</p>
+      ```
+
+    Fixes #48256
+
+    *Mike Dalessio*
+
+*   Deprecate `SafeBuffer#clone_empty`.
+
+    This method has not been used internally since Rails 4.2.0.
+
+    *Mike Dalessio*
+
 *   `MessageEncryptor`, `MessageVerifier`, and `config.active_support.message_serializer`
     now accept `:message_pack` and `:message_pack_allow_marshal` as serializers.
     These serializers require the [`msgpack` gem](https://rubygems.org/gems/msgpack)
