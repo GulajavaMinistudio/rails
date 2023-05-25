@@ -1,3 +1,26 @@
+*   Add `Arel::Nodes::Cte` for use in `WITH` expressions
+
+    `Cte` nodes also support explicit `MATERIALIZED` or `NOT MATERIALIZED` hints for the query planner.
+
+    ```ruby
+    posts = Arel::Table.new(:posts)
+    comments = Arel::Table.new(:comments)
+
+    good_comments_query = comments.project(Arel.star).where(comments[:rating].gt(7))
+    cte = Arel::Nodes::Cte.new(:good_comments, good_comments_query, materialized: true)
+
+    query = posts.
+      project(Arel.star).
+      with(cte).
+      where(posts[:id].in(cte.to_table.project(:post_id))).
+
+    puts query.to_sql
+
+    # WITH "good_comments" AS MATERIALIZED (SELECT * FROM "comments" WHERE "comments"."rating" > 7) SELECT * FROM "posts" WHERE "posts"."id" IN (SELECT post_id FROM "good_comments")
+    ```
+
+    *Jon Zeppieri*
+
 *   Fix mutation detection for serialized attributes backed by binary columns.
 
     *Jean Boussier*
@@ -481,6 +504,19 @@
     `ActiveRecord::QueryLogs` no longer depend on the query to be properly encoded.
 
     *Jean Boussier*
+
+*   Fix a bug where `ActiveRecord::Generators::ModelGenerator` would not respect create_table_migration template overrides.
+
+    ```
+    rails g model create_books title:string content:text
+    ```
+    will now read from the create_table_migration.rb.tt template in the following locations in order:
+    ```
+    lib/templates/active_record/model/create_table_migration.rb
+    lib/templates/active_record/migration/create_table_migration.rb
+    ```
+
+    *Spencer Neste*
 
 *   `ActiveRecord::Relation#explain` now accepts options.
 
