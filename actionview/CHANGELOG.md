@@ -1,3 +1,32 @@
+*   `simple_format` helper now handles a `:sanitize_options` - any extra options you want appending to the sanitize.
+
+    Before:
+    ```ruby
+      simple_format("<a target=\"_blank\" href=\"http://example.com\">Continue</a>")
+      # => "<p><a href=\"http://example.com\">Continue</a></p>"
+    ```
+
+    After:
+    ```ruby
+      simple_format("<a target=\"_blank\" href=\"http://example.com\">Continue</a>", {}, { sanitize_options: { attributes: %w[target href] } })
+      # => "<p><a target=\"_blank\" href=\"http://example.com\">Continue</a></p>"
+    ```
+
+    *Andrei Andriichuk*
+
+*   Add support for HTML5 standards-compliant sanitizers, and default to `Rails::HTML5::Sanitizer`
+    in the Rails 7.1 configuration if it is supported.
+
+    Action View's HTML sanitizers can be configured by setting
+    `config.action_view.sanitizer_vendor`. Supported values are `Rails::HTML4::Sanitizer` or
+    `Rails::HTML5::Sanitizer`.
+
+    The Rails 7.1 configuration will set this to `Rails::HTML5::Sanitizer` when it is supported, and
+    fall back to `Rails::HTML4::Sanitizer`. Previous configurations default to
+    `Rails::HTML4::Sanitizer`.
+
+    *Mike Dalessio*
+
 *   Add support for the HTML picture tag. It supports passing a String, an Array or a Block.
     Supports passing properties directly to the img tag via the `:image` key.
     Since the picture tag requires an img tag, the last element you provide will be used for the img tag.

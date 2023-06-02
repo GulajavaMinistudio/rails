@@ -1,3 +1,41 @@
+*   Assign auto populated columns on Active Record record creation.
+
+    Changes record creation logic to allow for the `auto_increment` column to be assigned
+    immediately after creation regardless of it's relation to the model's primary key.
+
+    The PostgreSQL adapter benefits the most from the change allowing for any number of auto-populated
+    columns to be assigned on the object immediately after row insertion utilizing the `RETURNING` statement.
+
+    *Nikita Vasilevsky*
+
+*   Remove the deprecation warning when `prepared_statements` configuration is set for the mysql2 adapter.
+
+    There is a known bug in `mysql2`. We don't want to encourage applications to migrate to `prepared_statements: true` until it's fixed.
+
+    *Eileen M. Uchitelle*
+
+*   Use the first key in the `shards` hash from `connected_to` for the `default_shard`.
+
+    Some applications may not want to use `:default` as a shard name in their connection model. Unfortunately Active Record expects there to be a `:default` shard because it must assume a shard to get the right connection from the pool manager. Rather than force applications to manually set this, `connects_to` can infer the default shard name from the hash of shards and will now assume that the first shard is your default.
+
+    For example if your model looked like this:
+
+    ```ruby
+    class ShardRecord < ApplicationRecord
+      self.abstract_class = true
+
+      connects_to shards: {
+        shard_one: { writing: :shard_one },
+        shard_two: { writing: :shard_two }
+      }
+    ```
+
+    Then the `default_shard` for this class would be set to `shard_one`.
+
+    Fixes: #45390
+
+    *Eileen M. Uchitelle*
+
 *   Fix mutation detection for serialized attributes backed by binary columns.
 
     *Jean Boussier*
