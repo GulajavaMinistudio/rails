@@ -1,3 +1,19 @@
+*   Fix where on association with has_one/has_many polymorphic relations.
+
+    Before:
+    ```ruby
+    Treasure.where(price_estimates: PriceEstimate.all)
+    #=> SELECT (...) WHERE "treasures"."id" IN (SELECT "price_estimates"."estimate_of_id" FROM "price_estimates")
+    ```
+
+    Later:
+    ```ruby
+    Treasure.where(price_estimates: PriceEstimate.all)
+    #=> SELECT (...) WHERE "treasures"."id" IN (SELECT "price_estimates"."estimate_of_id" FROM "price_estimates" WHERE "price_estimates"."estimate_of_type" = 'Treasure')
+    ```
+
+    *Lázaro Nixon*
+
 *   Assign auto populated columns on Active Record record creation.
 
     Changes record creation logic to allow for the `auto_increment` column to be assigned
@@ -7,12 +23,6 @@
     columns to be assigned on the object immediately after row insertion utilizing the `RETURNING` statement.
 
     *Nikita Vasilevsky*
-
-*   Remove the deprecation warning when `prepared_statements` configuration is set for the mysql2 adapter.
-
-    There is a known bug in `mysql2`. We don't want to encourage applications to migrate to `prepared_statements: true` until it's fixed.
-
-    *Eileen M. Uchitelle*
 
 *   Use the first key in the `shards` hash from `connected_to` for the `default_shard`.
 
@@ -1759,11 +1769,6 @@
     bigint instead of integer for the SQLite Adapter.
 
     *Marcelo Lauxen*
-
-*   Add a deprecation warning when `prepared_statements` configuration is not
-    set for the mysql2 adapter.
-
-    *Thiago Araujo and Stefanni Brasil*
 
 *   Fix `QueryMethods#in_order_of` to handle empty order list.
 
