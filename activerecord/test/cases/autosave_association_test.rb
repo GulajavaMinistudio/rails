@@ -939,6 +939,8 @@ class TestDestroyAsPartOfAutosaveAssociation < ActiveRecord::TestCase
     Parrot.delete_all
     @ship.delete
     @pirate.delete
+    Cpk::Book.delete_all
+    Cpk::Order.delete_all
   end
 
   # reload
@@ -1026,6 +1028,18 @@ class TestDestroyAsPartOfAutosaveAssociation < ActiveRecord::TestCase
     @ship.save
     assert_nil @ship.reload.pirate
     assert_nil Pirate.find_by_id(id)
+  end
+
+  # belongs_to for CPK
+  def test_autosave_cpk_association_should_destroy_parent_association_when_marked_for_destruction
+    book = Cpk::Book.new(title: "Book", author_id: 1, number: 2)
+    Cpk::Order.create!(id: [3, 4], book: book)
+
+    book.order.mark_for_destruction
+
+    assert book.save
+    assert_nil book.reload.order
+    assert_nil Cpk::Order.find_by(id: 4, shop_id: 3)
   end
 
   def test_should_skip_validation_on_a_parent_association_if_marked_for_destruction
@@ -1319,8 +1333,6 @@ end
 class TestAutosaveAssociationOnAHasOneAssociation < ActiveRecord::TestCase
   fixtures :chefs, :cake_designers, :drink_designers
 
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @pirate = Pirate.create(catchphrase: "Don' botharrr talkin' like one, savvy?")
@@ -1490,8 +1502,6 @@ class TestAutosaveAssociationOnAHasOneAssociation < ActiveRecord::TestCase
 end
 
 class TestAutosaveAssociationOnAHasOneThroughAssociation < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def create_member_with_organization
     organization = Organization.create
     member = Member.create
@@ -1535,8 +1545,6 @@ class TestAutosaveAssociationOnAHasOneThroughAssociation < ActiveRecord::TestCas
 end
 
 class TestAutosaveAssociationOnABelongsToAssociation < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @ship = Ship.create(name: "Nights Dirty Lightning")
@@ -1808,8 +1816,6 @@ module AutosaveAssociationOnACollectionAssociationTests
 end
 
 class TestAutosaveAssociationOnAHasManyAssociation < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @association_name = :birds
@@ -1824,8 +1830,6 @@ class TestAutosaveAssociationOnAHasManyAssociation < ActiveRecord::TestCase
 end
 
 class TestAutosaveAssociationOnAHasAndBelongsToManyAssociation < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @association_name = :autosaved_parrots
@@ -1841,8 +1845,6 @@ class TestAutosaveAssociationOnAHasAndBelongsToManyAssociation < ActiveRecord::T
 end
 
 class TestAutosaveAssociationOnAHasAndBelongsToManyAssociationWithAcceptsNestedAttributes < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @association_name = :parrots
@@ -1858,8 +1860,6 @@ class TestAutosaveAssociationOnAHasAndBelongsToManyAssociationWithAcceptsNestedA
 end
 
 class TestAutosaveAssociationValidationsOnAHasManyAssociation < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @pirate = Pirate.create(catchphrase: "Don' botharrr talkin' like one, savvy?")
@@ -1923,8 +1923,6 @@ class TestAutosaveAssociationValidationsOnAHasManyAssociation < ActiveRecord::Te
 end
 
 class TestAutosaveAssociationValidationsOnAHasOneAssociation < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @pirate = Pirate.create(catchphrase: "Don' botharrr talkin' like one, savvy?")
@@ -1946,8 +1944,6 @@ class TestAutosaveAssociationValidationsOnAHasOneAssociation < ActiveRecord::Tes
 end
 
 class TestAutosaveAssociationValidationsOnABelongsToAssociation < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @pirate = Pirate.create(catchphrase: "Don' botharrr talkin' like one, savvy?")
@@ -1974,8 +1970,6 @@ class TestAutosaveAssociationValidationsOnABelongsToAssociation < ActiveRecord::
 end
 
 class TestAutosaveAssociationValidationsOnAHABTMAssociation < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @pirate = Pirate.create(catchphrase: "Don' botharrr talkin' like one, savvy?")
@@ -1997,8 +1991,6 @@ class TestAutosaveAssociationValidationsOnAHABTMAssociation < ActiveRecord::Test
 end
 
 class TestAutosaveAssociationValidationMethodsGeneration < ActiveRecord::TestCase
-  self.use_transactional_tests = false unless supports_savepoints?
-
   def setup
     super
     @pirate = Pirate.new
