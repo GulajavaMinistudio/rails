@@ -1,3 +1,19 @@
+*   Deprecate calling `Rails.application.secrets`.
+
+    Rails `secrets` have been deprecated in favor of `credentials`.
+    Calling `Rails.application.secrets` should show a deprecation warning.
+
+    *Petrik de Heus*
+
+*   Store `secret_key_base` in `Rails.config` for local environments.
+
+    Rails `secrets` have been deprecated in favor of `credentials`.
+    For the local environments the `secret_key_base` is now stored in
+    `Rails.config.secret_key_base` instead of the soft deprecated
+    `Rails.application.secrets.secret_key_base`.
+
+    *Petrik de Heus*
+
 *   Enable force_ssl=true in production by default: Force all access to the app over SSL,
     use Strict-Transport-Security, and use secure cookies
 
