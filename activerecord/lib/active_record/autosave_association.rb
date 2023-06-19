@@ -453,7 +453,7 @@ module ActiveRecord
           if autosave && record.marked_for_destruction?
             record.destroy
           elsif autosave != false
-            key = reflection.options[:primary_key] ? public_send(reflection.options[:primary_key]) : id
+            key = reflection.options[:primary_key] ? _read_attribute(reflection.options[:primary_key].to_s) : id
 
             if (autosave && record.changed_for_autosave?) || _record_changed?(reflection, record, key)
               unless reflection.through_reflection
@@ -482,7 +482,10 @@ module ActiveRecord
       def association_foreign_key_changed?(reflection, record, key)
         return false if reflection.through_reflection?
 
-        record._has_attribute?(reflection.foreign_key) && record._read_attribute(reflection.foreign_key) != key
+        foreign_key = Array(reflection.foreign_key)
+        return false unless foreign_key.all? { |key| record._has_attribute?(key) }
+
+        foreign_key.map { |key| record._read_attribute(key) } != Array(key)
       end
 
       def inverse_polymorphic_association_changed?(reflection, record)
