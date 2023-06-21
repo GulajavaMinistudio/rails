@@ -1,3 +1,21 @@
+*   Apply scope to association subqueries. (belongs_to/has_one/has_many)
+
+    Given: `has_many :welcome_posts, -> { where(title: "welcome") }`
+
+    Before:
+    ```ruby
+    Author.where(welcome_posts: Post.all)
+    #=> SELECT (...) WHERE "authors"."id" IN (SELECT "posts"."author_id" FROM "posts")
+    ```
+
+    Later:
+    ```ruby
+    Author.where(welcome_posts: Post.all)
+    #=> SELECT (...) WHERE "authors"."id" IN (SELECT "posts"."author_id" FROM "posts" WHERE "posts"."title" = 'welcome')
+    ```
+
+    *Lázaro Nixon*
+
 *   Added PostgreSQL migration commands for enum rename, add value, and rename value.
 
     `rename_enum` and `rename_enum_value` are reversible. Due to Postgres
@@ -166,7 +184,7 @@
 
     *fatkodima*
 
-*   Add support for `Array#intersect?` to `ActiveRecord::Relation`.
+*   Add support for `Array#intersects?` to `ActiveRecord::Relation`.
 
     `Array#intersect?` is only available on Ruby 3.1 or later.
 
