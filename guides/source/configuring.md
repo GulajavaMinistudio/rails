@@ -69,6 +69,7 @@ Below are the default values associated with each target version. In cases of co
 - [`config.active_record.belongs_to_required_validates_foreign_key`](#config-active-record-belongs-to-required-validates-foreign-key): `false`
 - [`config.active_record.default_column_serializer`](#config-active-record-default-column-serializer): `nil`
 - [`config.active_record.encryption.hash_digest_class`](#config-active-record-encryption-hash-digest-class): `OpenSSL::Digest::SHA256`
+- [`config.active_record.encryption.support_sha1_for_non_deterministic_encryption`](#config-active-record-encryption-support-sha1-for-non-deterministic-encryption): `false`
 - [`config.active_record.marshalling_format_version`](#config-active-record-marshalling-format-version): `7.1`
 - [`config.active_record.query_log_tags_format`](#config-active-record-query-log-tags-format): `:sqlcommenter`
 - [`config.active_record.raise_on_assign_to_attr_readonly`](#config-active-record-raise-on-assign-to-attr-readonly): `true`
@@ -211,6 +212,18 @@ Accepts an array of paths from which Rails will autoload constants that won't be
 #### `config.autoload_paths`
 
 Accepts an array of paths from which Rails will autoload constants. Default is an empty array. Since [Rails 6](upgrading_ruby_on_rails.html#autoloading), it is not recommended to adjust this. See [Autoloading and Reloading Constants](autoloading_and_reloading_constants.html#autoload-paths).
+
+#### `config.autoload_lib(ignore:)`
+
+This method adds `lib` to `config.autoload_paths` and `config.eager_load_paths`.
+
+Normally, the `lib` directory has subdirectories that should not be autoloaded or eager loaded. Please, pass their name relative to `lib` in the required `ignore` keyword argument. For example,
+
+```ruby
+config.autoload_lib(ignore: %w(assets tasks generators))
+```
+
+Please, see more details in the [autoloading guide](autoloading_and_reloading_constants.html).
 
 #### `config.beginning_of_week`
 
@@ -1498,6 +1511,18 @@ database schema dump. Defaults to `/^fk_rails_[0-9a-f]{10}$/`.
  |-----------------------|---------------------------|
  | (original)            | `OpenSSL::Digest::SHA1`   |
  | 7.1                   | `OpenSSL::Digest::SHA256` |
+
+#### `config.active_record.encryption.support_sha1_for_non_deterministic_encryption`
+
+Enables support for decrypting existing data encrypted using a SHA-1 digest class. When `false`,
+it will only support the digest configured in `config.active_record.encryption.hash_digest_class`.
+
+ The default value depends on the `config.load_defaults` target version:
+
+ | Starting with version | The default value is |
+ |-----------------------|----------------------|
+ | (original)            | `true`               |
+ | 7.1                   | `false`              |
 
 ### Configuring Action Controller
 

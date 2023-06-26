@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ipaddr"
+require "active_support/core_ext/array/wrap"
 require "active_support/core_ext/kernel/reporting"
 require "active_support/file_update_checker"
 require "active_support/configuration_file"
@@ -283,6 +284,7 @@ module Rails
             active_record.before_committed_on_all_records = true
             active_record.default_column_serializer = nil
             active_record.encryption.hash_digest_class = OpenSSL::Digest::SHA256
+            active_record.encryption.support_sha1_for_non_deterministic_encryption = false
             active_record.marshalling_format_version = 7.1
             active_record.run_after_transaction_callbacks_in_order_defined = true
           end
@@ -447,6 +449,18 @@ module Rails
         config
       rescue => e
         raise e, "Cannot load database configuration:\n#{e.message}", e.backtrace
+      end
+
+      def autoload_lib(ignore:)
+        lib = root.join("lib")
+
+        # Set as a string to have the same type as default autoload paths, for
+        # consistency.
+        autoload_paths << lib.to_s
+        eager_load_paths << lib.to_s
+
+        ignored_abspaths = Array.wrap(ignore).map { lib.join(_1) }
+        Rails.autoloaders.main.ignore(ignored_abspaths)
       end
 
       def colorize_logging

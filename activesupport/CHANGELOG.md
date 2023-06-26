@@ -1,3 +1,12 @@
+*   Rename `Range#overlaps?` to `#overlap?` and add alias for backwards compatibility
+
+    *Christian Schmidt*
+
+*   Fix `EncryptedConfiguration` returning incorrect values for some `Hash`
+    methods
+
+    *Hartley McGuire*
+
 *   Don't show secrets for `MessageEncryptor#inspect`.
 
     Before:
@@ -72,7 +81,7 @@
     (>= 1.7.0).
 
     The Message Pack format can provide improved performance and smaller payload
-    sizes. It also supports roundtripping some Ruby types that are not supported
+    sizes. It also supports round-tripping some Ruby types that are not supported
     by JSON. For example:
 
       ```ruby
