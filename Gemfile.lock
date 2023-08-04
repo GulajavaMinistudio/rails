@@ -1,10 +1,10 @@
 GIT
   remote: https://github.com/github/trilogy.git
-  revision: 8e4ae98569c12894da9bcbee5edb32b76068dbfd
+  revision: a1f46bbb79f866c157ead6d483474670bdb17334
   branch: main
   glob: contrib/ruby/*.gemspec
   specs:
-    trilogy (2.4.0)
+    trilogy (2.4.1)
 
 GIT
   remote: https://github.com/matthewd/websocket-client-simple.git
@@ -43,7 +43,7 @@ PATH
       net-imap
       net-pop
       net-smtp
-      rails-dom-testing (~> 2.0)
+      rails-dom-testing (~> 2.2)
     actionpack (7.1.0.alpha)
       actionview (= 7.1.0.alpha)
       activesupport (= 7.1.0.alpha)
@@ -51,7 +51,7 @@ PATH
       rack (>= 2.2.4)
       rack-session (>= 1.0.1)
       rack-test (>= 0.6.3)
-      rails-dom-testing (~> 2.0)
+      rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
     actiontext (7.1.0.alpha)
       actionpack (= 7.1.0.alpha)
@@ -64,7 +64,7 @@ PATH
       activesupport (= 7.1.0.alpha)
       builder (~> 3.1)
       erubi (~> 1.11)
-      rails-dom-testing (~> 2.0)
+      rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
     activejob (7.1.0.alpha)
       activesupport (= 7.1.0.alpha)
@@ -313,7 +313,7 @@ GEM
     mini_magick (4.12.0)
     mini_mime (1.1.2)
     mini_portile2 (2.8.2)
-    minitest (5.17.0)
+    minitest (5.19.0)
     minitest-bisect (1.6.0)
       minitest-server (~> 1.0)
       path_expander (~> 1.1)
@@ -382,8 +382,9 @@ GEM
     rackup (2.1.0)
       rack (>= 3)
       webrick (~> 1.8)
-    rails-dom-testing (2.0.3)
-      activesupport (>= 4.2.0)
+    rails-dom-testing (2.2.0)
+      activesupport (>= 5.0.0)
+      minitest
       nokogiri (>= 1.6)
     rails-html-sanitizer (1.6.0)
       loofah (~> 2.21)
