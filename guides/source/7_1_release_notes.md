@@ -21,6 +21,50 @@ guide.
 Major Features
 --------------
 
+### Add default Dockerfiles for Rails applications
+
+TODO: Add description https://github.com/rails/rails/pull/46762
+
+### Add `ActiveRecord::Base.normalizes`
+
+TODO: Add description https://github.com/rails/rails/pull/43945
+
+### Add `ActiveRecord::Base.generates_token_for`
+
+TODO: Add description https://github.com/rails/rails/pull/44189
+
+### Add `perform_all_later`` to enqueue multiple jobs at once
+
+TODO: Add description https://github.com/rails/rails/pull/46603
+
+### Composite primary keys
+
+TODO: Add description
+
+### Introduce adapter for Trilogy
+
+TODO: Add description https://github.com/rails/rails/pull/47880
+
+### Add `ActiveSupport::MessagePack`
+
+TODO: Add description https://github.com/rails/rails/pull/47770
+
+### Introduce `config.autoload_lib`
+
+TODO: Add description https://github.com/rails/rails/pull/48572
+
+### Active Record API for general async queries
+
+TODO: Add description https://github.com/rails/rails/pull/44446
+
+### Allow templates to set strict `locals`.
+
+TODO: https://github.com/rails/rails/pull/45602
+
+### Add Rails.application.deprecators
+
+TODO: https://github.com/rails/rails/pull/46049
+
 Railties
 --------
 

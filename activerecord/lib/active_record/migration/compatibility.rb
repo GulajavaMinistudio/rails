@@ -178,6 +178,15 @@ module ActiveRecord
           super
         end
 
+        def change_column(table_name, column_name, type, **options)
+          if type == :datetime
+            options[:precision] ||= nil
+          end
+
+          type = PostgreSQLCompat.compatible_timestamp_type(type, connection)
+          super
+        end
+
         def create_table(table_name, **options)
           if block_given?
             super { |t| yield compatible_table_definition(t) }
@@ -197,6 +206,11 @@ module ActiveRecord
         module TableDefinition
           def new_column_definition(name, type, **options)
             type = PostgreSQLCompat.compatible_timestamp_type(type, @conn)
+            super
+          end
+
+          def change(name, type, index: nil, **options)
+            options[:precision] ||= nil
             super
           end
 
