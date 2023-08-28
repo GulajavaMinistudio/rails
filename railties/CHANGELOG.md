@@ -1,3 +1,13 @@
+*   `config/application.rb` now includes
+
+    ```ruby
+    config.autoload_lib(ignore: %w(assets tasks))
+    ```
+
+    In practice, this means that new 7.1 applications autoload from `lib` out of the box.
+
+    *Xavier Noria*
+
 *   Add an option to start rails console in sandbox mode by default
 
     `sandbox_by_default` option is added to start rails console in sandbox
@@ -703,8 +713,8 @@
 
     Previously, when running this command:
 
-    ``` sh
-    bin/rails generate scaffold_controller Admin/Post --model-name Post
+    ```bash
+    $ bin/rails generate scaffold_controller Admin/Post --model-name Post
     ```
 
     the comments above the controller action would look like:
