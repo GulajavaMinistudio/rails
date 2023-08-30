@@ -58,15 +58,63 @@ getting your Rails application up and running in a production environment.
 
 ### Add `ActiveRecord::Base.normalizes`
 
-TODO: Add description https://github.com/rails/rails/pull/43945
+Normalizations can be declared for attribute values. The normalization
+takes place when the attribute is assigned or updated, and will be persisted to the database.
+Normalization is also applied to corresponding keyword arguments in finder methods,
+allowing records to be queried using unnormalized values.
+
+For example:
+
+```ruby
+class User < ActiveRecord::Base
+  normalizes :email, with: -> email { email.strip.downcase }
+  normalizes :phone, with: -> phone { phone.delete("^0-9").delete_prefix("1") }
+end
+
+user = User.create(email: " CRUISE-CONTROL@EXAMPLE.COM\n")
+user.email                  # => "cruise-control@example.com"
+
+user = User.find_by(email: "\tCRUISE-CONTROL@EXAMPLE.COM ")
+user.email                  # => "cruise-control@example.com"
+user.email_before_type_cast # => "cruise-control@example.com"
+
+User.exists?(email: "\tCRUISE-CONTROL@EXAMPLE.COM ")         # => true
+User.exists?(["email = ?", "\tCRUISE-CONTROL@EXAMPLE.COM "]) # => false
+
+User.normalize(:phone, "+1 (555) 867-5309") # => "5558675309"
+```
 
 ### Add `ActiveRecord::Base.generates_token_for`
 
 TODO: Add description https://github.com/rails/rails/pull/44189
 
-### Add `perform_all_later`` to enqueue multiple jobs at once
+### Add `perform_all_later` to enqueue multiple jobs at once
 
-TODO: Add description https://github.com/rails/rails/pull/46603
+The [`perform_all_later` method in ActiveJob](https://github.com/rails/rails/pull/46603),
+designed to streamline the process of enqueuing multiple jobs simultaneously. This powerful
+addition allows you to efficiently enqueue jobs without triggering callbacks. This is
+particularly useful when you need to enqueue a batch of jobs at once, reducing the overhead
+of multiple round-trips to the queue datastore.
+
+Here's how you can take advantage of `perform_all_later`:
+
+```ruby
+# Enqueueing individual jobs
+ActiveJob.perform_all_later(MyJob.new("hello", 42), MyJob.new("world", 0))
+
+# Enqueueing an array of jobs
+user_jobs = User.pluck(:id).map { |id| UserJob.new(user_id: id) }
+ActiveJob.perform_all_later(user_jobs)
+```
+
+By utilizing `perform_all_later`, you can optimize your job enqueuing process and take advantage
+of improved efficiency, especially when working with large sets of jobs. It's worth noting that
+for queue adapters that support the new `enqueue_all` method, such as the Sidekiq adapter, the
+enqueuing process is further optimized using `push_bulk`.
+
+Please be aware that this new method introduces a separate event, `enqueue_all.active_job`,
+and does not utilize the existing `enqueue.active_job` event. This ensures accurate tracking
+and reporting of the bulk enqueuing process.
 
 ### Composite primary keys
 
@@ -80,9 +128,29 @@ TODO: Add description https://github.com/rails/rails/pull/47880
 
 TODO: Add description https://github.com/rails/rails/pull/47770
 
-### Introduce `config.autoload_lib`
+### Introducing `config.autoload_lib` and `config.autoload_lib_once` for Enhanced Autoloading
 
-TODO: Add description https://github.com/rails/rails/pull/48572
+A [new configuration method, `config.autoload_lib(ignore:)`](https://github.com/rails/rails/pull/48572),
+has been introduced. This method is used to enhance the autoload paths of applications by including the
+`lib` directory, which is not included by default. Also, `config.autoload_lib(ignore: %w(assets tasks))`
+is generated for new applications.
+
+When invoked from either `config/application.rb` or `config/environments/*.rb`, this method adds the
+`lib` directory to both `config.autoload_paths` and `config.eager_load_paths`. It's important to note
+that this feature is not available for engines.
+
+To ensure flexibility, the `ignore` keyword argument can be used to specify subdirectories within the
+`lib` directory that should not be managed by the autoloaders. For instance, you can exclude directories
+like `assets`, `tasks`, and `generators` by passing them to the `ignore` argument:
+
+```ruby
+config.autoload_lib(ignore: %w(assets tasks generators))
+```
+
+The [`config.autoload_lib_once` method](https://github.com/rails/rails/pull/48610) is similar to
+`config.autoload_lib`, except that it adds `lib` to `config.autoload_once_paths` instead.
+
+Please, see more details in the [autoloading guide](autoloading_and_reloading_constants.html#config-autoload-lib-ignore)
 
 ### Active Record API for general async queries
 
@@ -171,11 +239,15 @@ Please refer to the [Changelog][railties] for detailed changes.
 
 *   Remove deprecated `bin/rails secrets:setup` command.
 
+*   Remove default `X-Download-Options` header since it is used only by Internet Explorer.
+
 ### Deprecations
 
 *   Deprecated usage of `Rails.application.secrets`.
 
 *   Deprecated `secrets:show` and `secrets:edit` commands in favor of `credentials`.
+
+*   Deprecated `Rails::Generators::Testing::Behaviour` in favor of `Rails::Generators::Testing::Behavior`.
 
 ### Notable changes
 
@@ -196,6 +268,12 @@ Please refer to the [Changelog][action-cable] for detailed changes.
 ### Deprecations
 
 ### Notable changes
+
+*   Add `capture_broadcasts` test helper to capture all messages broadcasted in a block.
+
+*   Add the ability to Redis pub/sub adapter to automatically reconnect when Redis connection is lost.
+
+*   Add command callbacks `before_command`, `after_command`, and `around_command` to `ActionCable::Connection::Base`.
 
 Action Pack
 -----------
@@ -218,7 +296,17 @@ Please refer to the [Changelog][action-pack] for detailed changes.
 
 *   Deprecate `ActionDispatch::IllegalStateError`.
 
+*   Deprecate `speaker`, `vibrate`, and `vr` permissions policy directives.
+
 ### Notable changes
+
+*   Add `exclude?` method to `ActionController::Parameters`. It is the inverse of `include?` method.
+
+*   Add `ActionController::Parameters#extract_value` method to allow extracting serialized values from params.
+
+*   Add the ability to use custom logic for storing and retrieving CSRF tokens.
+
+*   Add `html` and `screenshot` kwargs for system test screenshot helper.
 
 Action View
 -----------
@@ -244,7 +332,19 @@ Please refer to the [Changelog][action-mailer] for detailed changes.
 
 ### Deprecations
 
+*   Deprecated `config.action_mailer.preview_path`.
+
+*   Deprecated passing params to `assert_enqueued_email_with` via the `:args` kwarg.
+    Now supports a `:params` kwarg, so use that to pass params.
+
 ### Notable changes
+
+*   Add `config.action_mailer.preview_paths` to support multiple preview paths.
+
+*   Add `capture_emails` in the test helper to capture all emails sent in a block.
+
+*   Add `deliver_enqueued_emails` to `ActionMailer::TestHelper` to deliver all enqueued email jobs.
+
 
 Active Record
 -------------
@@ -257,7 +357,7 @@ Please refer to the [Changelog][active-record] for detailed changes.
 
 *   Remove deprecated `ActiveRecord::Base` config accessors
 
-* Remove support for `:include_replicas` on `configs_for`. Use `:include_hidden` instead.
+*   Remove support for `:include_replicas` on `configs_for`. Use `:include_hidden` instead.
 
 *   Remove deprecated `config.active_record.partial_writes`.
 
@@ -286,6 +386,19 @@ Please refer to the [Changelog][active-storage] for detailed changes.
 ### Deprecations
 
 ### Notable changes
+
+*   `ActiveStorage::Analyzer::AudioAnalyzer` now outputs `sample_rate` and `tags` in the output `metadata` hash.
+
+*   Add the option to utilize predefined variants when invoking the `preview` or `representation` methods on an
+    attachment.
+
+*   `preprocessed` option is added when declaring variants to preprocess variants.
+
+*   Add the ability to destroy active storage variants.
+
+    ```ruby
+    User.first.avatar.variant(resize_to_limit: [100, 100]).destroy
+    ```
 
 Active Model
 ------------
@@ -339,6 +452,8 @@ Active Job
 Please refer to the [Changelog][active-job] for detailed changes.
 
 ### Removals
+
+*   Remove `QueAdapter`.
 
 ### Deprecations
 
