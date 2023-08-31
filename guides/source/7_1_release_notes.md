@@ -160,9 +160,38 @@ TODO: Add description https://github.com/rails/rails/pull/44446
 
 TODO: https://github.com/rails/rails/pull/45602
 
-### Add Rails.application.deprecators
+### Add `Rails.application.deprecators`
 
-TODO: https://github.com/rails/rails/pull/46049
+The new [`Rails.application.deprecators` method](https://github.com/rails/rails/pull/46049) returns a
+collection of managed deprecators within your application, and allows you to add and retrieve individual
+deprecators with ease:
+
+```ruby
+Rails.application.deprecators[:my_gem] = ActiveSupport::Deprecation.new("2.0", "MyGem")
+Rails.application.deprecators[:other_gem] = ActiveSupport::Deprecation.new("3.0", "OtherGem")
+```
+
+The collection's configuration settings affect all deprecators in the collection.
+
+```ruby
+Rails.application.deprecators.debug = true
+
+puts Rails.application.deprecators[:my_gem].debug
+# true
+
+puts Rails.application.deprecators[:other_gem].debug
+# true
+```
+
+There are scenarios where you might want to mute all deprecator warnings for a specific block of code.
+With the deprecators collection, you can easily silence all deprecator warnings within a block:
+
+```ruby
+Rails.application.deprecators.silence do
+  Rails.application.deprecators[:my_gem].warn    # No warning (silenced)
+  Rails.application.deprecators[:other_gem].warn # No warning (silenced)
+end
+```
 
 ### Support pattern matching for JSON `response.parsed_body`
 
@@ -363,9 +392,32 @@ Please refer to the [Changelog][active-record] for detailed changes.
 
 *   Remove deprecated `Tasks::DatabaseTasks.schema_file_type`.
 
+*   Remove `--no-comments` flag in structure dumps for PostgreSQL.
+
 ### Deprecations
 
+*   Deprecate `name` argument on `#remove_connection`.
+
+*   Deprecate `check_pending!` in favor of `check_all_pending!`.
+
+*   Deprecate `deferrable: true` option of `add_foreign_key` in favor of `deferrable: :immediate`.
+
+*   Deprecate `TestFixtures#fixture_path` in favor of `TestFixtures#fixture_paths`.
+
+*   Deprecate delegation from `Base` to `connection_handler`.
+
+*   Deprecate `config.active_record.suppress_multiple_database_warning`.
+
+*   Deprecate using `ActiveSupport::Duration` as an interpolated bind parameter in a SQL
+    string template.
+
+*   Deprecate `all_connection_pools` and make `connection_pool_list` more explicit.
+
+*   Deprecate `read_attribute(:id)` returning the primary key if the primary key is not `:id`.
+
 ### Notable changes
+
+*   Add `TestFixtures#fixture_paths` to support multiple fixture paths.
 
 Active Storage
 --------------
@@ -480,6 +532,11 @@ Please refer to the [Changelog][action-mailbox] for detailed changes.
 ### Deprecations
 
 ### Notable changes
+
+*   Add `X-Forwarded-To` addresses to recipients.
+
+*   Add `bounce_now_with` method to `ActionMailbox::Base` to send the bounce email without going through a
+    mailer queue.
 
 Ruby on Rails Guides
 --------------------
