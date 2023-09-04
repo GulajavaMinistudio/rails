@@ -78,10 +78,12 @@ user = User.find_by(email: "\tCRUISE-CONTROL@EXAMPLE.COM ")
 user.email                  # => "cruise-control@example.com"
 user.email_before_type_cast # => "cruise-control@example.com"
 
+User.where(email: "\tCRUISE-CONTROL@EXAMPLE.COM ").count # => 1
+
 User.exists?(email: "\tCRUISE-CONTROL@EXAMPLE.COM ")         # => true
 User.exists?(["email = ?", "\tCRUISE-CONTROL@EXAMPLE.COM "]) # => false
 
-User.normalize(:phone, "+1 (555) 867-5309") # => "5558675309"
+User.normalize_value_for(:phone, "+1 (555) 867-5309") # => "5558675309"
 ```
 
 ### Add `ActiveRecord::Base.generates_token_for`
@@ -120,9 +122,25 @@ and reporting of the bulk enqueuing process.
 
 TODO: Add description
 
-### Introduce adapter for Trilogy
+### Introduce adapter for `Trilogy`
 
-TODO: Add description https://github.com/rails/rails/pull/47880
+A [new adapter has been introduced](https://github.com/rails/rails/pull/47880) to facilitate the
+seamless integration of `Trilogy`, a MySQL-compatible database client, with Rails applications.
+Now, Rails applications have the option to incorporate `Trilogy` functionality by configuring their
+`config/database.yml` file. For instance:
+
+```yaml
+development:
+  adapter: trilogy
+  database: blog_development
+  pool: 5
+```
+
+Alternatively, integration can be achieved using the `DATABASE_URL` environment variable:
+
+```ruby
+ENV['DATABASE_URL'] # => "trilogy://localhost/blog_development?pool=5"
+```
 
 ### Add `ActiveSupport::MessagePack`
 
@@ -154,11 +172,66 @@ Please, see more details in the [autoloading guide](autoloading_and_reloading_co
 
 ### Active Record API for general async queries
 
-TODO: Add description https://github.com/rails/rails/pull/44446
+A significant enhancement has been introduced to the Active Record API, expanding its
+[support for asynchronous queries](https://github.com/rails/rails/pull/44446). This enhancement
+addresses the need for more efficient handling of not-so-fast queries, particularly focusing on
+aggregates (such as `count`, `sum`, etc.) and all methods returning a single record or anything
+other than a `Relation`.
+
+The new API includes the following asynchronous methods:
+
+- `async_count`
+- `async_sum`
+- `async_minimum`
+- `async_maximum`
+- `async_average`
+- `async_pluck`
+- `async_pick`
+- `async_find_by_sql`
+- `async_count_by_sql`
+
+Here's a brief example of how to use one of these methods, `async_count`, to count the number of published
+posts in an asynchronous manner:
+
+```ruby
+# Synchronous count
+published_count = Post.where(published: true).count # => 10
+
+# Asynchronous count
+promise = Post.where(published: true).async_count # => #<ActiveRecord::Promise status=pending>
+promise.value # => 10
+```
+
+These methods allow for the execution of these operations in an asynchronous manner, which can significantly
+improve performance for certain types of database queries.
 
 ### Allow templates to set strict `locals`.
 
-TODO: https://github.com/rails/rails/pull/45602
+Introduce a new feature that [allows templates to set explicit `locals`](https://github.com/rails/rails/pull/45602).
+This enhancement provides greater control and clarity when passing variables to your templates.
+
+By default, templates will accept any `locals` as keyword arguments. However, now you can define what `locals` a
+template should accept by adding a `locals` magic comment at the beginning of your template file.
+
+Here's how it works:
+
+```erb
+<%# locals: (message:) -%>
+<%= message %>
+```
+
+You can also set default values for these locals:
+
+```erb
+<%# locals: (message: "Hello, world!") -%>
+<%= message %>
+```
+
+If you want to disable the use of locals entirely, you can do so like this:
+
+```erb
+<%# locals: () %>
+```
 
 ### Add `Rails.application.deprecators`
 
@@ -352,6 +425,18 @@ Please refer to the [Changelog][action-view] for detailed changes.
 
 ### Notable changes
 
+*   `check_box_tag` and `radio_button_tag` now accept `checked` as a keyword argument.
+
+*   Add `picture_tag` helper to generate HTML `<picture>` tags.
+
+*   The `simple_format` helper now handles a `:sanitize_options` feature, allowing the addition of extra
+    options for the sanitize process.
+
+    ```ruby
+      simple_format("<a target=\"_blank\" href=\"http://example.com\">Continue</a>", {}, { sanitize_options: { attributes: %w[target href] } })
+      # => "<p><a target=\"_blank\" href=\"http://example.com\">Continue</a></p>"
+    ```
+
 Action Mailer
 -------------
 
@@ -463,6 +548,31 @@ Please refer to the [Changelog][active-model] for detailed changes.
 
 ### Notable changes
 
+*   Add support for infinite ranges to `LengthValidator`s `:in`/`:within` options.
+
+    ```ruby
+    validates_length_of :first_name, in: ..30
+    ```
+
+*   Add support for beginless ranges to `inclusivity/exclusivity` validators.
+
+     ```ruby
+    validates_inclusion_of :birth_date, in: -> { (..Date.today) }
+    ```
+
+*   Add support for password challenges to `has_secure_password`. When set, validate that the password
+    challenge matches the persisted `password_digest`.
+
+*   Allow validators to accept lambdas without record argument.
+
+    ```ruby
+    # Before
+    validates_comparison_of :birth_date, less_than_or_equal_to: ->(_record) { Date.today }
+
+    # After
+    validates_comparison_of :birth_date, less_than_or_equal_to: -> { Date.today }
+    ```
+
 Active Support
 --------------
 
@@ -510,6 +620,14 @@ Please refer to the [Changelog][active-job] for detailed changes.
 ### Deprecations
 
 ### Notable changes
+
+*   Add `perform_all_later` to enqueue multiple jobs at once.
+
+*   Add `--parent` option to job generator to specify parent class of job.
+
+*   Add `after_discard` method to `ActiveJob::Base` to run a callback when a job is about to be discarded.
+
+*   Add support for logging background job enqueue callers.
 
 Action Text
 ----------

@@ -1,3 +1,47 @@
+*   Change `has_secure_token` default to `on: :initialize`
+
+    Change the new default value from `on: :create` to `on: :initialize`
+
+    Can be controlled by the `config.active_record.generate_secure_token_on`
+    configuration:
+
+    ```ruby
+    config.active_record.generate_secure_token_on = :create
+    ```
+
+    *Sean Doyle*
+
+*   Fix `change_column` not setting `precision: 6` on `datetime` columns when
+    using 7.0+ Migrations and SQLite.
+
+    *Hartley McGuire*
+
+*   Support composite identifiers in `to_key`
+
+    `to_key` avoids wrapping `#id` value into an `Array` if `#id` already an array
+
+    *Nikita Vasilevsky*
+
+*   Add validation option for `enum`
+
+    ```ruby
+    class Contract < ApplicationRecord
+      enum :status, %w[in_progress completed], validate: true
+    end
+    Contract.new(status: "unknown").valid? # => false
+    Contract.new(status: nil).valid? # => false
+    Contract.new(status: "completed").valid? # => true
+
+    class Contract < ApplicationRecord
+      enum :status, %w[in_progress completed], validate: { allow_nil: true }
+    end
+    Contract.new(status: "unknown").valid? # => false
+    Contract.new(status: nil).valid? # => true
+    Contract.new(status: "completed").valid? # => true
+    ```
+
+    *Edem Topuzov*
+
 *   Allow batching methods to use already loaded relation if available
 
     Calling batch methods on already loaded relations will use the records previously loaded instead of retrieving
@@ -856,6 +900,7 @@
       ```ruby
       class User < ActiveRecord::Base
         normalizes :email, with: -> email { email.strip.downcase }
+        normalizes :phone, with: -> phone { phone.delete("^0-9").delete_prefix("1") }
       end
 
       user = User.create(email: " CRUISE-CONTROL@EXAMPLE.COM\n")
@@ -865,8 +910,12 @@
       user.email                  # => "cruise-control@example.com"
       user.email_before_type_cast # => "cruise-control@example.com"
 
+      User.where(email: "\tCRUISE-CONTROL@EXAMPLE.COM ").count # => 1
+
       User.exists?(email: "\tCRUISE-CONTROL@EXAMPLE.COM ")         # => true
       User.exists?(["email = ?", "\tCRUISE-CONTROL@EXAMPLE.COM "]) # => false
+
+      User.normalize_value_for(:phone, "+1 (555) 867-5309") # => "5558675309"
       ```
 
     *Jonathan Hefner*
