@@ -25,6 +25,18 @@ class SecureTokenTest < ActiveRecord::TestCase
     assert_equal token, User.find(@user.id).token
   end
 
+  def test_generating_token_on_initialize_is_skipped_if_column_was_not_selected
+    model = Class.new(ActiveRecord::Base) do
+      self.table_name = "users"
+      has_secure_token on: :initialize
+    end
+
+    model.create!
+    assert_nothing_raised do
+      model.select(:id).last
+    end
+  end
+
   def test_regenerating_the_secure_token
     @user.save
     old_token = @user.token
@@ -55,14 +67,13 @@ class SecureTokenTest < ActiveRecord::TestCase
   end
 
   def test_token_on_callback
-    User.class_eval do
-      undef regenerate_token
-
+    model = Class.new(ActiveRecord::Base) do
+      self.table_name = "users"
       has_secure_token on: :initialize
     end
 
-    model = User.new
+    user = model.new
 
-    assert_predicate model.token, :present?
+    assert_predicate user.token, :present?
   end
 end
