@@ -199,6 +199,34 @@ SELECT * FROM customers WHERE (customers.id IN (1,10))
 
 WARNING: The `find` method will raise an `ActiveRecord::RecordNotFound` exception unless a matching record is found for **all** of the supplied primary keys.
 
+If your table uses a composite primary key, you'll need to pass find an array to find a single item. For instance, if customers were defined with [:store_id, :id] as a primary key:
+
+```irb
+# Find the customer with store_id 3 and id 17
+irb> customers = Customer.find([3, 17])
+=> #<Customer store_id: 3, id: 17, first_name: "Magda">
+```
+
+The SQL equivalent of the above is:
+
+```sql
+SELECT * FROM customers WHERE store_id = 3 AND id = 17
+```
+
+To find multiple customers with composite IDs, you would pass an array of arrays:
+
+```irb
+# Find the customers with primary keys [1, 8] and [7, 15].
+irb> customers = Customer.find([[1, 8], [7, 15]]) # OR Customer.find([1, 8], [7, 15])
+=> [#<Customer store_id: 1, id: 8, first_name: "Pat">, #<Customer store_id: 7, id: 15, first_name: "Chris">]
+```
+
+The SQL equivalent of the above is:
+
+```sql
+SELECT * FROM customers WHERE (store_id = 1 AND id = 8 OR store_id = 7 AND id = 15)
+```
+
 #### `take`
 
 The [`take`][] method retrieves a record without any implicit ordering. For example:
@@ -1906,6 +1934,61 @@ SELECT books.* FROM books WHERE books.out_of_print = true
 ```
 
 [`unscoped`]: https://api.rubyonrails.org/classes/ActiveRecord/Scoping/Default/ClassMethods.html#method-i-unscoped
+
+### New Chains Inside Scope Block
+
+Unlike class methods, [`scope`][] can easily start a new clean chain against the
+model it is defined on.
+
+```ruby
+class Topic < ApplicationRecord
+  scope :toplevel, -> { where(parent_id: nil) }
+  scope :children, -> { where.not(parent_id: nil) }
+  scope :has_children, -> {
+    where(id: Topic.children.select(:parent_id))
+  }
+end
+
+Topic.toplevel.has_children
+```
+
+Inside `has_children` the `Topic` chain generates a subquery like this:
+
+```sql
+SELECT "topics"."parent_id" FROM "topics" WHERE "topics"."parent_id" IS NOT NULL
+```
+
+Class methods have different behavior which can be surprising if you expect them
+to work exactly like scopes.
+
+```ruby
+class Topic < ApplicationRecord
+  def self.toplevel
+    where(parent_id: nil)
+  end
+
+  def self.children
+    where.not(parent_id: nil)
+  end
+
+  def self.has_children
+    where(id: Topic.children.select(:parent_id))
+  end
+end
+
+Topic.toplevel.has_children
+```
+
+`Topic` inside `has_children` will implicitly include `toplevel` from the outer
+chain resulting in a subquery of:
+
+```sql
+SELECT "topics"."parent_id" FROM "topics" WHERE "topics"."parent_id" IS NULL AND "topics"."parent_id" IS NOT NULL
+```
+
+NOTE: In class methods, `self` refers back to the model. In scope, `self` acts as
+a chained relation. For the example above, `self` and `Topic` are interchangeable
+within the class method definition.
 
 Dynamic Finders
 ---------------
