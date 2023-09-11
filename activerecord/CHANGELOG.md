@@ -1,3 +1,24 @@
+*   Support composite foreign keys via migration helpers.
+
+    ```ruby
+    # Assuming "carts" table has "(shop_id, user_id)" as a primary key.
+
+    add_foreign_key(:orders, :carts, primary_key: [:shop_id, :user_id])
+
+    remove_foreign_key(:orders, :carts, primary_key: [:shop_id, :user_id])
+    foreign_key_exists?(:orders, :carts, primary_key: [:shop_id, :user_id])
+    ```
+
+    *fatkodima*
+
+*   Adds support for `if_not_exists` when adding a check constraint.
+
+    ```ruby
+    add_check_constraint :posts, "post_type IN ('blog', 'comment', 'share')", if_not_exists: true
+    ```
+
+    *Cody Cutrer*
+
 *   Raise an `ArgumentError` when `#accepts_nested_attributes_for` is declared more than once for an association in
     the same class. Previously, the last declaration would silently override the previous one. Overriding in a subclass
     is still allowed.
@@ -919,13 +940,14 @@
 
     *George Claghorn*
 
-*   Add `ActiveRecord::Base::normalizes` to declare attribute normalizations.
+*   Add `ActiveRecord::Base.normalizes` for declaring attribute normalizations.
 
-    A normalization is applied when the attribute is assigned or updated, and
-    the normalized value will be persisted to the database.  The normalization
-    is also applied to the corresponding keyword argument of finder methods.
-    This allows a record to be created and later queried using unnormalized
-    values.  For example:
+    An attribute normalization is applied when the attribute is assigned or
+    updated, and the normalized value will be persisted to the database.  The
+    normalization is also applied to the corresponding keyword argument of query
+    methods, allowing records to be queried using unnormalized values.
+
+    For example:
 
       ```ruby
       class User < ActiveRecord::Base
@@ -940,7 +962,8 @@
       user.email                  # => "cruise-control@example.com"
       user.email_before_type_cast # => "cruise-control@example.com"
 
-      User.where(email: "\tCRUISE-CONTROL@EXAMPLE.COM ").count # => 1
+      User.where(email: "\tCRUISE-CONTROL@EXAMPLE.COM ").count         # => 1
+      User.where(["email = ?", "\tCRUISE-CONTROL@EXAMPLE.COM "]).count # => 0
 
       User.exists?(email: "\tCRUISE-CONTROL@EXAMPLE.COM ")         # => true
       User.exists?(["email = ?", "\tCRUISE-CONTROL@EXAMPLE.COM "]) # => false
@@ -1558,7 +1581,7 @@
 
     *Alex Ghiculescu*
 
-*   Add new `ActiveRecord::Base::generates_token_for` API.
+*   Add new `ActiveRecord::Base.generates_token_for` API.
 
     Currently, `signed_id` fulfills the role of generating tokens for e.g.
     resetting a password.  However, signed IDs cannot reflect record state, so
@@ -1566,9 +1589,9 @@
     least until it expires.
 
     With `generates_token_for`, a token can embed data from a record.  When
-    using the token to fetch the record, the data from the token and the data
-    from the record will be compared.  If the two do not match, the token will
-    be treated as invalid, the same as if it had expired.  For example:
+    using the token to fetch the record, the data from the token and the current
+    data from the record will be compared.  If the two do not match, the token
+    will be treated as invalid, the same as if it had expired.  For example:
 
     ```ruby
     class User < ActiveRecord::Base

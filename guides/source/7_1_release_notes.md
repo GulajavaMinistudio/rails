@@ -58,10 +58,11 @@ getting your Rails application up and running in a production environment.
 
 ### Add `ActiveRecord::Base.normalizes`
 
-Normalizations can be declared for attribute values. The normalization
-takes place when the attribute is assigned or updated, and will be persisted to the database.
-Normalization is also applied to corresponding keyword arguments in finder methods,
-allowing records to be queried using unnormalized values.
+[`ActiveRecord::Base.normalizes`][] declares an attribute normalization. The
+normalization is applied when the attribute is assigned or updated, and the
+normalized value will be persisted to the database. The normalization is also
+applied to the corresponding keyword argument of query methods, allowing records
+to be queried using unnormalized values.
 
 For example:
 
@@ -78,7 +79,8 @@ user = User.find_by(email: "\tCRUISE-CONTROL@EXAMPLE.COM ")
 user.email                  # => "cruise-control@example.com"
 user.email_before_type_cast # => "cruise-control@example.com"
 
-User.where(email: "\tCRUISE-CONTROL@EXAMPLE.COM ").count # => 1
+User.where(email: "\tCRUISE-CONTROL@EXAMPLE.COM ").count         # => 1
+User.where(["email = ?", "\tCRUISE-CONTROL@EXAMPLE.COM "]).count # => 0
 
 User.exists?(email: "\tCRUISE-CONTROL@EXAMPLE.COM ")         # => true
 User.exists?(["email = ?", "\tCRUISE-CONTROL@EXAMPLE.COM "]) # => false
@@ -86,28 +88,27 @@ User.exists?(["email = ?", "\tCRUISE-CONTROL@EXAMPLE.COM "]) # => false
 User.normalize_value_for(:phone, "+1 (555) 867-5309") # => "5558675309"
 ```
 
+[`ActiveRecord::Base.normalizes`]: https://api.rubyonrails.org/v7.1/classes/ActiveRecord/Normalization/ClassMethods.html#method-i-normalizes
+
 ### Add `ActiveRecord::Base.generates_token_for`
 
-A new [method `generates_token_for`](https://github.com/rails/rails/pull/44189) has been introduced
-to `ActiveRecord::Base`. This feature allows you to generate tokens that can embed data from a record.
-These tokens are particularly useful for tasks like password resets.
+[`ActiveRecord::Base.generates_token_for`][] defines the generation of tokens
+for a specific purpose. Generated tokens can expire and can also embed record
+data. When using a token to fetch a record, the data from the token and the
+current data from the record will be compared. If the two do not match, the
+token will be treated as invalid, the same as if it had expired.
 
-With `generates_token_for`, tokens can be designed to reflect record state, making it possible to embed
-specific record data within the token itself. When utilizing the token to retrieve the associated record,
-a comparison is performed between the data in the token and the current data in the record. If the two
-sets of data do not match, the token is considered invalid, similar to an expired token.
-
-Here's an example of how this feature can be used:
+Here is an example implementing a single-use password reset token:
 
 ```ruby
 class User < ActiveRecord::Base
   has_secure_password
 
   generates_token_for :password_reset, expires_in: 15.minutes do
-    # A password's BCrypt salt changes when the password is updated.
-    # By embedding (part of) the salt in a token, the token will
-    # expire when the password is updated.
-    BCrypt::Password.new(password_digest).salt[-10..]
+    # `password_salt` (defined by `has_secure_password`) returns the salt for
+    # the password. The salt changes when the password is changed, so the token
+    # will expire when the password is changed.
+    password_salt&.last(10)
   end
 end
 
@@ -119,6 +120,8 @@ User.find_by_token_for(:password_reset, token) # => user
 user.update!(password: "new password")
 User.find_by_token_for(:password_reset, token) # => nil
 ```
+
+[`ActiveRecord::Base.generates_token_for`]: https://api.rubyonrails.org/v7.1/classes/ActiveRecord/TokenFor/ClassMethods.html#method-i-generates_token_for
 
 ### Add `perform_all_later` to enqueue multiple jobs at once
 
@@ -195,7 +198,43 @@ ENV['DATABASE_URL'] # => "trilogy://localhost/blog_development?pool=5"
 
 ### Add `ActiveSupport::MessagePack`
 
-TODO: Add description https://github.com/rails/rails/pull/47770
+[`ActiveSupport::MessagePack`][] is a serializer that integrates with the
+[`msgpack` gem][]. `ActiveSupport::MessagePack` can serialize the basic Ruby
+types supported by `msgpack`, as well as several additional types such as `Time`,
+`ActiveSupport::TimeWithZone`, and `ActiveSupport::HashWithIndifferentAccess`.
+Compared to `JSON` and `Marshal`, `ActiveSupport::MessagePack` can reduce
+payload size and improve performance.
+
+`ActiveSupport::MessagePack` can be used as a [message serializer](
+https://guides.rubyonrails.org/v7.1/configuring.html#config-active-support-message-serializer):
+
+```ruby
+config.active_support.message_serializer = :message_pack
+
+# Or individually:
+ActiveSupport::MessageEncryptor.new(secret, serializer: :message_pack)
+ActiveSupport::MessageVerifier.new(secret, serializer: :message_pack)
+```
+
+As the [cookies serializer](
+https://guides.rubyonrails.org/v7.1/configuring.html#config-action-dispatch-cookies-serializer):
+
+```ruby
+config.action_dispatch.cookies_serializer = :message_pack
+```
+
+And as a [cache serializer](
+https://guides.rubyonrails.org/v7.1/caching_with_rails.html#configuration):
+
+```ruby
+config.cache_store = :file_store, "tmp/cache", { serializer: :message_pack }
+
+# Or individually:
+ActiveSupport::Cache.lookup_store(:file_store, "tmp/cache", serializer: :message_pack)
+```
+
+[`ActiveSupport::MessagePack`]: https://api.rubyonrails.org/v7.1/classes/ActiveSupport/MessagePack.html
+[`msgpack` gem]: https://github.com/msgpack/msgpack-ruby
 
 ### Introducing `config.autoload_lib` and `config.autoload_lib_once` for Enhanced Autoloading
 
@@ -440,6 +479,8 @@ Please refer to the [Changelog][action-pack] for detailed changes.
 *   Remove deprecated ability to assign a single value to `config.action_dispatch.trusted_proxies`.
 
 *   Remove deprecated `poltergeist` and `webkit` (capybara-webkit) driver registration for system testing.
+
+*   Remove `AbstractController::Translation.raise_on_missing_translations` in favor of `config.i18n.raise_on_missing_translations`.
 
 ### Deprecations
 
