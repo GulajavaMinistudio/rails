@@ -125,7 +125,7 @@ User.find_by_token_for(:password_reset, token) # => nil
 
 ### Add `perform_all_later` to enqueue multiple jobs at once
 
-The [`perform_all_later` method in ActiveJob](https://github.com/rails/rails/pull/46603),
+The [`perform_all_later` method in Active Job](https://github.com/rails/rails/pull/46603),
 designed to streamline the process of enqueuing multiple jobs simultaneously. This powerful
 addition allows you to efficiently enqueue jobs without triggering callbacks. This is
 particularly useful when you need to enqueue a batch of jobs at once, reducing the overhead
@@ -479,8 +479,6 @@ Please refer to the [Changelog][action-pack] for detailed changes.
 *   Remove deprecated ability to assign a single value to `config.action_dispatch.trusted_proxies`.
 
 *   Remove deprecated `poltergeist` and `webkit` (capybara-webkit) driver registration for system testing.
-
-*   Remove `AbstractController::Translation.raise_on_missing_translations` in favor of `config.i18n.raise_on_missing_translations`.
 
 ### Deprecations
 
