@@ -1,3 +1,19 @@
+## Rails 7.1.0.beta1 (September 13, 2023) ##
+
+*   Encryption now supports `support_unencrypted_data` being set per-attribute.
+
+    You can now opt out of `support_unencrypted_data` on a specific encrypted attribute.
+    This only has an effect if `ActiveRecord::Encryption.config.support_unencrypted_data == true`.
+
+    ```ruby
+    class User < ActiveRecord::Base
+      encrypts :name, deterministic: true, support_unencrypted_data: false
+      encrypts :email, deterministic: true
+    end
+    ```
+
+    *Alex Ghiculescu*
+
 *   Add instrumentation for Active Record transactions
 
     Allows subscribing to transaction events for tracking/instrumentation. The event payload contains the connection, as well as timing details.
