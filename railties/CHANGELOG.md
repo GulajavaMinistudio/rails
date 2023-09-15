@@ -1,11 +1,23 @@
+*   Raise error when generating attribute with dangerous name.
+
+    The following will now raise an error as `save` and `hash` are already
+    defined by Active Record.
+
+    ```bash
+    $ bin/rails generate model Post save
+    $ bin/rails generate model Post hash
+    ```
+
+    *Petrik de Heus*
+
 ## Rails 7.1.0.beta1 (September 13, 2023) ##
 
 *   Add ability to show slow tests to the test runner
 
     ```bash
-    bin/test --profile # additionally prints 10 (default) slowest tests
+    $ bin/test --profile # additionally prints 10 (default) slowest tests
     # or
-    bin/test --profile 20 # prints 20 slowest tests
+    $ bin/test --profile 20 # prints 20 slowest tests
     ```
 
     *fatkodima*
@@ -13,7 +25,7 @@
 *   `rails new --javascript` generator now supports Bun
 
     ```bash
-    rails new my_new_app --javascript=bun
+    $ rails new my_new_app --javascript=bun
     ```
 
     *Jason Meller*

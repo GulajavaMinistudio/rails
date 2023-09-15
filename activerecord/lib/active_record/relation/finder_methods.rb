@@ -16,7 +16,7 @@ module ActiveRecord
     #   Person.find("1")        # returns the object for ID = 1
     #   Person.find("31-sarah") # returns the object for ID = 31
     #   Person.find(1, 2, 6)    # returns an array for objects with IDs in (1, 2, 6)
-    #   Person.find([7, 17])    # returns an array for objects with IDs in (7, 17)
+    #   Person.find([7, 17])    # returns an array for objects with IDs in (7, 17), or with composite primary key [7, 17]
     #   Person.find([1])        # returns an array for the object with ID = 1
     #   Person.where("administrator = 1").order("created_on DESC").find(1)
     #
@@ -527,12 +527,7 @@ module ActiveRecord
       def find_some(ids)
         return find_some_ordered(ids) unless order_values.present?
 
-        relation = if klass.composite_primary_key?
-          ids.map { |values_set| where(primary_key.zip(values_set).to_h) }.inject(&:or)
-        else
-          where(primary_key => ids)
-        end
-
+        relation = where(primary_key => ids)
         relation = relation.select(table[primary_key]) unless select_values.empty?
         result = relation.to_a
 
@@ -559,11 +554,7 @@ module ActiveRecord
         ids = ids.slice(offset_value || 0, limit_value || ids.size) || []
 
         relation = except(:limit, :offset)
-        relation = if klass.composite_primary_key?
-          ids.map { |values_set| relation.where(primary_key.zip(values_set).to_h) }.inject(&:or)
-        else
-          relation.where(primary_key => ids)
-        end
+        relation = relation.where(primary_key => ids)
         relation = relation.select(table[primary_key]) unless select_values.empty?
         result = relation.records
 
