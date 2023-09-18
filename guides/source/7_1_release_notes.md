@@ -450,6 +450,14 @@ Please refer to the [Changelog][railties] for detailed changes.
 *   Add `DATABASE` option that enables the specification of the target database when executing the
     `rails railties:install:migrations` command to copy migrations.
 
+*   Add support for Bun in `rails new --javascript` generator.
+
+    ```bash
+    $ rails new my_new_app --javascript=bun
+    ```
+
+*   Add ability to show slow tests to the test runner.
+
 Action Cable
 ------------
 
@@ -484,11 +492,13 @@ Please refer to the [Changelog][action-pack] for detailed changes.
 
 *   Deprecate `config.action_dispatch.return_only_request_media_type_on_content_type`.
 
-*   Deprecate `AbstractController::Helpers::MissingHelperError`
+*   Deprecate `AbstractController::Helpers::MissingHelperError`.
 
 *   Deprecate `ActionDispatch::IllegalStateError`.
 
 *   Deprecate `speaker`, `vibrate`, and `vr` permissions policy directives.
+
+*   Deprecate `true` and `false` values for `config.action_dispatch.show_exceptions` in favor of `:all`, `:rescuable`, or `:none`.
 
 ### Notable changes
 

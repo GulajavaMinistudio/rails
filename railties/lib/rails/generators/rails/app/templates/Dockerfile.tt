@@ -32,21 +32,18 @@ RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz
     rm -rf /tmp/node-build-master
 
 <% end -%>
-
 <% if using_bun? -%>
 ENV BUN_INSTALL=/usr/local/bun
 ENV PATH=/usr/local/bun/bin:$PATH
 ARG BUN_VERSION=<%= dockerfile_bun_version %>
-RUN curl -fsSL https://bun.sh/install | bash -s -- "${BUN_VERSION}"
+RUN curl -fsSL https://bun.sh/install | bash -s -- "bun-v${BUN_VERSION}"
 
 <% end -%>
-
 # Install application gems
 COPY Gemfile Gemfile.lock ./
 RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git<% if depend_on_bootsnap? -%> && \
-    bundle exec bootsnap precompile --gemfile
-<% end %>
+    bundle exec bootsnap precompile --gemfile<% end %>
 
 <% if using_node? -%>
 # Install node modules
@@ -54,7 +51,6 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 <% end -%>
-
 <% if using_bun? -%>
 # Install node modules
 COPY package.json bun.lockb ./
