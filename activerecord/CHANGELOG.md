@@ -1,3 +1,24 @@
+*   The SQLite3 adapter now supports `supports_insert_returning?`
+
+    Implementing the full `supports_insert_returning?` contract means the SQLite3 adapter supports auto-populated columns (#48241) as well as custom primary keys.
+
+    *Stephen Margheim*
+
+*   Ensure the SQLite3 adapter handles default functions with the `||` concatenation operator
+
+    Previously, this default function would produce the static string `"'Ruby ' || 'on ' || 'Rails'"`.
+    Now, the adapter will appropriately receive and use `"Ruby on Rails"`.
+
+    ```ruby
+    change_column_default "test_models", "ruby_on_rails", -> { "('Ruby ' || 'on ' || 'Rails')" }
+    ```
+
+    *Stephen Margheim*
+
+*   Dump PostgreSQL schemas as part of the schema dump.
+
+    *Lachlan Sylvester*
+
 ## Rails 7.1.0.beta1 (September 13, 2023) ##
 
 *   Encryption now supports `support_unencrypted_data` being set per-attribute.
