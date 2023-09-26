@@ -106,12 +106,12 @@ always.
 If your application does not have `lib` in the autoload or autoload once paths,
 please skip this section. You can find that out by inspecting the output of
 
-```
+```bash
 # Print autoload paths.
-bin/rails runner 'pp Rails.autoloaders.main.dirs'
+$ bin/rails runner 'pp Rails.autoloaders.main.dirs'
 
 # Print autoload once paths.
-bin/rails runner 'pp Rails.autoloaders.once.dirs'
+$ bin/rails runner 'pp Rails.autoloaders.once.dirs'
 ```
 
 If your application already has `lib` in the autoload paths, normally there is
@@ -138,7 +138,7 @@ config.eager_load_paths << config.root.join("lib")
 ```
 
 That still works, but it is recommended to replace those lines with the more
-concise and correct
+concise
 
 ```ruby
 config.autoload_lib(ignore: %w(assets tasks))
@@ -146,7 +146,7 @@ config.autoload_lib(ignore: %w(assets tasks))
 
 Please, add to the `ignore` list any other `lib` subdirectories that do not
 contain `.rb` files, or that should not be reloaded or eager loaded. For
-example, if your applications has `lib/templates`, `lib/generators`, or
+example, if your application has `lib/templates`, `lib/generators`, or
 `lib/middleware`, you'd add their name relative to `lib`:
 
 ```ruby
