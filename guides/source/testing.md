@@ -99,6 +99,8 @@ By requiring this file, `test_helper.rb` the default configuration to run our te
 
 ```ruby
 class ArticleTest < ActiveSupport::TestCase
+  # ...
+end
 ```
 
 The `ArticleTest` class defines a _test case_ because it inherits from `ActiveSupport::TestCase`. `ArticleTest` thus has all the methods available from `ActiveSupport::TestCase`. Later in this guide, we'll see some of the methods it gives us.
@@ -745,9 +747,9 @@ ERB allows you to embed Ruby code within templates. The YAML fixture format is p
 
 ```erb
 <% 1000.times do |n| %>
-user_<%= n %>:
-  username: <%= "user#{n}" %>
-  email: <%= "user#{n}@example.com" %>
+  user_<%= n %>:
+    username: <%= "user#{n}" %>
+    email: <%= "user#{n}@example.com" %>
 <% end %>
 ```
 
@@ -893,7 +895,7 @@ require "test_helper"
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   url = ENV.fetch("SELENIUM_REMOTE_URL", nil)
   options = if url
-    { browser: :remote, url }
+    { browser: :remote, url: url }
   else
     { browser: :chrome }
   end
@@ -1330,9 +1332,9 @@ After a request has been made and processed, you will have 3 Hash objects ready 
 As is the case with normal Hash objects, you can access the values by referencing the keys by string. You can also reference them by symbol name. For example:
 
 ```ruby
-flash["gordon"]               flash[:gordon]
-session["shmession"]          session[:shmession]
-cookies["are_good_for_u"]     cookies[:are_good_for_u]
+flash["gordon"]               # or flash[:gordon]
+session["shmession"]          # or session[:shmession]
+cookies["are_good_for_u"]     # or cookies[:are_good_for_u]
 ```
 
 ### Instance Variables Available
@@ -1699,7 +1701,7 @@ Partial templates - usually called "partials" - are another device for breaking 
 View tests provide an opportunity to test that partials render content the way you expect. View partial tests reside in `test/views/` and inherit from `ActionView::TestCase`.
 
 To render a partial, call `render` like you would in a template. The content is
-available through the test-local `rendered` method:
+available through the test-local `#rendered` method:
 
 ```ruby
 class ArticlePartialTest < ActionView::TestCase
@@ -1752,9 +1754,10 @@ test "renders a link to itself" do
 
   render "articles/article", article: article
   anchor = document_root_element.at("a")
+  url = article_url(article)
 
   assert_pattern do
-    anchor => { content: article.title, attributes: [{ name: "href", value: article_url(article) }] }
+    anchor => { content: "Hello, world", attributes: [{ name: "href", value: url }] }
   end
 end
 ```
@@ -1793,7 +1796,52 @@ class ArticlePartialTest < ViewPartialTestCase
 end
 ```
 
+Starting in Action View version 7.1, the `#rendered` helper method returns an
+object capable of parsing the view partial's rendered content.
+
+To transform the `String` content returned by the `#rendered` method into an
+object, define a parser by calling `.register_parser`. Calling
+`.register_parser :rss` defines a `#rendered.rss` helper method. For example,
+to parse rendered [RSS content][] into an object with `#rendered.rss`, register
+a call to `RSS::Parser.parse`:
+
+```ruby
+register_parser :rss, -> rendered { RSS::Parser.parse(rendered) }
+
+test "renders RSS" do
+  article = Article.create!(title: "Hello, world")
+
+  render formats: :rss, partial: article
+
+  assert_equal "Hello, world", rendered.rss.items.last.title
+end
+```
+
+By default, `ActionView::TestCase` defines a parser for:
+
+* `:html` - returns an instance of [Nokogiri::XML::Node](https://nokogiri.org/rdoc/Nokogiri/XML/Node.html)
+* `:json` - returns an instance of [ActiveSupport::HashWithIndifferentAccess](https://edgeapi.rubyonrails.org/classes/ActiveSupport/HashWithIndifferentAccess.html)
+
+```ruby
+test "renders HTML" do
+  article = Article.create!(title: "Hello, world")
+
+  render partial: "articles/article", locals: { article: article }
+
+  assert_pattern { rendered.html.at("main h1") => { content: "Hello, world" } }
+end
+
+test "renders JSON" do
+  article = Article.create!(title: "Hello, world")
+
+  render formats: :json, partial: "articles/article", locals: { article: article }
+
+  assert_pattern { rendered.json => { title: "Hello, world" } }
+end
+```
+
 [rails-dom-testing]: https://github.com/rails/rails-dom-testing
+[RSS content]: https://www.rssboard.org/rss-specification
 
 Testing Helpers
 ---------------
