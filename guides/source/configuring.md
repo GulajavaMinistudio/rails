@@ -1606,26 +1606,26 @@ database schema dump. Defaults to `/^fk_rails_[0-9a-f]{10}$/`.
 
 #### `config.active_record.encryption.hash_digest_class`
 
- Sets the digest algorithm used by Active Record Encryption.
+Sets the digest algorithm used by Active Record Encryption.
 
- The default value depends on the `config.load_defaults` target version:
+The default value depends on the `config.load_defaults` target version:
 
- | Starting with version | The default value is      |
- |-----------------------|---------------------------|
- | (original)            | `OpenSSL::Digest::SHA1`   |
- | 7.1                   | `OpenSSL::Digest::SHA256` |
+| Starting with version | The default value is      |
+| --------------------- | ------------------------- |
+| (original)            | `OpenSSL::Digest::SHA1`   |
+| 7.1                   | `OpenSSL::Digest::SHA256` |
 
 #### `config.active_record.encryption.support_sha1_for_non_deterministic_encryption`
 
 Enables support for decrypting existing data encrypted using a SHA-1 digest class. When `false`,
 it will only support the digest configured in `config.active_record.encryption.hash_digest_class`.
 
- The default value depends on the `config.load_defaults` target version:
+The default value depends on the `config.load_defaults` target version:
 
- | Starting with version | The default value is |
- |-----------------------|----------------------|
- | (original)            | `true`               |
- | 7.1                   | `false`              |
+| Starting with version | The default value is |
+| --------------------- | -------------------- |
+| (original)            | `true`               |
+| 7.1                   | `false`              |
 
 ### Configuring Action Controller
 
@@ -3416,7 +3416,7 @@ Below is a comprehensive list of all the initializers found in Rails in the orde
 
 * `load_active_support`: Requires `active_support/dependencies` which sets up the basis for Active Support. Optionally requires `active_support/all` if `config.active_support.bare` is un-truthful, which is the default.
 
-* `initialize_logger`: Initializes the logger (an `ActiveSupport::Logger` object) for the application and makes it accessible at `Rails.logger`, provided that no initializer inserted before this point has defined `Rails.logger`.
+* `initialize_logger`: Initializes the logger (an `ActiveSupport::BroadcastLogger` object) for the application and makes it accessible at `Rails.logger`, provided that no initializer inserted before this point has defined `Rails.logger`.
 
 * `initialize_cache`: If `Rails.cache` isn't set yet, initializes the cache by referencing the value in `config.cache_store` and stores the outcome as `Rails.cache`. If this object responds to the `middleware` method, its middleware is inserted before `Rack::Runtime` in the middleware stack.
 
