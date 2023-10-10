@@ -374,7 +374,7 @@ you. You can change the name of the column with the `:primary_key` option, or
 pass an array to `:primary_key` for a composite primary key. If you don't want
 a primary key at all, you can pass the option `id: false`.
 
-If you need to pass database specific options you can place an SQL fragment in
+If you need to pass database-specific options you can place an SQL fragment in
 the `:options` option. For example:
 
 ```ruby
@@ -685,37 +685,29 @@ actions automatically. Below are some of the actions that `change` supports:
 * [`add_index`][]
 * [`add_reference`][]
 * [`add_timestamps`][]
-* [`change_column_comment`][] (must supply a `:from` and `:to` option)
-* [`change_column_default`][] (must supply a `:from` and `:to` option)
+* [`change_column_comment`][] (must supply `:from` and `:to` options)
+* [`change_column_default`][] (must supply `:from` and `:to` options)
 * [`change_column_null`][]
-* [`change_table_comment`][] (must supply a `:from` and `:to` option)
+* [`change_table_comment`][] (must supply `:from` and `:to` options)
 * [`create_join_table`][]
 * [`create_table`][]
 * `disable_extension`
 * [`drop_join_table`][]
-* [`drop_table`][] (must supply a block)
+* [`drop_table`][] (must supply table creation options and block)
 * `enable_extension`
-* [`remove_check_constraint`][] (must supply a constraint expression)
-* [`remove_column`][] (must supply a type)
-* [`remove_columns`][] (must supply a `:type` option)
-* [`remove_foreign_key`][] (must supply a second table)
-* [`remove_index`][]
-* [`remove_reference`][]
-* [`remove_timestamps`][]
+* [`remove_check_constraint`][] (must supply original constraint expression)
+* [`remove_column`][] (must supply original type and column options)
+* [`remove_columns`][] (must supply original type and column options)
+* [`remove_foreign_key`][] (must supply other table and original options)
+* [`remove_index`][] (must supply columns and original options)
+* [`remove_reference`][] (must supply original options)
+* [`remove_timestamps`][] (must supply original options)
 * [`rename_column`][]
 * [`rename_index`][]
 * [`rename_table`][]
 
 [`change_table`][] is also reversible, as long as the block only calls
 reversible operations like the ones listed above.
-
-`remove_column` is reversible if you supply the column type as the third
-argument. Provide the original column options too, otherwise Rails can't
-recreate the column exactly when rolling back:
-
-```ruby
-remove_column :posts, :slug, :string, null: false, default: ''
-```
 
 If you're going to need to use any other methods, you should use `reversible`
 or write the `up` and `down` methods instead of using the `change` method.
@@ -766,16 +758,15 @@ class ExampleMigration < ActiveRecord::Migration[7.2]
       end
     end
 
-    add_column :users, :home_page_url, :string
-    rename_column :users, :email, :email_address
+    add_column :users, :address, :string
   end
 end
 ```
 
 Using `reversible` will ensure that the instructions are executed in the right
 order too. If the previous example migration is reverted, the `down` block will
-be run after the `home_page_url` column is removed and `email_address` column is renamed and right before the table
-`distributors` is dropped.
+be run after the `users.address` column is removed and before the `distributors`
+table is dropped.
 
 [`reversible`]: https://api.rubyonrails.org/classes/ActiveRecord/Migration.html#method-i-reversible
 
@@ -808,13 +799,11 @@ class ExampleMigration < ActiveRecord::Migration[7.2]
       FROM distributors;
     SQL
 
-    add_column :users, :home_page_url, :string
-    rename_column :users, :email, :email_address
+    add_column :users, :address, :string
   end
 
   def down
-    rename_column :users, :email_address, :email
-    remove_column :users, :home_page_url
+    remove_column :users, :address
 
     execute <<-SQL
       DROP VIEW distributors_view;

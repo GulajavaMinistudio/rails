@@ -439,21 +439,15 @@ module ActiveSupport
       #
       # ==== Dynamic Options
       #
-      # In some cases it may be necessary to to dynamically compute options based
-      # on the cached value. For this purpose, a ActiveSupport::Cache::WriteOptions
-      # instance is passed as a second argument to the block
+      # In some cases it may be necessary to dynamically compute options based
+      # on the cached value. To support this, an ActiveSupport::Cache::WriteOptions
+      # instance is passed as the second argument to the block. For example:
       #
       #     cache.fetch("authentication-token:#{user.id}") do |key, options|
       #       token = authenticate_to_service
       #       options.expires_at = token.expires_at
       #       token
       #     end
-      #
-      # Only some options can be set dynamically:
-      #
-      #   - +:expires_in+
-      #   - +:expires_at+
-      #   - +:version+
       #
       def fetch(name, options = nil, &block)
         if block_given?
