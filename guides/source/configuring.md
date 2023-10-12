@@ -1049,13 +1049,13 @@ Controls whether migrations are numbered with serial integers or with timestamps
 
 Controls the action to be taken when a SQL query produces a warning. The following options are available:
 
-  * `:ignore` - Database warnings wil be ignored. This is the default.
+  * `:ignore` - Database warnings will be ignored. This is the default.
 
   * `:log` - Database warnings will be logged via `ActiveRecord.logger` at the `:warn` level.
 
   * `:raise` - Database warnings will be raised as `ActiveRecord::SQLWarning`.
 
-  * `:report` - Database warnings be will reported to subscribers of Rails' error reporter.
+  * `:report` - Database warnings will be reported to subscribers of Rails' error reporter.
 
   * Custom proc - A custom proc can be provided. It should accept a `SQLWarning` error object.
 
@@ -1742,6 +1742,16 @@ By default it is set to `false` which results in following output:
 Rendered messages/_message.html.erb in 1.2 ms [cache hit]
 Rendered recordings/threads/_thread.html.erb in 1.5 ms [cache miss]
 ```
+
+#### `config.action_controller.raise_on_missing_callback_actions`
+
+Raises an `AbstractController::ActionNotFound` when the action specified in callback's `:only` or `:except` options is missing in the controller.
+
+| Starting with version | The default value is |
+| --------------------- | -------------------- |
+| (original)            | `false`              |
+| 7.1                   | `true` (development and test), `false` (other envs)|
+
 
 #### `config.action_controller.raise_on_open_redirects`
 
