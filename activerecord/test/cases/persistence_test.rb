@@ -47,7 +47,11 @@ class PersistenceTest < ActiveRecord::TestCase
     record_with_defaults = Default.create
     assert_not_nil record_with_defaults.id
     assert_equal "Ruby on Rails", record_with_defaults.ruby_on_rails
-    assert_not_nil record_with_defaults.virtual_stored_number if current_adapter?(:PostgreSQLAdapter)
+
+    if current_adapter?(:PostgreSQLAdapter) && ActiveRecord::Base.connection.supports_virtual_columns?
+      assert_not_nil record_with_defaults.virtual_stored_number
+    end
+
     assert_not_nil record_with_defaults.random_number
     assert_not_nil record_with_defaults.modified_date
     assert_not_nil record_with_defaults.modified_date_function
@@ -55,7 +59,7 @@ class PersistenceTest < ActiveRecord::TestCase
     assert_not_nil record_with_defaults.modified_time_without_precision
     assert_not_nil record_with_defaults.modified_time_function
 
-    if current_adapter?(:PostgreSQLAdapter)
+    if current_adapter?(:PostgreSQLAdapter) && ActiveRecord::Base.connection.supports_identity_columns?
       klass = Class.new(ActiveRecord::Base) do
         self.table_name = "postgresql_identity_table"
       end
@@ -800,7 +804,7 @@ class PersistenceTest < ActiveRecord::TestCase
   def test_delete
     topic = Topic.find(1)
     assert_equal topic, topic.delete, "topic.delete did not return self"
-    assert topic.frozen?, "topic not frozen after delete"
+    assert_predicate topic, :frozen?, "topic not frozen after delete"
     assert_raise(ActiveRecord::RecordNotFound) { Topic.find(topic.id) }
   end
 
@@ -819,14 +823,14 @@ class PersistenceTest < ActiveRecord::TestCase
   def test_destroy
     topic = Topic.find(1)
     assert_equal topic, topic.destroy, "topic.destroy did not return self"
-    assert topic.frozen?, "topic not frozen after destroy"
+    assert_predicate topic, :frozen?, "topic not frozen after destroy"
     assert_raise(ActiveRecord::RecordNotFound) { Topic.find(topic.id) }
   end
 
   def test_destroy!
     topic = Topic.find(1)
     assert_equal topic, topic.destroy!, "topic.destroy! did not return self"
-    assert topic.frozen?, "topic not frozen after destroy!"
+    assert_predicate topic, :frozen?, "topic not frozen after destroy!"
     assert_raise(ActiveRecord::RecordNotFound) { Topic.find(topic.id) }
   end
 
@@ -1106,8 +1110,8 @@ class PersistenceTest < ActiveRecord::TestCase
     t.update_column(:title, "super_title")
     assert_equal "John", t.author_name
     assert_equal "super_title", t.title
-    assert t.changed?, "topic should have changed"
-    assert t.author_name_changed?, "author_name should have changed"
+    assert_predicate t, :changed?, "topic should have changed"
+    assert_predicate t, :author_name_changed?, "author_name should have changed"
 
     t.reload
     assert_equal author_name, t.author_name
@@ -1205,8 +1209,8 @@ class PersistenceTest < ActiveRecord::TestCase
     t.update_columns(title: "super_title")
     assert_equal "John", t.author_name
     assert_equal "super_title", t.title
-    assert t.changed?, "topic should have changed"
-    assert t.author_name_changed?, "author_name should have changed"
+    assert_predicate t, :changed?, "topic should have changed"
+    assert_predicate t, :author_name_changed?, "author_name should have changed"
 
     t.reload
     assert_equal author_name, t.author_name
