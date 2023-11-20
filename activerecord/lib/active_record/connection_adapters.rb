@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "active_support/core_ext/string/filters"
+
 module ActiveRecord
   module ConnectionAdapters
     extend ActiveSupport::Autoload
@@ -18,33 +20,37 @@ module ActiveRecord
       #   ActiveRecord::ConnectionAdapters.register("mysql", "ActiveRecord::ConnectionAdapters::TrilogyAdapter", "active_record/connection_adapters/trilogy_adapter")
       #
       def register(name, class_name, path = class_name.underscore)
-        @adapters[name] = [class_name, path]
+        @adapters[name.to_s] = [class_name, path]
       end
 
       def resolve(adapter_name) # :nodoc:
         # Require the adapter itself and give useful feedback about
-        #   1. Missing adapter gems and
-        #   2. Adapter gems' missing dependencies.
-        class_name, path_to_adapter = @adapters[adapter_name]
+        #   1. Missing adapter gems.
+        #   2. Incorrectly registered adapters.
+        #   3. Adapter gems' missing dependencies.
+        class_name, path_to_adapter = @adapters[adapter_name.to_s]
 
         unless class_name
-          raise AdapterNotFound, "database configuration specifies nonexistent '#{adapter_name}' adapter. Ensure that the adapter is spelled correctly in config/database.yml and that you've added the necessary adapter gem to your Gemfile."
+          raise AdapterNotFound, <<~MSG.squish
+            Database configuration specifies nonexistent '#{adapter_name}' adapter.
+            Available adapters are: #{@adapters.keys.sort.join(", ")}.
+            Ensure that the adapter is spelled correctly in config/database.yml and that you've added the necessary
+            adapter gem to your Gemfile if it's not in the list of available adapters.
+          MSG
         end
 
         unless Object.const_defined?(class_name)
           begin
             require path_to_adapter
           rescue LoadError => error
-            # We couldn't require the adapter itself. Raise an exception that
-            # points out config typos and missing gems.
+            # We couldn't require the adapter itself.
             if error.path == path_to_adapter
-              # We can assume that a non-builtin adapter was specified, so it's
-              # either misspelled or missing from Gemfile.
-              raise LoadError, "Error loading the '#{adapter_name}' Active Record adapter. Ensure that the necessary adapter gem is in the Gemfile. #{error.message}", error.backtrace
-
+              # We can assume here that a non-builtin adapter was specified and the path
+              # registered by the adapter gem is incorrect.
+              raise LoadError, "Error loading the '#{adapter_name}' Active Record adapter. Ensure that the path registered by the adapter gem is correct. #{error.message}", error.backtrace
+            else
               # Bubbled up from the adapter require. Prefix the exception message
               # with some guidance about how to address it and reraise.
-            else
               raise LoadError, "Error loading the '#{adapter_name}' Active Record adapter. Missing a gem it depends on? #{error.message}", error.backtrace
             end
           end
