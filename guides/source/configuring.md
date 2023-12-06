@@ -1769,7 +1769,14 @@ Raises an `AbstractController::ActionNotFound` when the action specified in call
 
 #### `config.action_controller.raise_on_open_redirects`
 
-Raises an `ActionController::Redirecting::UnsafeRedirectError` when an unpermitted open redirect occurs.
+Protect an application from unintentionally redirecting to an external host
+(also known as an "open redirect") by making external redirects opt-in.
+
+When this configuration is set to `true`, an
+`ActionController::Redirecting::UnsafeRedirectError` will be raised when a URL
+with an external host is passed to [redirect_to][]. If an open redirect should
+be allowed, then `allow_other_host: true` can be added to the call to
+`redirect_to`.
 
 The default value depends on the `config.load_defaults` target version:
 
@@ -1777,6 +1784,8 @@ The default value depends on the `config.load_defaults` target version:
 | --------------------- | -------------------- |
 | (original)            | `false`              |
 | 7.0                   | `true`               |
+
+[redirect_to]: https://api.rubyonrails.org/classes/ActionController/Redirecting.html#method-i-redirect_to
 
 #### `config.action_controller.log_query_tags_around_actions`
 
@@ -2962,10 +2971,11 @@ development:
 
 The `config/database.yml` file can contain ERB tags `<%= %>`. Anything in the tags will be evaluated as Ruby code. You can use this to pull out data from an environment variable or to perform calculations to generate the needed connection information.
 
-When using a `ENV['DATABASE_URL']` or a `url` key in your `config/database.yml` file, Rails allows mapping the protocol
-in the URL to a database adapter that can be configured from within the application. This allows the adapter to be configured
-without modifying the URL set in the deployment environment. See: [`config.active_record.protocol_adapters`](#config-active_record-protocol-adapters).
-
+When using a `ENV['DATABASE_URL']` or a `url` key in your `config/database.yml`
+file, Rails allows mapping the protocol in the URL to a database adapter that
+can be configured from within the application. This allows the adapter to be
+configured without modifying the URL set in the deployment environment. See:
+[`config.active_record.protocol_adapters`](#config-active-record-protocol-adapters).
 
 TIP: You don't have to update the database configurations manually. If you look at the options of the application generator, you will see that one of the options is named `--database`. This option allows you to choose an adapter from a list of the most used relational databases. You can even run the generator repeatedly: `cd .. && rails new blog --database=mysql`. When you confirm the overwriting of the `config/database.yml` file, your application will be configured for MySQL instead of SQLite. Detailed examples of the common database connections are below.
 
