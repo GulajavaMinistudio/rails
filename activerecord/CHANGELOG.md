@@ -1,3 +1,19 @@
+*   Make `assert_queries` and `assert_no_queries` assertions public.
+
+    To assert the expected number of queries are made, Rails internally uses
+    `assert_queries` and `assert_no_queries`. These assertions can be now
+    be used in applications as well.
+
+    ```ruby
+    class ArticleTest < ActiveSupport::TestCase
+      test "queries are made" do
+         assert_queries(1) { Article.first }
+      end
+    end
+    ```
+
+    *Petrik de Heus*
+
 *   Fix `has_secure_token` calls the setter method on initialize.
 
     *Abeid Ahmed*
@@ -105,5 +121,9 @@
 *   Ensure `#signed_id` outputs `url_safe` strings.
 
     *Jason Meller*
+
+*   Add `nulls_last` and working `desc.nulls_first` for MySQL.
+
+    *Tristan Fellows*
 
 Please check [7-1-stable](https://github.com/rails/rails/blob/7-1-stable/activerecord/CHANGELOG.md) for previous changes.

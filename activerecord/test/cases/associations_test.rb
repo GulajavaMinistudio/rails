@@ -284,6 +284,14 @@ class AssociationsTest < ActiveRecord::TestCase
     assert_equal(blog_post, comment.blog_post_by_id)
   end
 
+  def test_polymorphic_belongs_to_uses_parent_query_constraints
+    parent_post = sharded_blog_posts(:great_post_blog_one)
+    child_post = Sharded::BlogPost.create!(title: "Child post", blog_id: parent_post.blog_id, parent: parent_post)
+    child_post.reload # reload to forget the parent association
+
+    assert_equal parent_post, child_post.parent
+  end
+
   def test_preloads_model_with_query_constraints_by_explicitly_configured_fk_and_pk
     comment = sharded_comments(:great_comment_blog_post_one)
     comments = Sharded::Comment.where(id: comment.id).preload(:blog_post_by_id).to_a
@@ -1386,6 +1394,15 @@ class PreloaderTest < ActiveRecord::TestCase
 
     assert_predicate comment.association(:blog_post), :loaded?
     assert_equal sharded_blog_posts(:great_post_blog_one), comment.blog_post
+  end
+
+  def test_preload_loaded_belongs_to_association_with_composite_foreign_key
+    comment = sharded_comments(:great_comment_blog_post_one)
+    comment.blog_post
+
+    assert_no_queries do
+      ActiveRecord::Associations::Preloader.new(records: [comment], associations: :blog_post).call
+    end
   end
 
   def test_preload_has_many_through_association_with_composite_query_constraints
