@@ -1,3 +1,13 @@
+*   Add `image/svg+xml` to the compressible content types of ActionDispatch::Static
+
+    *Georg Ledermann*
+
+*   Add instrumentation for ActionController::Live#send_stream
+
+    Allows subscribing to `send_stream` events. The event payload contains the filename, disposition, and type.
+
+    *Hannah Ramadan*
+
 *   Add support for `with_routing` test helper in `ActionDispatch::IntegrationTest`
 
     *Gannon McGibbon*
