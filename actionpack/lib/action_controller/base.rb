@@ -214,6 +214,8 @@ module ActionController
       RequestForgeryProtection,
       ContentSecurityPolicy,
       PermissionsPolicy,
+      RateLimiting,
+      AllowBrowser,
       Streaming,
       DataStreaming,
       HttpAuthentication::Basic::ControllerMethods,

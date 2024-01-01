@@ -56,6 +56,9 @@ group :rubocop do
   gem "rubocop-performance", require: false
   gem "rubocop-rails", require: false
   gem "rubocop-md", require: false
+
+  # This gem is used in Railties tests so it must be a development dependency.
+  gem "rubocop-rails-omakase", require: false
 end
 
 group :mdl do
@@ -92,6 +95,9 @@ if rack_version != "head"
 else
   gem "rack", git: "https://github.com/rack/rack.git", branch: "main"
 end
+
+gem "kredis", ">= 1.7.0", require: false
+gem "useragent", require: false
 
 # Active Job
 group :job do

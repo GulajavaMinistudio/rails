@@ -6,8 +6,11 @@ require "generators/shared_generator_tests"
 
 DEFAULT_APP_FILES = %w(
   .gitattributes
+  .github/dependabot.yml
+  .github/workflows/ci.yml
   .gitignore
   .dockerignore
+  .rubocop.yml
   .ruby-version
   README.md
   Gemfile
@@ -37,8 +40,10 @@ DEFAULT_APP_FILES = %w(
   app/views/layouts/mailer.html.erb
   app/views/layouts/mailer.text.erb
   bin/docker-entrypoint
+  bin/brakeman
   bin/rails
   bin/rake
+  bin/rubocop
   bin/setup
   config/application.rb
   config/boot.rb
@@ -621,6 +626,51 @@ class AppGeneratorTest < Rails::Generators::TestCase
     else
       assert_gem "debug"
     end
+  end
+
+  def test_inclusion_of_rubocop
+    run_generator
+    assert_gem "rubocop-rails-omakase"
+  end
+
+  def test_rubocop_is_skipped_if_required
+    run_generator [destination_root, "--skip-rubocop"]
+
+    assert_no_gem "rubocop"
+    assert_no_file "bin/rubocop"
+    assert_no_file ".rubocop.yml"
+  end
+
+  def test_inclusion_of_brakeman
+    run_generator
+    assert_gem "brakeman"
+  end
+
+  def test_brakeman_is_skipped_if_required
+    run_generator [destination_root, "--skip-brakeman"]
+
+    assert_no_gem "brakeman"
+    assert_no_file "bin/brakeman"
+  end
+
+  def test_both_brakeman_and_rubocop_binstubs_are_skipped_if_required
+    run_generator [destination_root, "--skip-brakeman", "--skip-rubocop"]
+
+    assert_no_file "bin/rubocop"
+    assert_no_file "bin/brakeman"
+  end
+
+  def test_inclusion_of_ci_files
+    run_generator
+    assert_file ".github/workflows/ci.yml"
+    assert_file ".github/dependabot.yml"
+  end
+
+  def test_ci_files_are_skipped_if_required
+    run_generator [destination_root, "--skip-ci"]
+
+    assert_no_file ".github/workflows/ci.yml"
+    assert_no_file ".github/dependabot.yml"
   end
 
   def test_usage_read_from_file

@@ -100,6 +100,15 @@ module Rails
         class_option :skip_dev_gems,       type: :boolean, default: nil,
                                            desc: "Skip development gems (e.g., web-console)"
 
+        class_option :skip_rubocop,        type: :boolean, default: nil,
+                                           desc: "Skip RuboCop setup"
+
+        class_option :skip_brakeman,       type: :boolean, default: nil,
+                                           desc: "Skip brakeman setup"
+
+        class_option :skip_ci,             type: :boolean, default: nil,
+                                           desc: "Skip GitHub CI files"
+
         class_option :dev,                 type: :boolean, default: nil,
                                            desc: "Set up the #{name} with Gemfile pointing to your Rails checkout"
 
@@ -379,6 +388,17 @@ module Rails
         skip_asset_pipeline? || options[:asset_pipeline] != "propshaft"
       end
 
+      def skip_rubocop?
+        options[:skip_rubocop]
+      end
+
+      def skip_brakeman?
+        options[:skip_brakeman]
+      end
+
+      def skip_ci?
+        options[:skip_ci]
+      end
 
       class GemfileEntry < Struct.new(:name, :version, :comment, :options, :commented_out)
         def initialize(name, version, comment, options = {}, commented_out = false)

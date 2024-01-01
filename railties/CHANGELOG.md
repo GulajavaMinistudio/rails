@@ -1,3 +1,15 @@
+*   Add GitHub CI files for dependabot, brakeman, rubocop, and running tests by default. Can be skipped with --skip-ci.
+
+    *DHH*
+
+*   Add brakeman gem by default for static analysis of security vulnerabilities. Allow skipping with --skip-brakeman option.
+
+    *vipulnsward*
+
+*   Add RuboCop with rules from rubocop-rails-omakase by default. Skip with --skip-rubocop.
+
+    *DHH* and *zzak*
+
 *   Use `bin/rails runner --skip-executor` option to not wrap the runner script
     with an Executor.
 

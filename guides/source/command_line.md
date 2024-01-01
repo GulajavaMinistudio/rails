@@ -66,6 +66,7 @@ If you wish to skip some files from being generated or skip some libraries, you 
 | `--skip-system-test`    | Skip system test files                                      |
 | `--skip-bootsnap`       | Skip bootsnap gem                                           |
 | `--skip-dev-gems`       | Skip adding development gems                                |
+| `--skip-rubocop`        | Skip RuboCop setup                                          |
 
 These are just some of the options that `rails new` accepts. For a full list of options, type `rails new --help`.
 
@@ -508,8 +509,8 @@ $ bin/rails destroy model Oops
 $ bin/rails about
 About your application's environment
 Rails version             7.2.0
-Ruby version              2.7.0 (x86_64-linux)
-RubyGems version          2.7.3
+Ruby version              3.1.0 (x86_64-linux)
+RubyGems version          3.3.7
 Rack version              3.0.8
 JavaScript Runtime        Node.js (V8)
 Middleware:               ActionDispatch::HostAuthorization, Rack::Sendfile, ActionDispatch::Static, ActionDispatch::Executor, ActionDispatch::ServerTiming, ActiveSupport::Cache::Strategy::LocalCache::Middleware, Rack::Runtime, Rack::MethodOverride, ActionDispatch::RequestId, ActionDispatch::RemoteIp, Sprockets::Rails::QuietAssets, Rails::Rack::Logger, ActionDispatch::ShowExceptions, WebConsole::Middleware, ActionDispatch::DebugExceptions, ActionDispatch::ActionableExceptions, ActionDispatch::Reloader, ActionDispatch::Callbacks, ActiveRecord::Migration::CheckPending, ActionDispatch::Cookies, ActionDispatch::Session::CookieStore, ActionDispatch::Flash, ActionDispatch::ContentSecurityPolicy::Middleware, ActionDispatch::PermissionsPolicy::Middleware, Rack::Head, Rack::ConditionalGet, Rack::ETag, Rack::TempfileReaper
