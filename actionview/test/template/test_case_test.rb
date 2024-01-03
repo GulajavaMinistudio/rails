@@ -453,8 +453,33 @@ module ActionView
       assert @called_initialize
     end
   end
-end
 
-if RUBY_VERSION >= "3.1"
-  require_relative "./test_case_test/pattern_matching_test_cases"
+  class PatternMatchingTestCases < ActionView::TestCase
+    test "document_root_element integrates with pattern matching" do
+      developer = DeveloperStruct.new("Eloy")
+
+      render "developers/developer_with_h1", developer: developer
+
+      assert_pattern { document_root_element.at("h1") => { content: "Eloy", attributes: [{ name: "id", value: "name" }] } }
+      refute_pattern { document_root_element.at("h1") => { content: "Not Eloy" } }
+    end
+
+    test "rendered.html integrates with pattern matching" do
+      developer = DeveloperStruct.new("Eloy")
+
+      render "developers/developer", developer: developer
+
+      assert_pattern { rendered.html => { content: "Eloy" } }
+      refute_pattern { rendered.html => { content: "Not Eloy" } }
+    end
+
+    test "rendered.json integrates with pattern matching" do
+      developer = DeveloperStruct.new("Eloy")
+
+      render formats: :json, partial: "developers/developer", locals: { developer: developer }
+
+      assert_pattern { rendered.json => { name: "Eloy" } }
+      refute_pattern { rendered.json => { name: "Not Eloy" } }
+    end
+  end
 end
