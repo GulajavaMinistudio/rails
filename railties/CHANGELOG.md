@@ -1,3 +1,16 @@
+*   Use `oven-sh/setup-bun` in GitHub CI when generating an app with bun
+
+    *TangRufus*
+
+*   Disable `pidfile` generation in production environment.
+
+    *Hans Schnedlitz*
+
+*   Set `config.action_view.annotate_rendered_view_with_filenames` to `true` in the
+    development environment.
+
+    *Adrian Marin*
+
 *   Support `BACKTRACE` ENV variable to turn off backtrace cleaning.
 
     Useful for debugging framework code:

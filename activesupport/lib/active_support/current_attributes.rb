@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "active_support/callbacks"
+require "active_support/core_ext/object/with"
 require "active_support/core_ext/enumerable"
 require "active_support/core_ext/module/delegation"
 
@@ -177,15 +178,14 @@ module ActiveSupport
           @current_instances_key ||= name.to_sym
         end
 
-        def method_missing(name, *args, &block)
+        def method_missing(name, ...)
           # Caches the method definition as a singleton method of the receiver.
           #
           # By letting #delegate handle it, we avoid an enclosure that'll capture args.
           singleton_class.delegate name, to: :instance
 
-          send(name, *args, &block)
+          send(name, ...)
         end
-        ruby2_keywords(:method_missing)
 
         def respond_to_missing?(name, _)
           super || instance.respond_to?(name)
@@ -208,12 +208,8 @@ module ActiveSupport
     #       end
     #     end
     #   end
-    def set(set_attributes)
-      old_attributes = compute_attributes(set_attributes.keys)
-      assign_attributes(set_attributes)
-      yield
-    ensure
-      assign_attributes(old_attributes)
+    def set(attributes, &block)
+      with(**attributes, &block)
     end
 
     # Reset all attributes. Should be called before and after actions, when used as a per-request singleton.
@@ -222,14 +218,5 @@ module ActiveSupport
         self.attributes = {}
       end
     end
-
-    private
-      def assign_attributes(new_attributes)
-        new_attributes.each { |key, value| public_send("#{key}=", value) }
-      end
-
-      def compute_attributes(keys)
-        keys.index_with { |key| public_send(key) }
-      end
   end
 end

@@ -272,6 +272,9 @@ Lint/InterpolationCheck:
   Exclude:
     - '**/test/**/*'
 
+Lint/SafeNavigationChain:
+  Enabled: true
+
 Style/EvalWithLocation:
   Enabled: true
   Exclude:
@@ -312,6 +315,9 @@ Style/RedundantCondition:
   Enabled: true
 
 Style/RedundantDoubleSplatHashBraces:
+  Enabled: true
+
+Style/ArrayIntersect:
   Enabled: true
 
 Performance/BindCall:

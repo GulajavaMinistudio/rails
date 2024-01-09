@@ -369,7 +369,7 @@ module ActionView
     include ::Capybara::Minitest::Assertions
 
     def page
-      Capybara.string(document_root_element)
+      Capybara.string(rendered)
     end
 
     test "document_root_element can be configured to utilize Capybara" do
@@ -382,26 +382,28 @@ module ActionView
     end
   end
 
-  class RenderedMethodMissingTest < ActionView::TestCase
-    test "rendered delegates methods to the String" do
+  class RenderedViewContentTest < ActionView::TestCase
+    test "#rendered inherits from String" do
       developer = DeveloperStruct.new("Eloy")
 
       render "developers/developer", developer: developer
 
+      assert_kind_of String, rendered
       assert_kind_of String, rendered.to_s
       assert_equal developer.name, rendered
-      assert_match rendered, /#{developer.name}/
+      assert_match(/#{developer.name}/, rendered)
       assert_includes rendered, developer.name
     end
   end
 
   class HTMLParserTest < ActionView::TestCase
-    test "rendered.html is a Nokogiri::XML::Element" do
+    test "rendered.html is a Nokogiri::XML::DocumentFragment" do
       developer = DeveloperStruct.new("Eloy")
 
       render "developers/developer", developer: developer
 
-      assert_kind_of Nokogiri::XML::Element, rendered.html
+      assert_kind_of Nokogiri::XML::DocumentFragment, rendered.html
+      assert_equal rendered.to_s, rendered.html.to_s
       assert_equal developer.name, document_root_element.text
     end
 
@@ -424,6 +426,7 @@ module ActionView
       render formats: :json, partial: "developers/developer", locals: { developer: developer }
 
       assert_kind_of ActiveSupport::HashWithIndifferentAccess, rendered.json
+      assert_equal rendered.to_s, rendered.json.to_json
       assert_equal developer.name, rendered.json[:name]
     end
   end
