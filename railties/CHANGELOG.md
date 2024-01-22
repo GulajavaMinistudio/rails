@@ -1,3 +1,21 @@
+*   Rails console now indicates application name and the current Rails environment:
+
+    ```txt
+    my-app(dev)> # for RAILS_ENV=development
+    my-app(test)> # for RAILS_ENV=test
+    my-app(prod)> # for RAILS_ENV=production
+    my-app(my_env)> # for RAILS_ENV=my_env
+    ```
+
+    The application name is derived from the application's module name from `config/application.rb`.
+    For example, `MyApp` will displayed as `my-app` in the prompt.
+
+    Additionally, the environment name will be colorized when the environment is
+    `development` (green), `test` (green), or `production` (red), if your
+    terminal supports it.
+
+    *Stan Lo*
+
 *   `bin/rails` now prints its help message when given an unrecognized bare
     option.
 
