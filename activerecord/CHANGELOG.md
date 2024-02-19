@@ -1,3 +1,21 @@
+*   Add ActiveRecord::Encryption::MessagePackMessageSerializer
+
+    Serialize data to the MessagePack format, for efficient storage in binary columns.
+
+    The binary encoding requires around 30% less space than the base64 encoding
+    used by the default serializer.
+
+    *Donal McBreen*
+
+*   Add support for encrypting binary columns
+
+    Ensure encryption and decryption pass `Type::Binary::Data` around for binary data.
+
+    Previously encrypting binary columns with the `ActiveRecord::Encryption::MessageSerializer`
+    incidentally worked for MySQL and SQLite, but not PostgreSQL.
+
+    *Donal McBreen*
+
 *   Deprecated `ENV["SCHEMA_CACHE"]` in favor of `schema_cache_path` in the database configuration.
 
     *Rafael Mendonça França*

@@ -36,6 +36,7 @@ module ActiveRecord
         SchemaReflection.new(nil)
       end
 
+      def schema_cache; end
       def connection_class; end
       def checkin(_); end
       def remove(_); end
@@ -117,7 +118,7 @@ module ActiveRecord
       include ConnectionAdapters::AbstractPool
 
       attr_accessor :automatic_reconnect, :checkout_timeout
-      attr_reader :db_config, :size, :reaper, :pool_config, :async_executor, :role, :shard
+      attr_reader :db_config, :size, :reaper, :pool_config, :async_executor, :role, :shard, :schema_cache
 
       delegate :schema_reflection, :schema_reflection=, :server_version, to: :pool_config
 
@@ -165,6 +166,8 @@ module ActiveRecord
         @pinned_connection = nil
 
         @async_executor = build_async_executor
+
+        @schema_cache = BoundSchemaReflection.new(schema_reflection, self)
 
         @reaper = Reaper.new(self, db_config.reaping_frequency)
         @reaper.run
@@ -252,13 +255,15 @@ module ActiveRecord
       # connection will be properly returned to the pool by the code that checked
       # it out.
       def with_connection
-        unless conn = @thread_cached_conns[ActiveSupport::IsolatedExecutionState.context]
-          conn = connection
-          fresh_connection = true
+        if conn = @thread_cached_conns[ActiveSupport::IsolatedExecutionState.context]
+          yield conn
+        else
+          begin
+            yield connection
+          ensure
+            release_connection
+          end
         end
-        yield conn
-      ensure
-        release_connection if fresh_connection
       end
 
       # Returns true if a connection has already been opened.
@@ -573,6 +578,8 @@ module ActiveRecord
 
         def attempt_to_checkout_all_existing_connections(raise_on_acquisition_timeout = true)
           collected_conns = synchronize do
+            reap # No need to wait for dead owners
+
             # account for our own connections
             @connections.select { |conn| conn.owner == ActiveSupport::IsolatedExecutionState.context }
           end
@@ -584,6 +591,7 @@ module ActiveRecord
             loop do
               synchronize do
                 return if collected_conns.size == @connections.size && @now_connecting == 0
+
                 remaining_timeout = timeout_time - Process.clock_gettime(Process::CLOCK_MONOTONIC)
                 remaining_timeout = 0 if remaining_timeout < 0
                 conn = checkout_for_exclusive_access(remaining_timeout)
