@@ -92,6 +92,10 @@ module ActiveRecord
       @connection.remove_index(:accounts, name: idx_name) rescue nil
     end
 
+    def test_returns_empty_indexes_for_non_existing_table
+      assert_equal [], @connection.indexes("nonexistingtable")
+    end
+
     def test_remove_index_when_name_and_wrong_column_name_specified
       index_name = "accounts_idx"
 
@@ -457,12 +461,6 @@ module ActiveRecord
     ensure
       reset_fixtures("posts", "authors", "author_addresses")
       @connection.disable_query_cache!
-    end
-
-    def test_all_foreign_keys_valid_is_deprecated
-      assert_deprecated(ActiveRecord.deprecator) do
-        @connection.all_foreign_keys_valid?
-      end
     end
 
     # test resetting sequences in odd tables in PostgreSQL

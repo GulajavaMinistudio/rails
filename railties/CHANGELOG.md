@@ -1,3 +1,20 @@
+*   Set `action_mailer.default_url_options` values in `development` and `test`.
+
+    Prior to this commit, new Rails applications would raise `ActionView::Template::Error`
+    if a mailer included a url built with a `*_path` helper.
+
+    *Steve Polito*
+
+*   Introduce `Rails::Generators::Testing::Assertions#assert_initializer`
+
+    Compliments the existing `initializer` generator action.
+
+    ```rb
+    assert_initializer "mail_interceptors.rb"
+    ```
+
+    *Steve Polito*
+
 *   Generate a .devcontainer folder and its contents when creating a new app.
 
     The .devcontainer folder includes everything needed to boot the app and do development in a remote container.
