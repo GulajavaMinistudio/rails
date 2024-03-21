@@ -382,7 +382,6 @@ module ActiveRecord
         @klass         = options[:anonymous_class]
         @plural_name   = active_record.pluralize_table_names ?
                             name.to_s.pluralize : name.to_s
-        validate_reflection!
       end
 
       def autosave=(autosave)
@@ -433,17 +432,6 @@ module ActiveRecord
       private
         def derive_class_name
           name.to_s.camelize
-        end
-
-        def validate_reflection!
-          return unless options[:foreign_key].is_a?(Array)
-
-          message = <<~MSG.squish
-            Passing #{options[:foreign_key]} array to :foreign_key option
-            on the #{active_record}##{name} association is not supported.
-            Use the query_constraints: #{options[:foreign_key]} option instead to represent a composite foreign key.
-          MSG
-          raise ArgumentError, message
         end
     end
 
@@ -511,10 +499,14 @@ module ActiveRecord
       end
 
       def foreign_key(infer_from_inverse_of: true)
-        @foreign_key ||= if options[:query_constraints]
+        @foreign_key ||= if options[:foreign_key]
+          if options[:foreign_key].is_a?(Array)
+            options[:foreign_key].map { |fk| fk.to_s.freeze }.freeze
+          else
+            options[:foreign_key].to_s.freeze
+          end
+        elsif options[:query_constraints]
           options[:query_constraints].map { |fk| fk.to_s.freeze }.freeze
-        elsif options[:foreign_key]
-          options[:foreign_key].to_s
         else
           derived_fk = derive_foreign_key(infer_from_inverse_of: infer_from_inverse_of)
 
@@ -805,6 +797,8 @@ module ActiveRecord
             MSG
           end
 
+          return foreign_key if primary_query_constraints.include?(foreign_key)
+
           first_key, last_key = primary_query_constraints
 
           if first_key == owner_pk
@@ -870,7 +864,11 @@ module ActiveRecord
       # klass option is necessary to support loading polymorphic associations
       def association_primary_key(klass = nil)
         if primary_key = options[:primary_key]
-          @association_primary_key ||= -primary_key.to_s
+          @association_primary_key ||= if primary_key.is_a?(Array)
+            primary_key.map { |pk| pk.to_s.freeze }.freeze
+          else
+            -primary_key.to_s
+          end
         elsif (klass || self.klass).has_query_constraints? || options[:query_constraints]
           (klass || self.klass).composite_query_constraints_list
         elsif (klass || self.klass).composite_primary_key?
