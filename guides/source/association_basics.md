@@ -1230,6 +1230,15 @@ side of the association.
 Counter cache columns are added to the owner model's list of read-only
 attributes through `attr_readonly`.
 
+Starting to use counter caches on existing large tables can be troublesome, because the column
+values must be backfilled separately of the column addition (to not lock the table for too long)
+and before the use of `:counter_cache` (otherwise methods like `size`/`any?`/etc, which use
+counter caches internally, can produce incorrect results). To safely backfill the values while
+keeping counter cache columns updated with the child records creation/removal and to avoid the
+mentioned methods use the possibly incorrect counter cache column values and always get the results
+from the database, use `counter_cache: { active: false }`. If you also need to specify a custom
+column name, use `counter_cache: { active: false, column: :my_custom_counter }`.
+
 If for some reason you change the value of an owner model's primary key, and do
 not also update the foreign keys of the counted models, then the counter cache
 may have stale data. In other words, any orphaned models will still count
@@ -2820,12 +2829,6 @@ class Supplier < ApplicationRecord
   has_many :deliveries, -> { extending FindRecentExtension }
 end
 ```
-
-Extensions can refer to the internals of the association proxy using these three attributes of the `proxy_association` accessor:
-
-* `proxy_association.owner` returns the object that the association is a part of.
-* `proxy_association.reflection` returns the reflection object that describes the association.
-* `proxy_association.target` returns the associated object for `belongs_to` or `has_one`, or the collection of associated objects for `has_many` or `has_and_belongs_to_many`.
 
 ### Association Scoping using the Association Owner
 
