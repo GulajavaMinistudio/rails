@@ -2768,9 +2768,13 @@ end
 Controls whether Active Job's `#perform_later` and similar methods automatically defer
 the job queuing to after the current Active Record transaction is committed.
 
-It can be set to `:never` to never defer the enqueue, to `:always` always defer
-the enqueue, or to `:default` to let the queue adapter define if it should be defered
-or not. Active Job backends that use the same database than Active Record as a queue,
+It can be set to:
+
+* `:never` - Never defer the enqueue.
+* `:always` - Always defer the enqueue.
+* `:default` - Let the queue adapter define the behaviour.
+
+Active Job backends that use the same database as Active Record as a queue,
 should generally prevent the deferring, and others should allow it.
 
 Example:
@@ -2783,8 +2787,8 @@ end
 ```
 
 In this example, if the configuration is set to `:never`, the job will
-be enqueued immediately, even thought the `Topic` hasn't been committed yet.
-Because of this, if the job is picked up almost emmediately, or if the
+be enqueued immediately, even though the `Topic` hasn't been committed yet.
+Because of this, if the job is picked up almost immediately, or if the
 transaction doesn't succeed for some reason, the job will fail to find this
 topic in the database.
 
@@ -2946,7 +2950,7 @@ Accepts an array of strings indicating the content types that Active Storage all
 By default, this is defined as:
 
 ```ruby
-config.active_storage.content_types_allowed_inline = %w(image/png image/gif image/jpeg image/tiff image/vnd.adobe.photoshop image/vnd.microsoft.icon application/pdf)
+config.active_storage.content_types_allowed_inline = %w(image/webp image/avif image/png image/gif image/jpeg image/tiff image/vnd.adobe.photoshop image/vnd.microsoft.icon application/pdf)
 ```
 
 #### `config.active_storage.queues.analysis`

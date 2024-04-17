@@ -1,4 +1,20 @@
-*   `ActiveRecord::Base.transaction` now yields an `ActiveRecord::Transation` object.
+*   Allow `ActiveRecord::Base#pluck` to accept hash values
+
+    ```ruby
+    # Before
+    Post.joins(:comments).pluck("posts.id", "comments.id", "comments.body")
+
+    # After
+    Post.joins(:comments).pluck(posts: [:id], comments: [:id, :body])
+    ```
+
+    *fatkodima*
+
+*   Raise an `ActiveRecord::ActiveRecordError` error when the MySQL database returns an invalid version string.
+
+    *Kevin McPhillips*
+
+*   `ActiveRecord::Base.transaction` now yields an `ActiveRecord::Transaction` object.
 
     This allows to register callbacks on it.
 
@@ -27,8 +43,8 @@
 
 *   Add `ActiveRecord.after_all_transactions_commit` callback.
 
-    Useful for code that may run either inside or outside a transaction and need
-    to perform works after the state changes have been properly peristed.
+    Useful for code that may run either inside or outside a transaction and needs
+    to perform work after the state changes have been properly persisted.
 
     ```ruby
     def publish_article(article)
@@ -46,7 +62,7 @@
 
     *Jean Boussier*
 
-*   Add the ability to ignore counter cache columns until they are backfilled
+*   Add the ability to ignore counter cache columns until they are backfilled.
 
     Starting to use counter caches on existing large tables can be troublesome, because the column
     values must be backfilled separately of the column addition (to not lock the table for too long)
@@ -70,7 +86,7 @@
 
     *fatkodima*
 
-*   Retry known idempotent SELECT queries on connection-related exceptions
+*   Retry known idempotent SELECT queries on connection-related exceptions.
 
     SELECT queries we construct by walking the Arel tree and / or with known model attributes
     are idempotent and can safely be retried in the case of a connection error. Previously,
