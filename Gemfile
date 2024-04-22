@@ -154,7 +154,7 @@ platforms :ruby, :windows do
   gem "racc", ">=1.4.6", require: false
 
   # Active Record.
-  gem "sqlite3", "~> 1.6", ">= 1.6.6"
+  gem "sqlite3", ">= 1.6.6"
 
   group :db do
     gem "pg", "~> 1.3"
@@ -196,3 +196,4 @@ gem "wdm", ">= 0.1.0", platforms: [:windows]
 if RUBY_VERSION < "3.2"
   gem "error_highlight", ">= 0.4.0", platforms: [:ruby]
 end
+gem "launchy"

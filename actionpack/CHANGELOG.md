@@ -1,3 +1,26 @@
+*   Fix the error page that is displayed when a view template is missing to account for nested controller paths in the
+    suggested correct location for the missing template.
+
+    *Joshua Young*
+
+*   Add `save_and_open_page` helper to IntegrationTest
+    `save_and_open_page` is a helpful helper to keep a short feedback loop when working on system tests.
+    A similar helper with matching signature has been added to integration tests.
+
+    *Joé Dupuis*
+
+*   Fix a regression in 7.1.3 passing a `to:` option without a controller when the controller is already defined by a scope.
+
+    ```ruby
+    Rails.application.routes.draw do
+      controller :home do
+        get "recent", to: "recent_posts"
+      end
+    end
+    ```
+
+    *Étienne Barrié*
+
 *   Request Forgery takes relative paths into account.
 
     *Stefan Wienert*
