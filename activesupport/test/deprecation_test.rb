@@ -975,6 +975,19 @@ class DeprecationTest < ActiveSupport::TestCase
     end
   end
 
+  test "warn deprecation can blame code from internal methods" do
+    @deprecator.behavior = ->(message, *) { @message = message }
+    method_that_emits_deprecation_with_internal_method(@deprecator)
+
+    assert_includes(@message, "/path/to/user/code.rb")
+  end
+
+  class_eval(<<~RUBY, "/path/to/user/code.rb", 1)
+    def method_that_emits_deprecation_with_internal_method(deprecator)
+      [1].each { deprecator.warn }
+    end
+  RUBY
+
   private
     def method_that_emits_deprecation(deprecator)
       deprecator.warn

@@ -1,3 +1,22 @@
+*   Allow assertionless tests to be reported.
+
+    `ActiveSupport::TestCase` can be configured to report tests that do not run any assertions.
+    This is helpful in detecting broken tests that do not perform intended assertions.
+
+    ```ruby
+    config.active_support.assertionless_tests_behavior = :raise
+    ```
+
+    *fatkodima*
+
+*   Support `hexBinary` type in `ActiveSupport::XmlMini`.
+
+    *heka1024*
+
+*   Deprecate `ActiveSupport::ProxyObject` in favor of Ruby's buildin `BasicObject`
+
+    *Earlopain*
+
 *   `stub_const` now accepts a `exists: false` parameter to allow stubbing missing constants.
 
     *Jean Boussier*
