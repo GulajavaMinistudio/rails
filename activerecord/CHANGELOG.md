@@ -1,3 +1,29 @@
+*   Support `touch_all` in batches.
+
+    ```ruby
+    Post.in_batches.touch_all
+    ```
+
+    *fatkodima*
+
+*   Add support for `:if_not_exists` and `:force` options to `create_schema`
+
+    *fatkodima*
+
+*   Fix `index_errors` having incorrect index in association validation errors.
+
+    *lulalala*
+
+*   Add `index_errors: :nested_attributes_order` mode.
+
+    This indexes the association validation errors based on the order received by nested attributes setter, and respects the `reject_if` configuration. This enables API to provide enough information to the frontend to map the validation errors back to their respective form fields.
+
+    *lulalala*
+
+*   Association option `query_constraints` is deprecated in favor of `foreign_key`.
+
+    *Nikita Vasilevsky*
+
 *   Add ENV["SKIP_TEST_DATABASE_TRUNCATE"] flag to speed up multi-process test runs on large DBs when all tests run within default txn. (This cuts ~10s from the test run of HEY when run by 24 processes against the 178 tables, since ~4,000 table truncates can then be skipped.)
 
     *DHH*
@@ -542,7 +568,7 @@
 
     *Hartley McGuire*
 
-*   Add `<role>_types` class method to `ActiveRecord::DelegatedType` so that the delegated types can be instrospected
+*   Add `<role>_types` class method to `ActiveRecord::DelegatedType` so that the delegated types can be introspected
 
     *JP Rosevear*
 
