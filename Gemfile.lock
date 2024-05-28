@@ -398,7 +398,7 @@ GEM
     pg (1.5.4)
     prettier_print (1.2.1)
     prism (0.27.0)
-    propshaft (0.8.0)
+    propshaft (0.9.0)
       actionpack (>= 7.0.0)
       activesupport (>= 7.0.0)
       rack
@@ -435,7 +435,7 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     rbtree (0.4.6)
-    rdoc (6.6.3.1)
+    rdoc (6.7.0)
       psych (>= 4.0.0)
     redcarpet (3.2.3)
     redis (5.0.8)
@@ -464,7 +464,7 @@ GEM
     retriable (3.1.2)
     rexml (3.2.6)
     rouge (4.2.0)
-    rubocop (1.63.5)
+    rubocop (1.64.0)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
       parallel (~> 1.10)
@@ -661,7 +661,7 @@ DEPENDENCIES
   rack-cache (~> 1.2)
   rails!
   rake (>= 13)
-  rdoc (~> 6.5)
+  rdoc (~> 6.7)
   redcarpet (~> 3.2.3)
   redis (>= 4.0.1)
   redis-namespace
