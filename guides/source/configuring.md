@@ -60,6 +60,7 @@ Below are the default values associated with each target version. In cases of co
 
 #### Default Values for Target Version 8.0
 
+- [`config.action_dispatch.strict_freshness`](#config-action-dispatch-strict-freshness): `true`
 - [`config.active_support.to_time_preserves_timezone`](#config-active-support-to-time-preserves-timezone): `:zone`
 
 #### Default Values for Target Version 7.2
@@ -1712,6 +1713,12 @@ The default value depends on the `config.load_defaults` target version:
 | (original)            | `true`               |
 | 7.1                   | `false`              |
 
+#### `config.active_record.encryption.compressor`
+
+Sets the compressor used by Active Record Encryption. The default value is `Zlib`.
+
+You can use your own compressor by setting this to a class that responds to `deflate` and `inflate`.
+
 #### `config.active_record.protocol_adapters`
 
 When using a URL to configure the database connection, this option provides a mapping from the protocol to the underlying
@@ -2109,6 +2116,20 @@ Setting the value to `:none` configures Action Pack raise all exceptions.
 | --------------------- | --------------------- |
 | (original)            | `true`                |
 | 7.1                   | `:all`                |
+
+### `config.action_dispatch.strict_freshness`
+
+Configures whether the `ActionDispatch::ETag` middleware should prefer the `ETag` header over the `Last-Modified` header when both are present in the response.
+
+If set to `true`, when both headers are present only the `ETag` is considered as specificed by RFC 7232 section 6.
+
+If set to `false`, when both headers are present, both headers are checked and both need to match for the response to be considered fresh.
+
+| Starting with version | The default value is  |
+| --------------------- | --------------------- |
+| (original)            | `false`               |
+| 8.0                   | `true`                |
+
 
 #### `ActionDispatch::Callbacks.before`
 
