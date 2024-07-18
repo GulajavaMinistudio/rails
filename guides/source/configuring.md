@@ -2994,6 +2994,7 @@ For example, if you want to use `AVIF` variants in your application you can add
 `image/avif` to this array.
 
 The default value depends on the `config.load_defaults` target version:
+
 | Starting with version | The default value is                            |
 | --------------------- | ----------------------------------------------- |
 | (original)            | `%w(image/png image/jpeg image/gif)`            |
@@ -3751,7 +3752,7 @@ Initialization Events
 
 Rails has 5 initialization events which can be hooked into (listed in the order that they are run):
 
-* `before_configuration`: This is run as soon as the application constant inherits from `Rails::Application`. The `config` calls are evaluated before this happens.
+* `before_configuration`: This is run when the application class inherits from `Rails::Application` in `config/application.rb`. Before the class body is executed. Engines may use this hook to run code before the application itself gets configured.
 
 * `before_initialize`: This is run directly before the initialization process of the application occurs with the `:bootstrap_hook` initializer near the beginning of the Rails initialization process.
 

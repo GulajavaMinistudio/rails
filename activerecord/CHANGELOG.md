@@ -1,3 +1,13 @@
+*   Raise specific exception when a connection is not defined.
+
+     The new `ConnectionNotDefined` exception provides connection name, shard and role accessors indicating the details of the connection that was requested.
+
+    *Hana Harencarova*, *Matthew Draper*
+
+*   Delete the deprecated constant `ActiveRecord::ImmutableRelation`.
+
+    *Xavier Noria*
+
 *   Fix duplicate callback execution when child autosaves parent with `has_one` and `belongs_to`.
 
     Before, persisting a new child record with a new associated parent record would run `before_validation`,
