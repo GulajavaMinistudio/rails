@@ -1,3 +1,13 @@
+*   Support batching using custom columns.
+
+    ```ruby
+    Product.in_batches(cursor: [:shop_id, :id]) do |relation|
+      # do something with relation
+    end
+    ```
+
+    *fatkodima*
+
 *   Use SQLite `IMMEDIATE` transactions when possible.
 
     Transactions run against the SQLite3 adapter default to IMMEDIATE mode to improve concurrency support and avoid busy exceptions.
@@ -77,12 +87,6 @@
     ```
 
     *Nony Dutton*
-
-*   Optimize `Relation#exists?` when records are loaded and the relation has no conditions.
-
-    This can avoid queries in some cases.
-
-    *fatkodima*
 
 *   Add a `filter` option to `in_order_of` to prioritize certain values in the sorting without filtering the results
     by these values.
