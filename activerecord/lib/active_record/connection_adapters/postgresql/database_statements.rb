@@ -169,6 +169,11 @@ module ActiveRecord
           end
 
           def cast_result(result)
+            if result.fields.empty?
+              result.clear
+              return ActiveRecord::Result.empty
+            end
+
             types = {}
             fields = result.fields
             fields.each_with_index do |fname, i|
@@ -182,7 +187,9 @@ module ActiveRecord
           end
 
           def affected_rows(result)
-            result.cmd_tuples
+            affected_rows = result.cmd_tuples
+            result.clear
+            affected_rows
           end
 
           def execute_batch(statements, name = nil)
