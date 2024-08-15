@@ -1,3 +1,29 @@
+*   Include schema name in `enable_extension` statements in `db/schema.rb`.
+
+    The schema dumper will now include the schema name in generated
+    `enable_extension` statements if they differ from the current schema.
+
+    For example, if you have a migration:
+
+    ```ruby
+    enable_extension "heroku_ext.pgcrypto"
+    enable_extension "pg_stat_statements"
+    ```
+
+    then the generated schema dump will also contain:
+
+    ```ruby
+    enable_extension "heroku_ext.pgcrypto"
+    enable_extension "pg_stat_statements"
+    ```
+
+    *Tony Novak*
+
+*   Fix `ActiveRecord::Encryption::EncryptedAttributeType#type` to return
+    actual cast type.
+
+    *Vasiliy Ermolovich*
+
 *   SQLite3Adapter: Bulk insert fixtures.
 
     Previously one insert command was executed for each fixture, now they are

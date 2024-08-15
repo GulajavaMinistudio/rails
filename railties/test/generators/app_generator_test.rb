@@ -286,6 +286,26 @@ class AppGeneratorTest < Rails::Generators::TestCase
     end
   end
 
+  def test_app_update_preserves_skip_brakeman
+    run_generator [ destination_root, "--skip-brakeman" ]
+
+    FileUtils.cd(destination_root) do
+      assert_no_changes -> { File.exist?("bin/brakeman") } do
+        run_app_update
+      end
+    end
+  end
+
+  def test_app_update_preserves_skip_rubocop
+    run_generator [ destination_root, "--skip-rubocop" ]
+
+    FileUtils.cd(destination_root) do
+      assert_no_changes -> { File.exist?("bin/rubocop") } do
+        run_app_update
+      end
+    end
+  end
+
   def test_app_update_preserves_skip_test
     run_generator [ destination_root, "--skip-test" ]
 
@@ -1488,16 +1508,6 @@ class AppGeneratorTest < Rails::Generators::TestCase
       assert_file "Dockerfile" do |content|
         assert_no_match "yarn", content
         assert_no_match "node-gyp", content
-      end
-    end
-
-    def run_app_update(app_root = destination_root, flags: "--force")
-      Dir.chdir(app_root) do
-        gemfile_contents = File.read("Gemfile")
-        gemfile_contents.sub!(/^(gem "rails").*/, "\\1, path: #{File.expand_path("../../..", __dir__).inspect}")
-        File.write("Gemfile", gemfile_contents)
-
-        quietly { system({ "BUNDLE_GEMFILE" => "Gemfile" }, "bin/rails app:update #{flags}", exception: true) }
       end
     end
 
