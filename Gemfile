@@ -152,11 +152,8 @@ end
 platforms :ruby, :windows do
   gem "nokogiri", ">= 1.8.1", "!= 1.11.0"
 
-  # Needed for compiling the ActionDispatch::Journey parser.
-  gem "racc", ">=1.4.6", require: false
-
   # Active Record.
-  gem "sqlite3", ">= 1.6.6"
+  gem "sqlite3", ">= 2.0"
 
   group :db do
     gem "pg", "~> 1.3"

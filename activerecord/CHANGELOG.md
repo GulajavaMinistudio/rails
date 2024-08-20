@@ -1,3 +1,13 @@
+*   Replace `SQLite3::Database#busy_timeout` with `#busy_handler_timeout=`.
+
+    Provides a non-GVL-blocking, fair retry interval busy handler implementation.
+
+    *Stephen Margheim*
+
+*   SQLite3Adapter: Translate `SQLite3::BusyException` into `ActiveRecord::StatementTimeout`.
+
+    *Matthew Nguyen*
+
 *   Include schema name in `enable_extension` statements in `db/schema.rb`.
 
     The schema dumper will now include the schema name in generated
