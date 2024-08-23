@@ -147,21 +147,7 @@ To encrypt Action Text fixtures, you should place them in `fixtures/action_text/
 
 `active_record.encryption` will serialize values using the underlying type before encrypting them, but, unless using a custom `message_serializer`, *they must be serializable as strings*. Structured types like `serialized` are supported out of the box.
 
-If you need to support a custom type, the recommended way is using a [serialized attribute](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html). The declaration of the serialized attribute should go **before** the encryption declaration:
-
-```ruby
-# CORRECT
-class Article < ApplicationRecord
-  serialize :title, type: Title
-  encrypts :title
-end
-
-# INCORRECT
-class Article < ApplicationRecord
-  encrypts :title
-  serialize :title, type: Title
-end
-```
+If you need to support a custom type, the recommended way is using a [serialized attribute](https://api.rubyonrails.org/classes/ActiveRecord/AttributeMethods/Serialization/ClassMethods.html).
 
 ### Ignoring Case
 
@@ -392,9 +378,9 @@ Both methods return `ActiveRecord::Encryption::Key` objects:
 
 A key can include arbitrary tags that will be stored unencrypted with the message. You can use `ActiveRecord::Encryption::Message#headers` to examine those values when decrypting.
 
-### Model-specific Key Providers
+### Attribute-specific Key Providers
 
-You can configure a key provider on a per-class basis with the `:key_provider` option:
+You can configure a key provider on a per-attribute basis with the `:key_provider` option:
 
 ```ruby
 class Article < ApplicationRecord
@@ -402,9 +388,9 @@ class Article < ApplicationRecord
 end
 ```
 
-### Model-specific Keys
+### Attribute-specific Keys
 
-You can configure a given key on a per-class basis with the `:key` option:
+You can configure a given key on a per-attribute basis with the `:key` option:
 
 ```ruby
 class Article < ApplicationRecord

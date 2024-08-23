@@ -86,7 +86,7 @@ module ActiveRecord
               "-c #{name}=#{value.to_s.gsub(/[ \\]/, '\\\\\0')}" unless value == ":default" || value == :default
             end.join(" ")
           end
-          find_cmd_and_exec("psql", config.database)
+          find_cmd_and_exec(ActiveRecord.database_cli[:postgresql], config.database)
         end
       end
 
@@ -282,6 +282,10 @@ module ActiveRecord
 
       def supports_nulls_not_distinct?
         database_version >= 15_00_00 # >= 15.0
+      end
+
+      def supports_native_partitioning? # :nodoc:
+        database_version >= 10_00_00 # >= 10.0
       end
 
       def index_algorithms
