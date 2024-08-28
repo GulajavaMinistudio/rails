@@ -1,3 +1,33 @@
+*   Ensure `ActiveRecord::Encryption.config` is always ready before access.
+
+    Previously, `ActiveRecord::Encryption` configuration was deferred until `ActiveRecord::Base`
+    was loaded. Therefore, accessing `ActiveRecord::Encryption.config` properties before
+    `ActiveRecord::Base` was loaded would give incorrect results.
+
+    `ActiveRecord::Encryption` now has its own loading hook so that its configuration is set as
+    soon as needed.
+
+    When `ActiveRecord::Base` is loaded, even lazily, it in turn triggers the loading of
+    `ActiveRecord::Encryption`, thus preserving the original behavior of having its config ready
+    before any use of `ActiveRecord::Base`.
+
+    *Maxime Réty*
+
+*   Add `TimeZoneConverter#==` method, so objects will be properly compared by
+    their type, scale, limit & precision.
+
+    Address #52699.
+
+    *Ruy Rocha*
+
+*   Add support for SQLite3 full-text-search and other virtual tables.
+
+    Previously, adding sqlite3 virtual tables messed up `schema.rb`.
+
+    Now, virtual tables can safely be added using `create_virtual_table`.
+
+    *Zacharias Knudsen*
+
 *   Support use of alternative database interfaces via the `database_cli` ActiveRecord configuration option.
 
     ```ruby
