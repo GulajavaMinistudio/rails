@@ -1,3 +1,9 @@
+*   Deserialize binary data before decrypting
+
+    This ensures that we call `PG::Connection.unescape_bytea` on PostgreSQL before decryption.
+
+    *Donal McBreen*
+
 *   Ensure `ActiveRecord::Encryption.config` is always ready before access.
 
     Previously, `ActiveRecord::Encryption` configuration was deferred until `ActiveRecord::Base`
@@ -153,7 +159,7 @@
 
 *   Raise specific exception when a connection is not defined.
 
-     The new `ConnectionNotDefined` exception provides connection name, shard and role accessors indicating the details of the connection that was requested.
+    The new `ConnectionNotDefined` exception provides connection name, shard and role accessors indicating the details of the connection that was requested.
 
     *Hana Harencarova*, *Matthew Draper*
 
