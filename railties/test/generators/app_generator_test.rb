@@ -436,7 +436,7 @@ class AppGeneratorTest < Rails::Generators::TestCase
   def test_config_database_is_added_by_default
     run_generator
     assert_file "config/database.yml", /sqlite3/
-    assert_gem "sqlite3", '">= 2.0"'
+    assert_gem "sqlite3", '">= 2.1"'
   end
 
   def test_config_mysql_database
@@ -462,7 +462,7 @@ class AppGeneratorTest < Rails::Generators::TestCase
   end
 
   def test_action_cable_redis_gems
-    run_generator
+    run_generator [destination_root, "--skip-solid"]
     assert_file "Gemfile", /^# gem "redis"/
   end
 
@@ -645,7 +645,7 @@ class AppGeneratorTest < Rails::Generators::TestCase
     run_generator_instance
 
     assert_file "config/deploy.yml"
-    assert_file ".env.erb"
+    assert_file ".kamal/secrets"
   end
 
   def test_kamal_files_are_skipped_if_required
@@ -656,7 +656,7 @@ class AppGeneratorTest < Rails::Generators::TestCase
     assert_empty @bundle_commands.grep("exec kamal init")
 
     assert_no_file "config/deploy.yml"
-    assert_no_file ".env.erb"
+    assert_no_file ".kamal/secrets"
   end
 
   def test_inclusion_of_kamal_storage_volume
@@ -1028,10 +1028,8 @@ class AppGeneratorTest < Rails::Generators::TestCase
   def test_inclusion_of_ruby_version
     run_generator
 
-    ruby_version = "#{Gem::Version.new(Gem::VERSION) >= Gem::Version.new("3.3.13") ? Gem.ruby_version : RUBY_VERSION}"
-
     assert_file "Dockerfile" do |content|
-      assert_match(/ARG RUBY_VERSION=#{ruby_version}/, content)
+      assert_match(/ARG RUBY_VERSION=#{Gem.ruby_version}/, content)
     end
     assert_file ".ruby-version" do |content|
       if ENV["RBENV_VERSION"]

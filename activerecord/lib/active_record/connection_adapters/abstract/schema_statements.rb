@@ -693,7 +693,7 @@ module ActiveRecord
       #
       # If the options provided include an +if_exists+ key, it will be used to check if the
       # column does not exist. This will silently ignore the migration rather than raising
-      # if the column was already used.
+      # if the column was already removed.
       #
       #   remove_column(:suppliers, :qualification, if_exists: true)
       def remove_column(table_name, column_name, type = nil, **options)
@@ -854,6 +854,16 @@ module ActiveRecord
       #   CREATE INDEX index_accounts_on_branch_id ON accounts USING btree(branch_id) INCLUDE (party_id)
       #
       # Note: only supported by PostgreSQL.
+      #
+      # ====== Creating an index where NULLs are treated equally
+      #
+      #   add_index(:people, :last_name, nulls_not_distinct: true)
+      #
+      # generates:
+      #
+      #   CREATE INDEX index_people_on_last_name ON people (last_name) NULLS NOT DISTINCT
+      #
+      # Note: only supported by PostgreSQL version 15.0.0 and greater.
       #
       # ====== Creating an index with a specific method
       #

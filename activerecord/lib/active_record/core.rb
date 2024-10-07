@@ -350,7 +350,7 @@ module ActiveRecord
 
       # Returns a string like 'Post(id:integer, title:string, body:text)'
       def inspect # :nodoc:
-        if self == Base
+        if self == Base || singleton_class?
           super
         elsif abstract_class?
           "#{super}(abstract)"
@@ -370,7 +370,7 @@ module ActiveRecord
       end
 
       def predicate_builder # :nodoc:
-        @predicate_builder ||= PredicateBuilder.new(table_metadata)
+        @predicate_builder ||= PredicateBuilder.new(TableMetadata.new(self, arel_table))
       end
 
       def type_caster # :nodoc:
@@ -413,10 +413,6 @@ module ActiveRecord
           else
             relation
           end
-        end
-
-        def table_metadata
-          TableMetadata.new(self, arel_table)
         end
 
         def cached_find_by(keys, values)

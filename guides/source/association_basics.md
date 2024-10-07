@@ -575,11 +575,8 @@ associated model.
 @account = @supplier.create_account(terms: "Net 30")
 ```
 
-Finally, `create_association!` does the same, but raises
-`ActiveRecord::RecordInvalid` if the record is invalid.
-
-`create_association!` does the same as `create_association` above, but raises
-`ActiveRecord::RecordInvalid` if the record is invalid.
+Finally, `create_association!` does the same as `create_association` above,
+but raises `ActiveRecord::RecordInvalid` if the record is invalid.
 
 ```ruby
 # This will raise ActiveRecord::RecordInvalid because the terms is blank
@@ -3137,7 +3134,7 @@ Although the `:counter_cache` option is specified on the model with the
 `books_count` column to the `Author` model:
 
 ```ruby
-class AddBooksCountToAuthors < ActiveRecord::Migration[6.0]
+class AddBooksCountToAuthors < ActiveRecord::Migration[8.0]
   def change
     add_column :authors, :books_count, :integer, default: 0, null: false
   end
