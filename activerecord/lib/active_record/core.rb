@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "active_support/core_ext/enumerable"
-require "active_support/core_ext/module/delegation"
 require "active_support/parameter_filter"
 require "concurrent/map"
 
@@ -197,6 +196,17 @@ module ActiveRecord
         connected_to_stack.reverse_each do |hash|
           return hash[:prevent_writes] if !hash[:prevent_writes].nil? && hash[:klasses].include?(Base)
           return hash[:prevent_writes] if !hash[:prevent_writes].nil? && hash[:klasses].include?(connection_class_for_self)
+        end
+
+        false
+      end
+
+      # Intended to behave like `.current_preventing_writes` given the class name as input.
+      # See PoolConfig and ConnectionHandler::ConnectionDescriptor.
+      def self.preventing_writes?(class_name) # :nodoc:
+        connected_to_stack.reverse_each do |hash|
+          return hash[:prevent_writes] if !hash[:prevent_writes].nil? && hash[:klasses].include?(Base)
+          return hash[:prevent_writes] if !hash[:prevent_writes].nil? && hash[:klasses].any? { |klass| klass.name == class_name }
         end
 
         false

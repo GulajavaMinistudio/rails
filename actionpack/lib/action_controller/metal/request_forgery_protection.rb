@@ -149,6 +149,7 @@ module ActionController # :nodoc:
       #
       #
       # Built-in unverified request handling methods are:
+      #
       # *   `:exception` - Raises ActionController::InvalidAuthenticityToken
       #     exception.
       # *   `:reset_session` - Resets the session.
@@ -177,6 +178,7 @@ module ActionController # :nodoc:
       #
       #
       # Built-in session token strategies are:
+      #
       # *   `:session` - Store the CSRF token in the session.  Used as default if
       #     `:store` option is not specified.
       # *   `:cookie` - Store the CSRF token in an encrypted cookie.
@@ -626,6 +628,7 @@ module ActionController # :nodoc:
         If you cannot change the referrer policy, you can disable origin checking with the
         Rails.application.config.action_controller.forgery_protection_origin_check setting.
       MSG
+      private_constant :NULL_ORIGIN_MESSAGE
 
       # Checks if the request originated from the same origin by looking at the Origin
       # header.

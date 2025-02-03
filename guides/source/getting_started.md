@@ -482,8 +482,7 @@ This generates a `SELECT` SQL query but also adds a `WHERE` clause to filter the
 records that have a `name` matching `"Pants"`. This also returns an
 `ActiveRecord::Relation` because multiple records may have the same name.
 
-We can use `order(name: :asc)` to sort records by name in ascending alphabetical
-order by `name`.
+We can use `order(name: :asc)` to sort records by name in ascending alphabetical order.
 
 ```irb
 store(dev)> Product.order(name: :asc)
@@ -683,7 +682,7 @@ First, let's do a quick refresher on URLs and HTTP Request methods.
 Let's examine the different parts of a URL:
 
 ```
-http://example.org/products?sale=true&sort=asc
+https://example.org/products?sale=true&sort=asc
 ```
 
 In this URL, each part has a name:
@@ -1090,7 +1089,7 @@ browser.
 
 Combined with the `link_to` helper, we can generate anchor tags and use the URL
 helper to do this cleanly in Ruby. `link_to` accepts the display content for the
-link (`product.name`)and the path or URL to link to for the `href` attribute
+link (`product.name`) and the path or URL to link to for the `href` attribute
 (`product`).
 
 Let's refactor this to use these helpers:
