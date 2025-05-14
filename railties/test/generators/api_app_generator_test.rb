@@ -163,6 +163,7 @@ class ApiAppGeneratorTest < Rails::Generators::TestCase
         bin/setup
         config/application.rb
         config/boot.rb
+        config/bundler-audit.yml
         config/cable.yml
         config/environment.rb
         config/environments
@@ -184,6 +185,7 @@ class ApiAppGeneratorTest < Rails::Generators::TestCase
         lib
         lib/tasks
         log
+        script
         test/fixtures
         test/controllers
         test/integration

@@ -32,6 +32,8 @@ DEFAULT_APP_FILES = %w(
   app/views/pwa/manifest.json.erb
   app/views/pwa/service-worker.js
   bin/brakeman
+  bin/bundler-audit
+  bin/ci
   bin/dev
   bin/docker-entrypoint
   bin/rails
@@ -42,7 +44,9 @@ DEFAULT_APP_FILES = %w(
   config.ru
   config/application.rb
   config/boot.rb
+  config/bundler-audit.yml
   config/cable.yml
+  config/ci.rb
   config/credentials.yml.enc
   config/database.yml
   config/environment.rb
@@ -653,8 +657,16 @@ class AppGeneratorTest < Rails::Generators::TestCase
 
   def test_inclusion_of_ci_files
     run_generator
-    assert_file ".github/workflows/ci.yml"
-    assert_file ".github/dependabot.yml"
+    assert_file ".github/workflows/ci.yml" do |yaml|
+      assert_nothing_raised do
+        YAML.load(yaml)
+      end
+    end
+    assert_file ".github/dependabot.yml" do |yaml|
+      assert_nothing_raised do
+        YAML.load(yaml)
+      end
+    end
   end
 
   def test_ci_files_are_skipped_if_required
@@ -696,6 +708,16 @@ class AppGeneratorTest < Rails::Generators::TestCase
 
     assert_no_file "config/deploy.yml"
     assert_no_file ".kamal/secrets"
+  end
+
+  def test_database_yml_skip_kamal
+    run_generator [destination_root, "--skip-kamal"]
+
+    assert_file("config/database.yml") do |content|
+      assert_match("db/queue_migrate", content)
+      assert_match("db/cache_migrate", content)
+      assert_match("db/cable_migrate", content)
+    end
   end
 
   def test_inclusion_of_kamal_storage_volume
@@ -819,13 +841,6 @@ class AppGeneratorTest < Rails::Generators::TestCase
     end
   end
 
-  def test_bundler_binstub
-    generator([destination_root])
-    run_generator_instance
-
-    assert_equal 1, @bundle_commands.count("binstubs bundler")
-  end
-
   def test_skip_active_job_option
     run_generator [destination_root, "--skip-active-job"]
 
@@ -858,8 +873,16 @@ class AppGeneratorTest < Rails::Generators::TestCase
     assert_no_gem "jsbundling-rails"
     assert_no_node_files
 
+    assert_file "app/controllers/application_controller.rb" do |content|
+      assert_no_match(/importmap/, content)
+    end
+
     assert_file "config/initializers/content_security_policy.rb" do |content|
       assert_no_match(/policy\.connect_src/, content)
+    end
+
+    assert_file "config/ci.rb" do |content|
+      assert_no_match(/importmap|yarn/, content)
     end
 
     assert_file ".gitattributes" do |content|

@@ -260,7 +260,11 @@ module ActiveRecord
       end
 
       def valid_type?(type) # :nodoc:
-        !native_database_types[type].nil?
+        self.class.valid_type?(type)
+      end
+
+      def native_database_types # :nodoc:
+        self.class.native_database_types
       end
 
       # this method must only be called while holding connection pool's mutex
@@ -555,6 +559,10 @@ module ActiveRecord
         false
       end
 
+      def supports_disabling_indexes?
+        false
+      end
+
       def return_value_after_insert?(column) # :nodoc:
         column.auto_populated?
       end
@@ -673,7 +681,7 @@ module ActiveRecord
 
           reset_transaction(restore: restore_transactions) do
             clear_cache!(new_connection: true)
-            configure_connection
+            attempt_configure_connection
           end
         rescue => original_exception
           translated_exception = translate_exception_class(original_exception, nil, nil)
@@ -726,7 +734,7 @@ module ActiveRecord
       def reset!
         clear_cache!(new_connection: true)
         reset_transaction
-        configure_connection
+        attempt_configure_connection
       end
 
       # Removes the connection from the pool and disconnect it.
@@ -762,7 +770,7 @@ module ActiveRecord
             if @unconfigured_connection
               @raw_connection = @unconfigured_connection
               @unconfigured_connection = nil
-              configure_connection
+              attempt_configure_connection
               @last_activity = Process.clock_gettime(Process::CLOCK_MONOTONIC)
               @verified = true
               return
@@ -880,6 +888,10 @@ module ActiveRecord
             register_class_with_precision m, %r(\A[^\(]*datetime)i, Type::DateTime, timezone: default_timezone
             m.alias_type %r(\A[^\(]*timestamp)i, "datetime"
           end
+        end
+
+        def valid_type?(type) # :nodoc:
+          !native_database_types[type].nil?
         end
 
         private
@@ -1131,7 +1143,7 @@ module ActiveRecord
           active_record_error
         end
 
-        def log(sql, name = "SQL", binds = [], type_casted_binds = [], async: false, &block) # :doc:
+        def log(sql, name = "SQL", binds = [], type_casted_binds = [], async: false, allow_retry: false, &block) # :doc:
           instrumenter.instrument(
             "sql.active_record",
             sql:               sql,
@@ -1139,6 +1151,7 @@ module ActiveRecord
             binds:             binds,
             type_casted_binds: type_casted_binds,
             async:             async,
+            allow_retry:       allow_retry,
             connection:        self,
             transaction:       current_transaction.user_transaction.presence,
             affected_rows:     0,
@@ -1212,6 +1225,13 @@ module ActiveRecord
         # holding @lock (or from #initialize).
         def configure_connection
           check_version
+        end
+
+        def attempt_configure_connection
+          configure_connection
+        rescue Exception # Need to handle things such as Timeout::ExitException
+          disconnect!
+          raise
         end
 
         def default_prepared_statements
