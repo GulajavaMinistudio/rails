@@ -105,6 +105,9 @@ class RequestIP < BaseRequestTest
     request = stub_request "HTTP_X_FORWARDED_FOR" => "3.4.5.6,127.0.0.1"
     assert_equal "3.4.5.6", request.remote_ip
 
+    request = stub_request "HTTP_X_FORWARDED_FOR" => "3.4.5.6:1234,127.0.0.1"
+    assert_equal "3.4.5.6", request.remote_ip
+
     request = stub_request "HTTP_X_FORWARDED_FOR" => "unknown,192.168.0.1"
     assert_equal "192.168.0.1", request.remote_ip
 
@@ -150,31 +153,34 @@ class RequestIP < BaseRequestTest
     request = stub_request "REMOTE_ADDR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
     assert_equal "2001:0db8:85a3:0000:0000:8a2e:0370:7334", request.remote_ip
 
-    request = stub_request "REMOTE_ADDR" => "fe80:0000:0000:0000:0202:b3ff:fe1e:8329,2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+    request = stub_request "REMOTE_ADDR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7335,2001:0db8:85a3:0000:0000:8a2e:0370:7334"
     assert_equal "2001:0db8:85a3:0000:0000:8a2e:0370:7334", request.remote_ip
 
     request = stub_request "REMOTE_ADDR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-                           "HTTP_X_FORWARDED_FOR" => "fe80:0000:0000:0000:0202:b3ff:fe1e:8329"
-    assert_equal "fe80:0000:0000:0000:0202:b3ff:fe1e:8329", request.remote_ip
+                           "HTTP_X_FORWARDED_FOR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7335"
+    assert_equal "2001:0db8:85a3:0000:0000:8a2e:0370:7335", request.remote_ip
 
     request = stub_request "REMOTE_ADDR" => "::1",
-                           "HTTP_X_FORWARDED_FOR" => "fe80:0000:0000:0000:0202:b3ff:fe1e:8329"
-    assert_equal "fe80:0000:0000:0000:0202:b3ff:fe1e:8329", request.remote_ip
+                           "HTTP_X_FORWARDED_FOR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7335"
+    assert_equal "2001:0db8:85a3:0000:0000:8a2e:0370:7335", request.remote_ip
 
-    request = stub_request "HTTP_X_FORWARDED_FOR" => "fe80:0000:0000:0000:0202:b3ff:fe1e:8329,unknown"
+    request = stub_request "HTTP_X_FORWARDED_FOR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7335,unknown"
+    assert_equal "2001:0db8:85a3:0000:0000:8a2e:0370:7335", request.remote_ip
+
+    request = stub_request "HTTP_X_FORWARDED_FOR" => "[fe80:0000:0000:0000:0202:b3ff:fe1e:8329]:3000,unknown"
     assert_equal "fe80:0000:0000:0000:0202:b3ff:fe1e:8329", request.remote_ip
 
     request = stub_request "HTTP_X_FORWARDED_FOR" => "fe80:0000:0000:0000:0202:b3ff:fe1e:8329,::1"
     assert_equal "fe80:0000:0000:0000:0202:b3ff:fe1e:8329", request.remote_ip
 
-    request = stub_request "HTTP_X_FORWARDED_FOR" => "fe80:0000:0000:0000:0202:b3ff:fe1e:8329, ::1, ::1"
-    assert_equal "fe80:0000:0000:0000:0202:b3ff:fe1e:8329", request.remote_ip
+    request = stub_request "HTTP_X_FORWARDED_FOR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7335, ::1, ::1"
+    assert_equal "2001:0db8:85a3:0000:0000:8a2e:0370:7335", request.remote_ip
 
     request = stub_request "HTTP_X_FORWARDED_FOR" => "unknown,::1"
     assert_equal "::1", request.remote_ip
 
-    request = stub_request "HTTP_X_FORWARDED_FOR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7334, fe80:0000:0000:0000:0202:b3ff:fe1e:8329, ::1, fc00::, fc01::, fdff"
-    assert_equal "fe80:0000:0000:0000:0202:b3ff:fe1e:8329", request.remote_ip
+    request = stub_request "HTTP_X_FORWARDED_FOR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7334, 2001:0db8:85a3:0000:0000:8a2e:0370:7335, ::1, fc00::, fc01::, fdff"
+    assert_equal "2001:0db8:85a3:0000:0000:8a2e:0370:7335", request.remote_ip
 
     request = stub_request "HTTP_X_FORWARDED_FOR" => "FE00::, FDFF::"
     assert_equal "FE00::", request.remote_ip
@@ -184,21 +190,21 @@ class RequestIP < BaseRequestTest
   end
 
   test "remote ip v6 spoof detection" do
-    request = stub_request "HTTP_X_FORWARDED_FOR" => "fe80:0000:0000:0000:0202:b3ff:fe1e:8329",
+    request = stub_request "HTTP_X_FORWARDED_FOR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7335",
                            "HTTP_CLIENT_IP"       => "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
     e = assert_raise(ActionDispatch::RemoteIp::IpSpoofAttackError) {
       request.remote_ip
     }
     assert_match(/IP spoofing attack/, e.message)
-    assert_match(/HTTP_X_FORWARDED_FOR="fe80:0000:0000:0000:0202:b3ff:fe1e:8329"/, e.message)
+    assert_match(/HTTP_X_FORWARDED_FOR="2001:0db8:85a3:0000:0000:8a2e:0370:7335"/, e.message)
     assert_match(/HTTP_CLIENT_IP="2001:0db8:85a3:0000:0000:8a2e:0370:7334"/, e.message)
   end
 
   test "remote ip v6 spoof detection disabled" do
-    request = stub_request "HTTP_X_FORWARDED_FOR" => "fe80:0000:0000:0000:0202:b3ff:fe1e:8329",
+    request = stub_request "HTTP_X_FORWARDED_FOR" => "2001:0db8:85a3:0000:0000:8a2e:0370:7335",
                            "HTTP_CLIENT_IP"       => "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
                            :ip_spoofing_check     => false
-    assert_equal "fe80:0000:0000:0000:0202:b3ff:fe1e:8329", request.remote_ip
+    assert_equal "2001:0db8:85a3:0000:0000:8a2e:0370:7335", request.remote_ip
   end
 
   test "remote ip with user specified trusted proxies String" do
@@ -330,6 +336,34 @@ class RequestDomain < BaseRequestTest
     request = stub_request "HTTP_HOST" => "dev.www.rubyonrails.co.uk", :tld_length => 2
     assert_equal %w( dev www ), request.subdomains
     assert_equal "dev.www", request.subdomain
+  end
+end
+
+class RequestDomainExtractor < BaseRequestTest
+  module CustomExtractor
+    extend self
+
+    def domain_from(_, _)
+      "world"
+    end
+
+    def subdomains_from(_, _)
+      ["hello"]
+    end
+  end
+
+  setup { ActionDispatch::Http::URL.domain_extractor = CustomExtractor }
+
+  teardown { ActionDispatch::Http::URL.domain_extractor = ActionDispatch::Http::URL::DomainExtractor }
+
+  test "domain" do
+    request = stub_request "HTTP_HOST" => "foobar.foobar.com"
+    assert_equal "world", request.domain
+  end
+
+  test "subdomains" do
+    request = stub_request "HTTP_HOST" => "foobar.foobar.com"
+    assert_equal "hello", request.subdomain
   end
 end
 
@@ -1118,6 +1152,11 @@ class RequestParameters < BaseRequestTest
 
   test "parameters containing an invalid UTF8 character" do
     request = stub_request("QUERY_STRING" => "foo=%81E")
+    assert_raises(ActionController::BadRequest) { request.parameters }
+  end
+
+  test "parameters key containing an invalid UTF8 character" do
+    request = stub_request("QUERY_STRING" => "%81E=bar")
     assert_raises(ActionController::BadRequest) { request.parameters }
   end
 

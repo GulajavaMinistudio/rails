@@ -172,28 +172,36 @@ module ActiveRecord
 
       def test_exec_insert_with_returning_disabled
         connection = connection_without_insert_returning
-        result = connection.exec_insert("insert into postgresql_partitioned_table_parent (number) VALUES (1)", nil, [], "id", "postgresql_partitioned_table_parent_id_seq")
+        result = assert_deprecated(ActiveRecord.deprecator) do
+          connection.exec_insert("insert into postgresql_partitioned_table_parent (number) VALUES (1)", nil, [], "id", "postgresql_partitioned_table_parent_id_seq")
+        end
         expect = connection.query("select max(id) from postgresql_partitioned_table_parent").first.first
         assert_equal expect.to_i, result.rows.first.first
       end
 
       def test_exec_insert_with_returning_disabled_and_no_sequence_name_given
         connection = connection_without_insert_returning
-        result = connection.exec_insert("insert into postgresql_partitioned_table_parent (number) VALUES (1)", nil, [], "id")
+        result = assert_deprecated(ActiveRecord.deprecator) do
+          connection.exec_insert("insert into postgresql_partitioned_table_parent (number) VALUES (1)", nil, [], "id")
+        end
         expect = connection.query("select max(id) from postgresql_partitioned_table_parent").first.first
         assert_equal expect.to_i, result.rows.first.first
       end
 
       def test_exec_insert_default_values_with_returning_disabled_and_no_sequence_name_given
         connection = connection_without_insert_returning
-        result = connection.exec_insert("insert into postgresql_partitioned_table_parent DEFAULT VALUES", nil, [], "id")
+        result = assert_deprecated(ActiveRecord.deprecator) do
+          connection.exec_insert("insert into postgresql_partitioned_table_parent DEFAULT VALUES", nil, [], "id")
+        end
         expect = connection.query("select max(id) from postgresql_partitioned_table_parent").first.first
         assert_equal expect.to_i, result.rows.first.first
       end
 
       def test_exec_insert_default_values_quoted_schema_with_returning_disabled_and_no_sequence_name_given
         connection = connection_without_insert_returning
-        result = connection.exec_insert('insert into "public"."postgresql_partitioned_table_parent" DEFAULT VALUES', nil, [], "id")
+        result = assert_deprecated(ActiveRecord.deprecator) do
+          connection.exec_insert('insert into "public"."postgresql_partitioned_table_parent" DEFAULT VALUES', nil, [], "id")
+        end
         expect = connection.query("select max(id) from postgresql_partitioned_table_parent").first.first
         assert_equal expect.to_i, result.rows.first.first
       end
@@ -527,7 +535,7 @@ module ActiveRecord
 
       def test_raise_error_when_cannot_translate_exception
         assert_raise TypeError do
-          @connection.send(:log, nil) { @connection.execute(nil) }
+          @connection.execute(:not_a_query)
         end
       end
 
@@ -653,7 +661,7 @@ module ActiveRecord
         @connection.execute("DROP EXTENSION IF EXISTS hstore")
       end
 
-      def test_ignores_warnings_when_behaviour_ignore
+      def test_ignores_warnings_when_behavior_ignore
         with_db_warnings_action(:ignore) do
           # libpq prints a warning to stderr from C, so we need to stub
           # the whole file descriptors, not just Ruby's $stdout/$stderr.
@@ -665,7 +673,7 @@ module ActiveRecord
         end
       end
 
-      def test_logs_warnings_when_behaviour_log
+      def test_logs_warnings_when_behavior_log
         with_db_warnings_action(:log) do
           sql_warning = "[ActiveRecord::SQLWarning] PostgreSQL SQL warning (01000)"
 
@@ -675,7 +683,7 @@ module ActiveRecord
         end
       end
 
-      def test_raises_warnings_when_behaviour_raise
+      def test_raises_warnings_when_behavior_raise
         with_db_warnings_action(:raise) do
           error = assert_raises(ActiveRecord::SQLWarning) do
             @connection.execute("do $$ BEGIN RAISE WARNING 'PostgreSQL SQL warning'; END; $$")
@@ -684,7 +692,7 @@ module ActiveRecord
         end
       end
 
-      def test_reports_when_behaviour_report
+      def test_reports_when_behavior_report
         with_db_warnings_action(:report) do
           error_reporter = ActiveSupport::ErrorReporter.new
           subscriber = ActiveSupport::ErrorReporter::TestHelper::ErrorSubscriber.new
@@ -700,7 +708,7 @@ module ActiveRecord
         end
       end
 
-      def test_warnings_behaviour_can_be_customized_with_a_proc
+      def test_warnings_behavior_can_be_customized_with_a_proc
         warning_message = nil
         warning_level = nil
         warning_action = ->(warning) do

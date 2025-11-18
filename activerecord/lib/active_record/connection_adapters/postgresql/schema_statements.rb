@@ -12,9 +12,10 @@ module ActiveRecord
         end
 
         # Create a new PostgreSQL database. Options include <tt>:owner</tt>, <tt>:template</tt>,
-        # <tt>:encoding</tt> (defaults to utf8), <tt>:collation</tt>, <tt>:ctype</tt>,
-        # <tt>:tablespace</tt>, and <tt>:connection_limit</tt> (note that MySQL uses
-        # <tt>:charset</tt> while PostgreSQL uses <tt>:encoding</tt>).
+        # <tt>:encoding</tt> (defaults to utf8), <tt>:locale_provider</tt>, <tt>:locale</tt>,
+        # <tt>:collation</tt>, <tt>:ctype</tt>, <tt>:tablespace</tt>, and
+        # <tt>:connection_limit</tt> (note that MySQL uses <tt>:charset</tt> while PostgreSQL
+        # uses <tt>:encoding</tt>).
         #
         # Example:
         #   create_database config[:database], config
@@ -30,6 +31,10 @@ module ActiveRecord
                       " TEMPLATE = \"#{value}\""
                     when :encoding
                       " ENCODING = '#{value}'"
+                    when :locale_provider
+                      " LOCALE_PROVIDER = '#{value}'"
+                    when :locale
+                      " LOCALE = '#{value}'"
                     when :collation
                       " LC_COLLATE = '#{value}'"
                     when :ctype
@@ -50,8 +55,15 @@ module ActiveRecord
         #
         # Example:
         #   drop_database 'matt_development'
-        def drop_database(name) # :nodoc:
-          execute "DROP DATABASE IF EXISTS #{quote_table_name(name)}"
+        #
+        # Note, for PostgreSQL versions >= 13 the SQL statement will include <tt>WITH (FORCE)</tt> to
+        # disconnect clients before dropping the database. This allows you to drop/reset the
+        # database without stopping the \Rails server etc. See:
+        # https://www.postgresql.org/docs/current/sql-dropdatabase.html
+        def drop_database(name)
+          statement = "DROP DATABASE IF EXISTS #{quote_table_name(name)}"
+          statement += " WITH (FORCE)" if supports_force_drop_database?
+          execute statement
         end
 
         def drop_table(*table_names, **options) # :nodoc:
@@ -230,6 +242,14 @@ module ActiveRecord
           query_value("SELECT current_schema", "SCHEMA")
         end
 
+        # Returns an array of the names of all schemas presently in the effective search path,
+        # in their priority order.
+        def current_schemas # :nodoc:
+          schemas = query_value("SELECT current_schemas(false)", "SCHEMA")
+          decoder = PG::TextDecoder::Array.new
+          decoder.decode(schemas)
+        end
+
         # Returns the current database encoding format.
         def encoding
           query_value("SELECT pg_encoding_to_char(encoding) FROM pg_database WHERE datname = current_database()", "SCHEMA")
@@ -272,6 +292,11 @@ module ActiveRecord
         # Drops the schema for the given schema name.
         def drop_schema(schema_name, **options)
           execute "DROP SCHEMA#{' IF EXISTS' if options[:if_exists]} #{quote_schema_name(schema_name)} CASCADE"
+        end
+
+        # Renames the schema for the given schema name.
+        def rename_schema(schema_name, new_name)
+          execute "ALTER SCHEMA #{quote_schema_name(schema_name)} RENAME TO #{quote_schema_name(new_name)}"
         end
 
         # Sets the schema search path to a string of comma-separated schema names.
@@ -417,16 +442,13 @@ module ActiveRecord
         def primary_keys(table_name) # :nodoc:
           query_values(<<~SQL, "SCHEMA")
             SELECT a.attname
-              FROM (
-                     SELECT indrelid, indkey, generate_subscripts(indkey, 1) idx
-                       FROM pg_index
-                      WHERE indrelid = #{quote(quote_table_name(table_name))}::regclass
-                        AND indisprimary
-                   ) i
-              JOIN pg_attribute a
-                ON a.attrelid = i.indrelid
-               AND a.attnum = i.indkey[i.idx]
-             ORDER BY i.idx
+            FROM pg_index i
+            JOIN pg_attribute a
+              ON a.attrelid = i.indrelid
+              AND a.attnum = ANY(i.indkey)
+            WHERE i.indrelid = #{quote(quote_table_name(table_name))}::regclass
+              AND i.indisprimary
+            ORDER BY array_position(i.indkey, a.attnum)
           SQL
         end
 

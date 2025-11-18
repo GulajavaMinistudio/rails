@@ -205,7 +205,16 @@ module ActiveRecord
           end
 
           def encode_range(range)
-            "[#{type_cast_range_value(range.begin)},#{type_cast_range_value(range.end)}#{range.exclude_end? ? ')' : ']'}"
+            lower_bound, upper_bound = if date_or_time_range?(range)
+              type_cast_time_range_values(range)
+            else
+              [
+                type_cast_range_value(range.begin),
+                type_cast_range_value(range.end)
+              ]
+            end
+
+            "[#{lower_bound},#{upper_bound}#{range.exclude_end? ? ')' : ']'}"
           end
 
           def determine_encoding_of_strings_in_array(value)
@@ -226,8 +235,19 @@ module ActiveRecord
             infinity?(value) ? "" : type_cast(value)
           end
 
+          def type_cast_time_range_values(range)
+            [
+              range.begin.nil? ? "-infinity" : type_cast(range.begin),
+              range.end.nil? ? "infinity" : type_cast(range.end)
+            ]
+          end
+
           def infinity?(value)
             value.respond_to?(:infinite?) && value.infinite?
+          end
+
+          def date_or_time_range?(range)
+            [range.begin.class, range.end.class].intersect?([Date, DateTime, Time])
           end
       end
     end
