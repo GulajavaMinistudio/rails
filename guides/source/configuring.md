@@ -60,7 +60,9 @@ Below are the default values associated with each target version. In cases of co
 
 #### Default Values for Target Version 8.2
 
+- [`config.action_controller.default_protect_from_forgery_with`](#config-action-controller-default-protect-from-forgery-with): `:exception`
 - [`config.action_controller.forgery_protection_verification_strategy`](#config-action-controller-forgery-protection-verification-strategy): `:header_only`
+- [`config.action_dispatch.default_headers`](#config-action-dispatch-default-headers): `{ "X-Frame-Options" => "SAMEORIGIN", "X-Content-Type-Options" => "nosniff", "X-Permitted-Cross-Domain-Policies" => "none", "Referrer-Policy" => "strict-origin-when-cross-origin" }`
 - [`config.active_job.enqueue_after_transaction_commit`](#config-active-job-enqueue-after-transaction-commit): `true`
 - [`config.active_record.postgresql_adapter_decode_bytea`](#config-active-record-postgresql-adapter-decode-bytea): `true`
 - [`config.active_record.postgresql_adapter_decode_money`](#config-active-record-postgresql-adapter-decode-money): `true`
@@ -2031,6 +2033,22 @@ The default value depends on the `config.load_defaults` target version:
 | (original)            | `false`              |
 | 5.2                   | `true`               |
 
+#### `config.action_controller.default_protect_from_forgery_with`
+
+Configures the default strategy used when calling `protect_from_forgery` without the `:with` option.
+Defaults to `:null_session`, but will change to `:exception` in a future version of Rails.
+
+Applications can opt into the new behavior early by setting:
+
+```ruby
+config.action_controller.default_protect_from_forgery_with = :exception
+```
+
+| Starting with version | The default value is |
+| --------------------- | -------------------- |
+| (original)            | `:null_session`      |
+| 8.2                   | `:exception`         |
+
 #### `config.action_controller.relative_url_root`
 
 Can be used to tell Rails that you are [deploying to a subdirectory](
@@ -2237,6 +2255,7 @@ The default value depends on the `config.load_defaults` target version:
 | (original)            | <pre><code>{<br>  "X-Frame-Options" => "SAMEORIGIN",<br>  "X-XSS-Protection" => "1; mode=block",<br>  "X-Content-Type-Options" => "nosniff",<br>  "X-Download-Options" => "noopen",<br>  "X-Permitted-Cross-Domain-Policies" => "none",<br>  "Referrer-Policy" => "strict-origin-when-cross-origin"<br>}</code></pre> |
 | 7.0                   | <pre><code>{<br>  "X-Frame-Options" => "SAMEORIGIN",<br>  "X-XSS-Protection" => "0",<br>  "X-Content-Type-Options" => "nosniff",<br>  "X-Download-Options" => "noopen",<br>  "X-Permitted-Cross-Domain-Policies" => "none",<br>  "Referrer-Policy" => "strict-origin-when-cross-origin"<br>}</code></pre> |
 | 7.1                   | <pre><code>{<br>  "X-Frame-Options" => "SAMEORIGIN",<br>  "X-XSS-Protection" => "0",<br>  "X-Content-Type-Options" => "nosniff",<br>  "X-Permitted-Cross-Domain-Policies" => "none",<br>  "Referrer-Policy" => "strict-origin-when-cross-origin"<br>}</code></pre> |
+| 8.2                   | <pre><code>{<br>  "X-Frame-Options" => "SAMEORIGIN"<br>  "X-Content-Type-Options" => "nosniff",<br>  "X-Permitted-Cross-Domain-Policies" => "none",<br>  "Referrer-Policy" => "strict-origin-when-cross-origin"<br>}</code></pre> |
 
 #### `config.action_dispatch.default_charset`
 
@@ -3163,7 +3182,7 @@ Sets the adapter for the queuing backend. The default adapter is `:async`. For a
 # Be sure to have the adapter's gem in your Gemfile
 # and follow the adapter's specific installation
 # and deployment instructions.
-config.active_job.queue_adapter = :sidekiq
+config.active_job.queue_adapter = :solid_queue
 ```
 
 #### `config.active_job.default_queue_name`

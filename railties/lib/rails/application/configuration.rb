@@ -373,6 +373,16 @@ module Rails
 
           if respond_to?(:action_controller)
             action_controller.forgery_protection_verification_strategy = :header_only
+            action_controller.default_protect_from_forgery_with = :exception
+          end
+
+          if respond_to?(:action_dispatch)
+            action_dispatch.default_headers = {
+              "X-Frame-Options" => "SAMEORIGIN",
+              "X-Content-Type-Options" => "nosniff",
+              "X-Permitted-Cross-Domain-Policies" => "none",
+              "Referrer-Policy" => "strict-origin-when-cross-origin"
+            }
           end
 
           if respond_to?(:active_record)
